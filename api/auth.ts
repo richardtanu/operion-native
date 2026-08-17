@@ -1,10 +1,15 @@
 import { apiRequest } from './client';
-import type { LoginRequest, LoginResponse } from './types';
+import type { AuthResponse, LoginRequest, RegisterRequest, UserProfileResponse } from './types';
 
-/**
- * Endpoint path is a placeholder — no OpenAPI spec exists to confirm the
- * real auth route against the separate backend project. Update once known.
- */
-export function login(request: LoginRequest): Promise<LoginResponse> {
-  return apiRequest<LoginResponse>('/auth/login', { method: 'POST', body: request });
+export function login(request: LoginRequest): Promise<AuthResponse> {
+  return apiRequest<AuthResponse>('/auth/login', { method: 'POST', body: request });
+}
+
+export function register(request: RegisterRequest): Promise<AuthResponse> {
+  return apiRequest<AuthResponse>('/auth/register', { method: 'POST', body: request });
+}
+
+/** Login/register return only a token — this is the actual source of user profile data. */
+export function getMe(token: string): Promise<UserProfileResponse> {
+  return apiRequest<UserProfileResponse>('/auth/me', { token });
 }

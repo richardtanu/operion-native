@@ -1,14 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react';
-import { login as loginRequest } from '../api/auth';
+import { getMe, login as loginRequest } from '../api/auth';
 import { ApiError } from '../api/httpError';
-import type { AuthUser } from '../api/types';
+import type { UserProfileResponse } from '../api/types';
 import { tokenStorage } from './tokenStorage';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 type AuthContextValue = {
   status: AuthStatus;
-  user: AuthUser | null;
+  user: UserProfileResponse | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -18,20 +18,25 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [status, setStatus] = useState<AuthStatus>('loading');
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<UserProfileResponse | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       const stored = await tokenStorage.getToken();
       if (stored) {
-        // A stored token with no user record is a known scaffold gap: there's
-        // no "get current user" endpoint wired up yet (no OpenAPI spec to
-        // confirm one against). Treat presence of a token as authenticated
-        // for routing purposes; real user hydration is a follow-up once a
-        // /me-equivalent endpoint is known.
         setToken(stored);
-        setStatus('authenticated');
+        try {
+          setUser(await getMe(stored));
+          setStatus('authenticated');
+        } catch {
+          // Stored token is no longer valid (expired/revoked) — drop it and
+          // send the user back through login rather than staying stuck in a
+          // half-authenticated state.
+          await tokenStorage.clearToken();
+          setToken(null);
+          setStatus('unauthenticated');
+        }
       } else {
         setStatus('unauthenticated');
       }
@@ -48,10 +53,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
         // must never be outbox-queued, so this calls the API layer directly
         // rather than going through useOutboxAction.
         try {
-          const response = await loginRequest({ email, password });
-          await tokenStorage.setToken(response.accessToken);
-          setToken(response.accessToken);
-          setUser(response.user);
+          const { token: newToken } = await loginRequest({ email, password });
+          const profile = await getMe(newToken);
+          await tokenStorage.setToken(newToken);
+          setToken(newToken);
+          setUser(profile);
           setStatus('authenticated');
         } catch (err) {
           if (err instanceof ApiError) throw err;
