@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Operion",
-    "slug": "operion-mobile",
+    "slug": "operion",
     "scheme": "operion",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,9 +11,11 @@
       "typedRoutes": true
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.richardtanus.operion"
     },
     "android": {
+      "package": "com.richardtanus.operion",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -30,6 +32,13 @@
       "expo-splash-screen",
       "expo-secure-store",
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7647cec1-34fd-4a17-b8d2-9960f39648b4"
+      }
+    },
+    "owner": "richardtanus-organization"
   }
 }
