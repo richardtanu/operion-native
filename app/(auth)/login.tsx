@@ -3,10 +3,14 @@ import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, TextField } from '../../components';
 import { useAuth } from '../../auth/AuthContext';
+import * as tokens from '../../theme/tokens';
+import { textStyle } from '../../theme/typeStyle';
 
-// Blocking-error, manual-retry flow (plan.md §3) — login calls the API
-// directly through AuthContext, never through the outbox. A queued login
-// would be meaningless: there's no session to act on until it resolves.
+const { color, type: typeScale } = tokens;
+
+// Blocking-error, manual-retry flow — login calls the API directly through
+// AuthContext, never through the outbox. A queued login would be
+// meaningless: there's no session to act on until it resolves.
 export default function LoginScreen() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
@@ -27,11 +31,11 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-0">
+    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
       <View className="flex-1 justify-center gap-lg px-xl">
         <View className="gap-xs">
-          <Text className="text-2xl font-bold text-neutral-900">Operion</Text>
-          <Text className="text-base text-neutral-500">Sign in to continue</Text>
+          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Operion</Text>
+          <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Sign in to continue</Text>
         </View>
 
         <View className="gap-md">
@@ -46,7 +50,7 @@ export default function LoginScreen() {
           <TextField label="Password" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
         </View>
 
-        {error ? <Text className="text-sm text-status-danger">{error}</Text> : null}
+        {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 
         <Button label={submitting ? 'Signing in…' : 'Sign in'} onPress={handleSubmit} disabled={submitting} />
       </View>

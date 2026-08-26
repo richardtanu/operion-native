@@ -1,30 +1,37 @@
 import { Text, View } from 'react-native';
+import * as tokens from '../theme/tokens';
+import { textStyle } from '../theme/typeStyle';
+
+const { color, tone: toneColors, type: typeScale, radius, border } = tokens;
 
 export type ChipTone = 'neutral' | 'success' | 'warning' | 'danger' | 'pending';
 
 type ChipProps = {
   label: string;
   tone?: ChipTone;
-};
-
-const toneStyles: Record<ChipTone, { bg: string; text: string }> = {
-  neutral: { bg: 'bg-neutral-100', text: 'text-neutral-700' },
-  success: { bg: 'bg-status-success/15', text: 'text-status-success' },
-  warning: { bg: 'bg-status-warning/15', text: 'text-status-warning' },
-  danger: { bg: 'bg-status-danger/15', text: 'text-status-danger' },
-  pending: { bg: 'bg-status-pending/15', text: 'text-status-pending' },
+  /** Filled background instead of the default outline — reserve for the one status that should read loudest on a screen. */
+  solid?: boolean;
 };
 
 // A single status badge. Screens with more than one independent status
-// dimension (e.g. Realisasi's `status` + `varianceStatus`, plan.md §5.1)
-// render multiple Chips side by side — never merge them into one, per the
-// web wireframe kit's explicit rule (SESSION_BRIEF_C_PENCIL_HANDOFF.md).
-// Composing that layout is the screen's job; this component only renders one.
-export function Chip({ label, tone = 'neutral' }: ChipProps) {
-  const { bg, text } = toneStyles[tone];
+// dimension (e.g. Realisasi's `status` + `varianceStatus`) render multiple
+// Chips side by side — never merge them into one. Composing that layout is
+// the screen's job; this component only renders one.
+export function Chip({ label, tone = 'neutral', solid }: ChipProps) {
+  const c = toneColors[tone];
   return (
-    <View className={`self-start rounded-full px-md py-xs ${bg}`}>
-      <Text className={`text-xs font-medium ${text}`}>{label}</Text>
+    <View
+      style={{
+        alignSelf: 'flex-start',
+        borderWidth: border.base,
+        borderColor: c,
+        borderRadius: radius.sm,
+        backgroundColor: solid ? c : 'transparent',
+        paddingVertical: 2,
+        paddingHorizontal: 8,
+      }}
+    >
+      <Text style={{ ...textStyle(typeScale.chip), fontWeight: '700', color: solid ? color.panel : c }}>{label}</Text>
     </View>
   );
 }

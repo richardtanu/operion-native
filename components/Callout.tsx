@@ -1,20 +1,47 @@
 import type { PropsWithChildren } from 'react';
 import { Text, View } from 'react-native';
+import * as tokens from '../theme/tokens';
+import { textStyle } from '../theme/typeStyle';
+
+const { color, tone: toneColors, font, type: typeScale, radius, border } = tokens;
+
+export type CalloutTone = 'neutral' | 'success' | 'warning' | 'danger';
 
 type CalloutProps = PropsWithChildren<{
   title?: string;
+  tone?: CalloutTone;
 }>;
 
-// Dashed-border note box, mirroring the web wireframe kit
-// (SESSION_BRIEF_C_PENCIL_HANDOFF.md). Used to record what a drawing/build
-// revealed that a screen record didn't anticipate, or to surface an open
-// question visibly instead of silently resolving it — never used to answer
-// the question itself.
-export function Callout({ title, children }: CalloutProps) {
+const TINT_BG: Record<CalloutTone, string> = {
+  neutral: 'transparent',
+  success: `${toneColors.success}0F`,
+  warning: `${toneColors.warning}0F`,
+  danger: `${toneColors.danger}0F`,
+};
+
+// Dashed-border note box. Used to record what a build revealed that a
+// screen record didn't anticipate, or to surface an open question visibly
+// instead of silently resolving it — never used to answer the question.
+export function Callout({ title, tone = 'neutral', children }: CalloutProps) {
+  const c = tone === 'neutral' ? color.steel : toneColors[tone];
   return (
-    <View className="gap-xs rounded-md border border-dashed border-neutral-300 bg-neutral-50 p-md">
-      {title ? <Text className="text-sm font-semibold text-neutral-700">{title}</Text> : null}
-      <Text className="text-sm text-neutral-600">{children}</Text>
+    <View
+      style={{
+        borderWidth: border.base,
+        borderStyle: 'dashed',
+        borderColor: c,
+        borderRadius: radius.sm,
+        padding: 9,
+        backgroundColor: TINT_BG[tone],
+        gap: 4,
+      }}
+    >
+      {title ? (
+        <Text style={{ fontFamily: font.displayBold, fontSize: 12, letterSpacing: 1.1, textTransform: 'uppercase', color: c, fontWeight: '700' }}>
+          {title}
+        </Text>
+      ) : null}
+      <Text style={{ ...textStyle(typeScale.helper), color: tone === 'neutral' ? color.steel : c }}>{children}</Text>
     </View>
   );
 }

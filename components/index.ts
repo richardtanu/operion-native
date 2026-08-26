@@ -1,5 +1,12 @@
 export { Button } from './Button';
-export { Callout } from './Callout';
+export { Callout, type CalloutTone } from './Callout';
+export { CeilingBar } from './CeilingBar';
+export { Card, type CardTone } from './Card';
 export { Chip, type ChipTone } from './Chip';
+export { Field } from './Field';
+export { FieldLabel } from './FieldLabel';
+export { KV } from './KV';
+export { Row } from './Row';
+export { Section } from './Section';
 export { SyncStateIndicator, type SyncState } from './SyncStateIndicator';
 export { TextField } from './TextField';

@@ -1,37 +1,60 @@
-import { Pressable, Text, type PressableProps } from 'react-native';
+import { Pressable, Text, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import * as tokens from '../theme/tokens';
+import { textStyle } from '../theme/typeStyle';
 
-type ButtonVariant = 'primary' | 'secondary';
+const { color, font, type: typeScale, radius, border } = tokens;
 
-type ButtonProps = Omit<PressableProps, 'children'> & {
+type ButtonVariant = 'primary' | 'secondary' | 'gated';
+
+type ButtonProps = Omit<PressableProps, 'children' | 'style'> & {
   label: string;
   variant?: ButtonVariant;
+  /**
+   * Small mono badge next to the label — the scope required for a `gated`
+   * action (e.g. "OWNER+"). Carries role.gatedAction's meaning: plain border
+   * means anyone can press it, this yellow-bordered variant means the
+   * backend actually enforces a scope check. Don't add `gate` to a button
+   * that isn't really gated server-side.
+   */
+  gate?: string;
+  style?: StyleProp<ViewStyle>;
 };
 
-// Mirrors the Button vocabulary already established in operion.pen's web
-// wireframe kit (SESSION_BRIEF_C_PENCIL_HANDOFF.md): Primary (filled) is the
-// main action, Secondary (outlined) is the lesser action. Same vocabulary,
-// separate implementation per the plan's "share the contract, not the
-// chrome" principle (plan.md §1).
-export function Button({ label, variant = 'primary', disabled, className, ...pressableProps }: ButtonProps) {
-  const base = 'items-center justify-center rounded-md px-lg py-md';
-  const variantStyle =
-    variant === 'primary'
-      ? 'bg-brand-500 active:bg-brand-600'
-      : 'border border-neutral-300 bg-transparent active:bg-neutral-50';
-  const disabledStyle = disabled ? 'opacity-50' : '';
-
-  const textStyle =
-    variant === 'primary' ? 'text-base font-semibold text-neutral-0' : 'text-base font-semibold text-neutral-700';
+export function Button({ label, variant = 'primary', gate, disabled, style, ...pressableProps }: ButtonProps) {
+  const backgroundColor = disabled ? color.line : variant === 'primary' ? color.ink : 'transparent';
+  const textColor = disabled ? color.panel : variant === 'primary' ? color.panel : color.ink;
+  const borderColor = variant === 'gated' ? color.tag : variant === 'secondary' ? color.line : 'transparent';
+  const borderWidth = variant === 'gated' ? border.strong : variant === 'secondary' ? border.base : 0;
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
-      className={`${base} ${variantStyle} ${disabledStyle} ${className ?? ''}`}
+      style={[
+        {
+          width: '100%',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
+          borderRadius: radius.sm,
+          paddingVertical: 12,
+          paddingHorizontal: 14,
+          backgroundColor,
+          borderWidth,
+          borderColor,
+        },
+        style,
+      ]}
       {...pressableProps}
     >
-      <Text className={textStyle}>{label}</Text>
+      <Text style={{ ...textStyle(typeScale.button), fontWeight: '700', color: textColor }}>{label}</Text>
+      {gate ? (
+        <Text style={{ fontFamily: font.mono, fontSize: 10, fontWeight: '600', color: disabled ? color.panel : color.warn }}>
+          {gate}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }

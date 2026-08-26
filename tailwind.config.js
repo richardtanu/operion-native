@@ -1,4 +1,4 @@
-const { colors, spacing, radii, typography } = require('./theme/tokens.js');
+const { color, space, radius } = require('./theme/tokens.js');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -6,33 +6,24 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
-      colors: {
-        neutral: colors.neutral,
-        brand: colors.brand,
-        status: colors.status,
-      },
+      // Flat palette, not nested — matches theme/tokens.js's `color` export
+      // directly (ground/surface/panel/derived/ink/steel/mute/line/hair/tag/
+      // good/warn/danger/info). The semantic `type` scale (screenTitle,
+      // fieldLabel, etc.) isn't linear, so components pull it from
+      // theme/tokens.js via inline style instead of a Tailwind fontSize scale.
+      colors: { ...color },
       spacing: {
-        xs: `${spacing.xs}px`,
-        sm: `${spacing.sm}px`,
-        md: `${spacing.md}px`,
-        lg: `${spacing.lg}px`,
-        xl: `${spacing.xl}px`,
-        '2xl': `${spacing['2xl']}px`,
-        '3xl': `${spacing['3xl']}px`,
+        xs: `${space.xs}px`,
+        sm: `${space.sm}px`,
+        md: `${space.md}px`,
+        lg: `${space.lg}px`,
+        xl: `${space.xl}px`,
+        xxl: `${space.xxl}px`,
       },
       borderRadius: {
-        sm: `${radii.sm}px`,
-        md: `${radii.md}px`,
-        lg: `${radii.lg}px`,
-        full: `${radii.full}px`,
-      },
-      fontSize: {
-        xs: `${typography.size.xs}px`,
-        sm: `${typography.size.sm}px`,
-        base: `${typography.size.base}px`,
-        lg: `${typography.size.lg}px`,
-        xl: `${typography.size.xl}px`,
-        '2xl': `${typography.size['2xl']}px`,
+        sm: `${radius.sm}px`,
+        md: `${radius.md}px`,
+        pill: `${radius.pill}px`,
       },
     },
   },

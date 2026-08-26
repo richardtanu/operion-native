@@ -31,7 +31,8 @@
       "expo-router",
       "expo-splash-screen",
       "expo-secure-store",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font"
     ],
     "extra": {
       "router": {},

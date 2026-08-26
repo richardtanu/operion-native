@@ -3,20 +3,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout, SyncStateIndicator, type SyncState } from '../../components';
 import { useOutbox } from '../../outbox/OutboxProvider';
 import type { OutboxItem, OutboxStatus } from '../../outbox/types';
+import * as tokens from '../../theme/tokens';
+import { textStyle } from '../../theme/typeStyle';
+
+const { color, type: typeScale, radius, border } = tokens;
 
 // Dev-only verification screen — not part of any designed flow. Exists so
-// the outbox (plan.md §1) can be exercised end-to-end without a real write
-// screen: enqueue a fake item, watch it go queued -> confirmed/failed, and
-// confirm a kill-and-relaunch mid-queue doesn't lose the row (see the plan's
-// verification checklist). Exclude from production nav / gate behind
-// __DEV__ once real write screens exist.
+// the outbox can be exercised end-to-end without a real write screen:
+// enqueue a fake item, watch it go queued -> confirmed/failed, and confirm
+// a kill-and-relaunch mid-queue doesn't lose the row.
 export default function DebugOutboxScreen() {
   const { items, enqueue, retryItem } = useOutbox();
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-0">
+    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
       <View className="flex-1 gap-lg px-xl pt-xl">
-        <Text className="text-2xl font-bold text-neutral-900">Outbox debug</Text>
+        <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Outbox debug</Text>
 
         <Callout title="What this proves">
           Enqueue writes below, then background/kill and relaunch the app before they resolve —
@@ -55,7 +57,7 @@ export default function DebugOutboxScreen() {
           keyExtractor={(item) => item.id}
           contentContainerClassName="gap-sm pb-xl"
           renderItem={({ item }) => <OutboxRow item={item} onRetry={() => retryItem(item.id)} />}
-          ListEmptyComponent={<Text className="text-sm text-neutral-500">No outbox items yet.</Text>}
+          ListEmptyComponent={<Text style={{ ...textStyle(typeScale.body), color: color.steel }}>No outbox items yet.</Text>}
         />
       </View>
     </SafeAreaView>
@@ -70,11 +72,23 @@ function toSyncState(status: OutboxStatus): SyncState {
 
 function OutboxRow({ item, onRetry }: { item: OutboxItem; onRetry: () => void }) {
   return (
-    <View className="flex-row items-center justify-between rounded-md border border-neutral-200 px-md py-md">
-      <View className="flex-1 gap-xs">
-        <Text className="text-sm font-medium text-neutral-800">{item.kind}</Text>
-        <Text className="text-xs text-neutral-500">{item.endpoint}</Text>
-        {item.lastError ? <Text className="text-xs text-status-danger">{item.lastError}</Text> : null}
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderRadius: radius.sm,
+        borderWidth: border.hair,
+        borderColor: color.hair,
+        paddingHorizontal: 12,
+        paddingVertical: 12,
+        backgroundColor: color.panel,
+      }}
+    >
+      <View style={{ flex: 1, gap: 4 }}>
+        <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.kind}</Text>
+        <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{item.endpoint}</Text>
+        {item.lastError ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{item.lastError}</Text> : null}
       </View>
       <SyncStateIndicator state={toSyncState(item.status)} onRetry={onRetry} />
     </View>
