@@ -30,13 +30,13 @@ export interface LoginRequest {
   password: string;
 }
 
+/** ADMIN-only since BE-12. There is no scope field: grant one afterwards with PATCH /users/{id}/scope. */
 export interface RegisterRequest {
   email: string;
   password: string;
   fullName: string;
-  /** Defaults to BLITZ_BDG on the backend if omitted. */
+  /** Defaults to the calling ADMIN's own tenant; must be inside their tenant tree. */
   tenantCode?: string;
-  scope?: Scope;
 }
 
 /** POST /auth/login and /auth/register both return just this — no user object. */
@@ -408,4 +408,35 @@ export interface ProcurementActivityFilters {
   actorId?: string;
   type?: ProcurementEntityType;
   limit?: number;
+}
+
+// ---------- Notifications ----------
+
+export type NotificationType =
+  | 'NEW_PURCHASE_REQUEST'
+  | 'PURCHASE_REQUEST_ORDERED'
+  | 'PART_END_OF_LIFE'
+  | 'LOW_STOCK'
+  | 'REALISASI_ESCALATED'
+  | 'PURCHASE_REQUEST_APPROVED'
+  | 'PURCHASE_REQUEST_REJECTED'
+  | 'PURCHASE_REQUEST_AUTHORIZED'
+  | 'PURCHASE_AUTHORIZATION_CREATED';
+
+/** Only ever the caller's own notifications. Nobody is notified of their own action (BE-07). */
+export interface NotificationResponse {
+  id: string;
+  /** A plain string server-side — a type added later must still render. */
+  type: NotificationType | (string & {});
+  title: string;
+  message: string;
+  referenceType: string | null;
+  referenceId: string | null;
+  read: boolean;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface UnreadCountResponse {
+  unreadCount: number;
 }

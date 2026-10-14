@@ -28,9 +28,9 @@ Read from source in the backend repo (`c:\richards stuff\demo`). Where these con
 | `PurchaseOrderResponse` | `totalAmount` and item `price` null below OWNER (BE-11) | PROC-07 renders by null, no client masking |
 | `GET /goods-receipts` | Tree-scoped, newest `receivedDate` first. Filters `from`, `to` (inclusive `yyyy-MM-dd`), `receivedBy`, `path` (`PO`\|`REALISASI`, else 400) (BE-08) | PROC-05 list screen |
 | `GET /goods-receipts/{id}` | Out-of-tree id answers like a missing one | `getGoodsReceipt()` |
-| `GET /procurement/activity` | Newest-first status changes across PR, PRA, Realisasi, PO. ADMIN or PROCUREMENT role, or OWNER+ scope, else 403. Filters `from`, `to`, `tenantId`, `actorId`, `type`, `limit` (default 100, max 500) (BE-07) | `getProcurementActivity()`; no screen yet |
+| `GET /procurement/activity` | Newest-first status changes across PR, PRA, Realisasi, PO. ADMIN or PROCUREMENT role, or OWNER+ scope, else 403. Filters `from`, `to`, `tenantId`, `actorId`, `type`, `limit` (default 100, max 500) (BE-07) | PROC-09 Activity Log screen |
 | `PATCH /users/{id}/role` | ADMIN only, tree-contained, never your own role | Unused in the app |
-| Notifications | New types `PURCHASE_REQUEST_APPROVED`, `_REJECTED`, `_AUTHORIZED` (to the requester) and `PURCHASE_AUTHORIZATION_CREATED` (to PROCUREMENT users in the PRA's tenant) | The app has no notifications screen yet |
+| Notifications | New types `PURCHASE_REQUEST_APPROVED`, `_REJECTED`, `_AUTHORIZED` (to the requester) and `PURCHASE_AUTHORIZATION_CREATED` (to PROCUREMENT users in the PRA's tenant). `GET /notifications` is newest first; `PATCH /{id}/read`, `PATCH /read-all`, `GET /unread-count` | Notifications screen + dashboard unread count (`api/notifications.ts`) |
 
 ---
 

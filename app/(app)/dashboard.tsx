@@ -1,8 +1,10 @@
-import { Link } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Link, useFocusEffect } from 'expo-router';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout } from '../../components';
 import { useAuth } from '../../auth/AuthContext';
+import { getUnreadCount } from '../../api/notifications';
 import { useTheme } from '../../theme/ThemeContext';
 import { textStyle } from '../../theme/typeStyle';
 
@@ -13,7 +15,19 @@ import { textStyle } from '../../theme/typeStyle';
 // into Procurement (module 1, the one module that has gone through it).
 export default function DashboardScreen() {
   const { color, type: typeScale } = useTheme();
-  const { logout } = useAuth();
+  const { logout, token } = useAuth();
+  const [unread, setUnread] = useState<number | null>(null);
+
+  // Refresh whenever the dashboard comes back into view, e.g. after reading
+  // notifications. A failed count just hides the number.
+  useFocusEffect(
+    useCallback(() => {
+      if (!token) return;
+      getUnreadCount(token)
+        .then((r) => setUnread(r.unreadCount))
+        .catch(() => setUnread(null));
+    }, [token]),
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
@@ -27,6 +41,10 @@ export default function DashboardScreen() {
 
         <Link href="/(app)/procurement" asChild>
           <Button label="Procurement" />
+        </Link>
+
+        <Link href="/(app)/notifications" asChild>
+          <Button label={unread ? `Notifications · ${unread} unread` : 'Notifications'} variant="secondary" />
         </Link>
 
         {__DEV__ ? (

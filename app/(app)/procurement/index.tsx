@@ -2,6 +2,8 @@ import { Link, type Href } from 'expo-router';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../components';
+import { useAuth } from '../../../auth/AuthContext';
+import { canReadActivityLog } from '../../../auth/permissions';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
@@ -23,6 +25,7 @@ const SCREENS: { code: string; label: string; href: Href }[] = [
 // that has.
 export default function ProcurementMenuScreen() {
   const { color, type: typeScale } = useTheme();
+  const { user } = useAuth();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
       <View className="flex-1 gap-md px-xl pt-xl">
@@ -33,6 +36,11 @@ export default function ProcurementMenuScreen() {
               <Button label={`${s.code} · ${s.label}`} variant="secondary" />
             </Link>
           ))}
+          {/* Gated: ADMIN or PROCUREMENT role, or Owner scope and above. Shown to
+              everyone so the gate is visible, disabled for those it excludes. */}
+          <Link href="/(app)/procurement/activity" asChild>
+            <Button label="PROC-09 · Activity log" variant="gated" gate="ADMIN·PROC·OWNER+" disabled={!canReadActivityLog(user)} />
+          </Link>
         </View>
       </View>
     </SafeAreaView>
