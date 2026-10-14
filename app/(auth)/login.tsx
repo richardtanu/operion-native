@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, TextField } from '../../components';
+import { Button, Callout, TextField } from '../../components';
 import { useAuth } from '../../auth/AuthContext';
 import { ThemeContext, useTheme } from '../../theme/ThemeContext';
 import { tacticalGreenTheme } from '../../theme/themes/tacticalGreen';
@@ -27,7 +27,7 @@ export default function LoginScreen() {
 
 function LoginScreenBody() {
   const { color, type: typeScale } = useTheme();
-  const { login } = useAuth();
+  const { login, sessionExpired } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +65,7 @@ function LoginScreenBody() {
           <TextField label="Password" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
         </View>
 
+        {sessionExpired && !error ? <Callout tone="warning">Your session expired. Sign in again to continue.</Callout> : null}
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 
         <Button label={submitting ? 'Signing in…' : 'Sign in'} onPress={handleSubmit} disabled={submitting} />

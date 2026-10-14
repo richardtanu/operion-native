@@ -9,6 +9,13 @@ type RequestOptions = {
   token?: string | null;
 };
 
+let unauthorizedHandler: (() => void) | null = null;
+
+/** AuthContext registers its logout here, so any screen's 401 ends the session in one place. */
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler;
+}
+
 /**
  * Thin fetch wrapper: base URL, bearer header, JSON parse, error
  * normalization. No axios/ky — a handful of hand-written endpoints against
@@ -36,10 +43,25 @@ export async function apiRequest<TResponse>(path: string, options: RequestOption
   });
 
   const text = await response.text();
-  const data = text ? JSON.parse(text) : undefined;
+  // JwtAuthenticationFilter answers a bad/expired token with a plain-text
+  // 401 ("Invalid JWT token"), not JSON — parsing it blindly would throw a
+  // SyntaxError instead of the ApiError callers branch on.
+  let data: unknown;
+  try {
+    data = text ? JSON.parse(text) : undefined;
+  } catch {
+    data = text;
+  }
+
+  // 401 only ever means the token itself was rejected (expired after 24h,
+  // or JWT_SECRET rotated). 403 is NOT a dead session since BE-12: it is a
+  // permission denial, and the user stays signed in.
+  if (response.status === 401 && token) {
+    unauthorizedHandler?.();
+  }
 
   if (!response.ok) {
-    const errorBody = data && typeof data === 'object' ? data : {};
+    const errorBody: object = data && typeof data === 'object' ? data : typeof data === 'string' && data ? { error: data } : {};
     const baseMessage =
       ('error' in errorBody && String(errorBody.error)) ||
       ('message' in errorBody && String(errorBody.message)) ||
