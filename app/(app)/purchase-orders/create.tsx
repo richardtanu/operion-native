@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, Field, Row, Section } from '../../../components';
+import { Button, Callout, Card, Chip, Field, KV, Row, Section } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { cancelPurchaseOrder, createPurchaseOrder, listPurchaseRequests, listSuppliers, sendPurchaseOrder } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
@@ -34,7 +34,6 @@ export default function CreatePurchaseOrderScreen() {
   const [approvedPrs, setApprovedPrs] = useState<PurchaseRequestResponse[]>([]);
   const [supplierId, setSupplierId] = useState<string | null>(null);
   const [linkedPrIds, setLinkedPrIds] = useState<string[]>([]);
-  const [orderDate, setOrderDate] = useState('');
   const [lines, setLines] = useState<Line[]>([newLine()]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +100,7 @@ export default function CreatePurchaseOrderScreen() {
           <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
             Also reachable: draft · ordered · partially_received · received · cancelled
           </Text>
+          <KV k="Order date" v={created.orderDate ?? '—'} derived />
 
           {created.items.map((item) => (
             <Card key={item.id}>
@@ -171,9 +171,7 @@ export default function CreatePurchaseOrderScreen() {
           supplier — that role moved to Realisasi.
         </Callout>
 
-        <Row>
-          <Field label="Order date" value={orderDate} onChangeText={setOrderDate} mono placeholder="YYYY-MM-DD" />
-        </Row>
+        <Field label="Order date" value="Set to today when created" variant="derived" />
 
         <Section>From purchase requests (optional)</Section>
         {approvedPrs.map((pr) => (

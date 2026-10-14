@@ -37,17 +37,19 @@ function DebugOutboxScreen() {
 
         <View className="flex-row gap-sm">
           <View className="flex-1">
+            {/* BE-12 deleted the backend's debug endpoints, so the success case
+                uses a real, idempotent write: it marks your notifications read. */}
             <Button
-              label="Enqueue (likely succeeds)"
+              label="Enqueue (succeeds: marks notifications read)"
               variant="secondary"
               onPress={() =>
-                enqueue({ kind: 'debug.ping', endpoint: '/debug/ping', method: 'POST', payload: { ts: Date.now() } })
+                enqueue({ kind: 'debug.read-all', endpoint: '/notifications/read-all', method: 'PATCH', payload: {} })
               }
             />
           </View>
           <View className="flex-1">
             <Button
-              label="Enqueue (likely fails)"
+              label="Enqueue (fails: 404)"
               variant="secondary"
               onPress={() =>
                 enqueue({
