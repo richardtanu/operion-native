@@ -29,9 +29,11 @@ export default function DashboardScreen() {
           <Button label="Procurement" />
         </Link>
 
-        <Link href="/(app)/debug-outbox" asChild>
-          <Button label="Open outbox debug screen" variant="secondary" />
-        </Link>
+        {__DEV__ ? (
+          <Link href="/(app)/debug-outbox" asChild>
+            <Button label="Open outbox debug screen" variant="secondary" />
+          </Link>
+        ) : null}
 
         <Button label="Log out" variant="secondary" onPress={logout} />
       </View>

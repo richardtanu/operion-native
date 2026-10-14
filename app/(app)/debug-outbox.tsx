@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import { FlatList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout, SyncStateIndicator, type SyncState } from '../../components';
@@ -11,7 +12,15 @@ import { textStyle } from '../../theme/typeStyle';
 // the outbox can be exercised end-to-end without a real write screen:
 // enqueue a fake item, watch it go queued -> confirmed/failed, and confirm
 // a kill-and-relaunch mid-queue doesn't lose the row.
-export default function DebugOutboxScreen() {
+//
+// Never reachable in a production build: the dashboard hides its link
+// behind __DEV__, and a deep link to this route redirects away.
+export default function DebugOutboxRoute() {
+  if (!__DEV__) return <Redirect href="/(app)/dashboard" />;
+  return <DebugOutboxScreen />;
+}
+
+function DebugOutboxScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const { items, enqueue, retryItem } = useOutbox();
 
