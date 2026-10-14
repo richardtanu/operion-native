@@ -40,3 +40,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# local tunnel / backend logs written by the dev helper scripts
+*.log
+
+# per-machine Claude Code settings
+.claude/settings.local.json
