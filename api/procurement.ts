@@ -6,13 +6,17 @@ import type {
   CreatePurchaseRequestRequest,
   CreateRealisasiRequest,
   CreateSupplierRequest,
+  GoodsReceiptFilters,
   GoodsReceiptResponse,
+  ProcurementActivityEntry,
+  ProcurementActivityFilters,
   PurchaseOrderResponse,
   PurchaseRequestAuthorizationResponse,
   PurchaseRequestResponse,
   RealisasiResponse,
   RejectRequest,
   StatusHistoryEntry,
+  SupersedeRealisasiRequest,
   SupplierResponse,
 } from './types';
 
@@ -23,6 +27,13 @@ import type {
  * actions must not be queued — a queued PR approval or Realisasi creation
  * that fails silently later is worse than a refusal now.
  */
+
+function queryString(params: object): string {
+  const pairs = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
+  return pairs.length ? `?${pairs.join('&')}` : '';
+}
 
 // ---------- PROC-01/02 — Purchase Request ----------
 
@@ -99,7 +110,7 @@ export function rejectRealisasi(id: string, token: string): Promise<RealisasiRes
 }
 
 /** Correction, not edit — flips the original to SUPERSEDED and creates a new record linked by supersedesId. */
-export function supersedeRealisasi(id: string, request: CreateRealisasiRequest, token: string): Promise<RealisasiResponse> {
+export function supersedeRealisasi(id: string, request: SupersedeRealisasiRequest, token: string): Promise<RealisasiResponse> {
   return apiRequest<RealisasiResponse>(`/realisasi/${id}/supersede`, { method: 'POST', body: request, token });
 }
 
@@ -111,6 +122,16 @@ export function getRealisasiHistory(id: string, token: string): Promise<StatusHi
 
 export function createGoodsReceipt(request: CreateGoodsReceiptRequest, token: string): Promise<GoodsReceiptResponse> {
   return apiRequest<GoodsReceiptResponse>('/goods-receipts', { method: 'POST', body: request, token });
+}
+
+/** BE-08: the caller's tenant tree, newest `receivedDate` first. Absent filters are simply not sent. */
+export function listGoodsReceipts(filters: GoodsReceiptFilters, token: string): Promise<GoodsReceiptResponse[]> {
+  return apiRequest<GoodsReceiptResponse[]>(`/goods-receipts${queryString(filters)}`, { token });
+}
+
+/** An id outside the caller's tree answers exactly like a missing one. */
+export function getGoodsReceipt(id: string, token: string): Promise<GoodsReceiptResponse> {
+  return apiRequest<GoodsReceiptResponse>(`/goods-receipts/${id}`, { token });
 }
 
 export function listGoodsReceiptsByPurchaseOrder(poId: string, token: string): Promise<GoodsReceiptResponse[]> {
@@ -162,3 +183,10 @@ export function getPurchaseOrderHistory(id: string, token: string): Promise<Stat
 // client-filtered to paymentMethod=PERSONAL_REIMBURSABLE &&
 // reimbursementStatus=PENDING. No markReimbursed function exists here on
 // purpose: the backend has no endpoint for it (orphan action, don't add).
+
+// ---------- Activity log (BE-07) ----------
+
+/** Newest first, across the caller's tenant tree. 403 unless ADMIN or PROCUREMENT role, or OWNER+ scope. */
+export function getProcurementActivity(filters: ProcurementActivityFilters, token: string): Promise<ProcurementActivityEntry[]> {
+  return apiRequest<ProcurementActivityEntry[]>(`/procurement/activity${queryString(filters)}`, { token });
+}

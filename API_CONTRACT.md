@@ -4,9 +4,33 @@
 (controllers, request/response DTOs, validation annotations, service-layer checks) — not inferred from the
 mobile client, not guessed, not from any spec doc (none exists). Where the mobile app's own types previously
 disagreed with this, the app was wrong (see [Known gaps](#known-gaps-and-footguns) — `requestedBy` was the
-first one found and fixed; `receivedBy` is the same bug, not yet fixed).
+first one found and fixed; `receivedBy` was the same bug, fixed 14 Oct 2026).
 
 Regenerate this by re-reading the backend rather than hand-editing if it drifts from the code.
+
+---
+
+## Changes since BE-12 (backend `main` 19f5b73, 14 Oct 2026)
+
+Read from source in the backend repo (`c:\richards stuff\demo`). Where these contradict a section below, these win.
+
+| Change | Status / shape | Mobile handling |
+|---|---|---|
+| Permission denials | 403 (was 400). SoD violations stay 400 | Screens show the server message; PRA create maps 403 to a Manager+ message |
+| Expired or invalid JWT | 401, **plain-text** body `Invalid JWT token` (from `JwtAuthenticationFilter`) | `api/client.ts` parses non-JSON bodies; any 401 on an authed request signs the user out |
+| No token at all | 403 (backend plans to make this 401) | Only hit when signed out |
+| Unknown path / wrong method | 404 / 405 (were 500) | Outbox fails 4xx at once, retries 5xx up to 5 times |
+| `POST /auth/register` | ADMIN bearer token required; `scope` in body ignored | Unused in the app |
+| `POST /auth/login` | Unknown email 400 `Invalid credentials`; wrong password 401 | Both shown as "Email or password is incorrect." |
+| `POST /purchase-requests` | `requestedBy` must be in the caller's own tenant, else 400 `Requesting user not found in your branch` | App always sends the signed-in user |
+| `POST /purchase-authorizations`, `PATCH …/{id}/cancel` | MANAGER scope or above, else 403 (BE-13) | PROC-03 button gated `MANAGER+` |
+| PRA items | `purchasedValue`, `remainingValue` null below OWNER; `maxValue` always visible (BE-13) | Rendered masked |
+| `PurchaseOrderResponse` | `totalAmount` and item `price` null below OWNER (BE-11) | PROC-07 renders by null, no client masking |
+| `GET /goods-receipts` | Tree-scoped, newest `receivedDate` first. Filters `from`, `to` (inclusive `yyyy-MM-dd`), `receivedBy`, `path` (`PO`\|`REALISASI`, else 400) (BE-08) | PROC-05 list screen |
+| `GET /goods-receipts/{id}` | Out-of-tree id answers like a missing one | `getGoodsReceipt()` |
+| `GET /procurement/activity` | Newest-first status changes across PR, PRA, Realisasi, PO. ADMIN or PROCUREMENT role, or OWNER+ scope, else 403. Filters `from`, `to`, `tenantId`, `actorId`, `type`, `limit` (default 100, max 500) (BE-07) | `getProcurementActivity()`; no screen yet |
+| `PATCH /users/{id}/role` | ADMIN only, tree-contained, never your own role | Unused in the app |
+| Notifications | New types `PURCHASE_REQUEST_APPROVED`, `_REJECTED`, `_AUTHORIZED` (to the requester) and `PURCHASE_AUTHORIZATION_CREATED` (to PROCUREMENT users in the PRA's tenant) | The app has no notifications screen yet |
 
 ---
 
@@ -24,7 +48,8 @@ Regenerate this by re-reading the backend rather than hand-editing if it drifts 
 | `BadCredentialsException` | 401 | `{ timestamp, error: "Invalid username or password" }` |
 | Generic `RuntimeException` (most service-layer manual checks) | 400 | `{ timestamp, error }` — no `details` map, the message is the whole story |
 | Anything else | 500 | `{ timestamp, error: "Internal server error", desc }` |
-| Spring Security filter-chain rejection (e.g. missing/bad JWT) | 403 | **no body at all** — never reaches `GlobalExceptionHandler` |
+| Missing JWT (Spring Security filter chain) | 403 | **no body at all** — never reaches `GlobalExceptionHandler` |
+| Expired or malformed JWT (`JwtAuthenticationFilter`) | 401 | plain text `Invalid JWT token` — not JSON |
 
 The mobile app's `api/client.ts` already reads `details` and appends it to the thrown `ApiError.message`.
 
@@ -440,7 +465,8 @@ creates**, worth knowing if you ever see a duplicate. `orderDate` defaults to to
 `RECEIVED` or already `CANCELLED`; cancelling reverts any linked `ORDERED` PurchaseRequest back to `APPROVED`
 and unlinks it, with a history row on the PR.
 
-**`PurchaseOrderResponse` — BE-11 gap confirmed, no redaction at all:**
+**`PurchaseOrderResponse`** — the comments below describe the pre-BE-11 gap. Since 14 Oct 2026 `totalAmount` and
+every item `price` are null below OWNER (see Changes since BE-12):
 ```
 id: UUID
 poNumber: string
@@ -462,17 +488,16 @@ mobile app is correctly drawn to the *intended* redaction, not to what the backe
 ## Known gaps and footguns
 
 1. **`receivedBy` on `POST /goods-receipts` is `@NotNull` and client-supplied — not derived from the JWT.**
-   This is the exact same shape as the bug already found and fixed on `POST /purchase-requests`'s
-   `requestedBy`. The app's current `CreateGoodsReceiptRequest` type (`api/types.ts`) does **not** include
-   `receivedBy` — the Goods Receipt screen will hit the same `Validation failed — receivedBy: must not be null`
-   error the first time it's tested, until it's added the same way `requestedBy` was.
+   Same shape as `POST /purchase-requests`'s `requestedBy`. **Fixed in the app 14 Oct 2026:** the type requires
+   it and PROC-05 sends the signed-in user.
+   Related: `receivedDate` and Realisasi `purchasedAt` are `LocalDateTime`, so a bare `yyyy-MM-dd` fails to parse.
+   The screens now send `yyyy-MM-ddT00:00:00` (`lib/dates.ts`).
 2. **`SupersedeRealisasiRequest.correction` and several `*Item*.quantity`/`authorizedQty`/`purchasedQty` fields
    are effectively required but only `@Positive` (not `@NotNull`)** — a missing/null value NPEs the server as a
    500, not a clean validation `details` response. Client-side, treat these as required even though the
    backend's own validation wouldn't catch a clean `null`.
-3. **BE-11 (Purchase Order cost redaction) is real and unpatched** — `price`/`totalAmount` are visible to every
-   scope today, contrary to Realisasi's BE-06 pattern. The app draws the intended redacted state anyway per
-   explicit design direction — don't "fix" the app to match the backend's current (unintended) behavior.
+3. **BE-11 (Purchase Order cost redaction) — fixed server-side 14 Oct 2026.** `price`/`totalAmount` are null
+   below OWNER, matching Realisasi's BE-06 pattern. PROC-07 now renders by null instead of masking by scope.
 4. **`externalOrderRef` uniqueness on Realisasi is checked globally, not per-tenant** — two different tenants
    can't use the same external order reference. Probably not what a multi-tenant design intends, but that's
    what's enforced today.

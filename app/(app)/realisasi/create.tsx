@@ -22,6 +22,7 @@ import type {
 } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
+import { toLocalDateTime } from '../../../lib/dates';
 
 
 const STEPS = ['Receipt', 'Costs', 'Items'] as const;
@@ -67,6 +68,7 @@ export default function CreateRealisasiScreen() {
   const [actualUnitPrice, setActualUnitPrice] = useState('');
 
   const [supersedeTargetId, setSupersedeTargetId] = useState<string | null>(null);
+  const [supersedeReason, setSupersedeReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<RealisasiResponse | null>(null);
@@ -114,6 +116,9 @@ export default function CreateRealisasiScreen() {
     if (!channel.trim()) return setError('Channel is required.');
     if (!paymentMethod.trim()) return setError('Payment method is required.');
     if (!purchasedAt.trim()) return setError('Purchased-at date is required.');
+    const purchasedAtValue = toLocalDateTime(purchasedAt);
+    if (!purchasedAtValue) return setError('Purchased-at must be a real date in YYYY-MM-DD form.');
+    if (supersedeTargetId && !supersedeReason.trim()) return setError('Give a reason for the correction.');
     const qty = Number(purchasedQty);
     const price = Number(actualUnitPrice);
     if (!Number.isFinite(qty) || qty <= 0) return setError('Purchased quantity must be greater than zero.');
@@ -126,7 +131,7 @@ export default function CreateRealisasiScreen() {
       supplierId: supplierId ?? undefined,
       paymentMethod: paymentMethod.trim(),
       paymentRef: paymentRef.trim() || undefined,
-      purchasedAt: purchasedAt.trim(),
+      purchasedAt: purchasedAtValue,
       subtotal: Number(subtotal) || 0,
       sellerDiscount: Number(sellerDiscount) || 0,
       platformVoucher: Number(platformVoucher) || 0,
@@ -147,7 +152,7 @@ export default function CreateRealisasiScreen() {
     setSubmitting(true);
     try {
       const response = supersedeTargetId
-        ? await supersedeRealisasi(supersedeTargetId, request, token)
+        ? await supersedeRealisasi(supersedeTargetId, { reason: supersedeReason.trim(), correction: request }, token)
         : await createRealisasi(request, token);
       setResult(response);
     } catch (err) {
@@ -386,6 +391,10 @@ export default function CreateRealisasiScreen() {
               it's created.
             </Callout>
           </>
+        ) : null}
+
+        {supersedeTargetId ? (
+          <Field label="Reason for correction" value={supersedeReason} onChangeText={setSupersedeReason} placeholder="e.g. wrong unit price entered" />
         ) : null}
 
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}

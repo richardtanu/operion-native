@@ -23,10 +23,13 @@ function newLine(): Line {
 // PROC-03 — PRA Authorization. Creating this record IS the authorization —
 // there is no separate approve step. Ceilings are per line only; there is
 // deliberately no header total (open product decision, not a bug to fix).
+// Create needs MANAGER scope or above (BE-13): the Owner approves the need,
+// Manager+ sets the spending ceiling. Below that the API answers 403.
 export default function CreatePurchaseAuthorizationScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
-  const { token } = useAuth();
+  const { user, token } = useAuth();
+  const managerPlus = user?.scope === 'MANAGER' || user?.scope === 'OWNER' || user?.scope === 'PRINCIPAL';
   const [approvedPrs, setApprovedPrs] = useState<PurchaseRequestResponse[]>([]);
   const [selectedPrIds, setSelectedPrIds] = useState<string[]>([]);
   const [lines, setLines] = useState<Line[]>([newLine()]);
@@ -67,7 +70,11 @@ export default function CreatePurchaseAuthorizationScreen() {
       const response = await createPurchaseAuthorization({ purchaseRequestIds: selectedPrIds, items }, token);
       setCreated(response);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create the authorization.');
+      if (err instanceof ApiError && err.status === 403) {
+        setError('Creating an authorization needs Manager scope or above.');
+      } else {
+        setError(err instanceof ApiError ? err.message : 'Could not create the authorization.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -157,18 +164,26 @@ export default function CreatePurchaseAuthorizationScreen() {
           lines each individually within ceiling can still overrun a budget nobody stated.
         </Callout>
         <Callout>There is no approve step. Creating this record is the authorization.</Callout>
-        <Callout tone="danger">
-          Nothing notifies anyone when a PRA is created — no notification type exists for it. Purchasing finds out by
-          looking.
+        <Callout>
+          Creating this notifies the PROCUREMENT users in this branch, so purchasing knows they can buy. The request's
+          requester is told it was authorized.
         </Callout>
         <Callout tone="warning">
-          Cost fields on this screen (max value, purchased value, remaining value) are Owner+-only — below that scope
-          they come back null from the API and render masked, not as an error.
+          Purchased and remaining value are Owner+-only — below that scope they come back null from the API and render
+          masked, not as an error. The max value you set here stays visible.
         </Callout>
 
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 
-        <Button label={submitting ? 'Creating…' : 'Create (= authorize)'} onPress={handleSubmit} disabled={submitting} />
+        {!managerPlus ? <Callout tone="warning">Your scope can't create authorizations — it needs Manager or above.</Callout> : null}
+
+        <Button
+          label={submitting ? 'Creating…' : 'Create (= authorize)'}
+          variant="gated"
+          gate="MANAGER+"
+          onPress={handleSubmit}
+          disabled={submitting || !managerPlus}
+        />
       </ScrollView>
     </SafeAreaView>
   );

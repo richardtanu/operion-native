@@ -158,12 +158,14 @@ export interface PurchaseRequestAuthorizationItemResponse {
   partId: string;
   partName: string;
   authorizedQty: number;
-  /** Null below Owner scope (BE-06 redaction) — render masked, not as an error. */
+  /** The spending limit — visible at every scope (BE-13), so the buyer knows their ceiling. */
   maxValue: number | null;
   purchasedQty: number;
+  /** Null below Owner scope (BE-13) — summed from Realisasi spend, which BE-06 hides. */
   purchasedValue: number | null;
   /** Computed live, never stored — always render via Field variant="derived". */
   remainingQty: number;
+  /** Null below Owner scope too: maxValue − remainingValue would give purchasedValue straight back. */
   remainingValue: number | null;
 }
 
@@ -261,6 +263,12 @@ export interface CreateRealisasiRequest {
   items: CreateRealisasiItemRequest[];
 }
 
+/** POST /realisasi/{id}/supersede wraps the corrected record — sending a bare CreateRealisasiRequest is a 400 "Reason is required". */
+export interface SupersedeRealisasiRequest {
+  reason: string;
+  correction: CreateRealisasiRequest;
+}
+
 export interface GoodsReceiptItemResponse {
   id: string;
   partId: string;
@@ -290,10 +298,27 @@ export interface CreateGoodsReceiptItemRequest {
   quantity: number;
 }
 
+/** Which path a receipt came in on — the `path` filter on GET /goods-receipts (anything else is a 400). */
+export type GoodsReceiptPath = 'PO' | 'REALISASI';
+
+/** Optional filters on GET /goods-receipts (BE-08). Dates are inclusive `yyyy-MM-dd`. */
+export interface GoodsReceiptFilters {
+  from?: string;
+  to?: string;
+  receivedBy?: string;
+  path?: GoodsReceiptPath;
+}
+
 /** Exactly one of `purchaseOrderId` / `realisasiId` — enforced server-side, throws if both or neither. */
 export interface CreateGoodsReceiptRequest {
   purchaseOrderId?: string;
   realisasiId?: string;
+  /**
+   * Required (`@NotNull`), client-supplied like PR's `requestedBy` — not taken
+   * from the token. Must differ from the Realisasi's creator (SoD, no exemption).
+   */
+  receivedBy: string;
+  /** `LocalDateTime` server-side: send `yyyy-MM-ddTHH:mm:ss` — a bare date fails to parse. */
   receivedDate: string;
   notes?: string;
   items: CreateGoodsReceiptItemRequest[];
@@ -320,12 +345,8 @@ export interface PurchaseOrderItemResponse {
   partId: string;
   partName: string;
   quantity: number;
-  /**
-   * Not yet redacted server-side below Owner (BE-11 open) — this app masks
-   * it client-side by the viewer's own scope anyway, per the brief's
-   * explicit instruction to draw the intended state, not today's bug.
-   */
-  price: number;
+  /** Null below Owner scope (BE-11, redacted server-side) — render masked, not as an error. */
+  price: number | null;
 }
 
 export interface PurchaseOrderResponse {
@@ -335,8 +356,8 @@ export interface PurchaseOrderResponse {
   supplierId: string | null;
   supplierName: string | null;
   orderDate: string | null;
-  /** Same BE-11 caveat as PurchaseOrderItemResponse.price. */
-  totalAmount: number;
+  /** Null below Owner scope (BE-11), same as PurchaseOrderItemResponse.price. */
+  totalAmount: number | null;
   items: PurchaseOrderItemResponse[];
   purchaseRequestIds: string[];
   createdAt: string;
@@ -352,4 +373,39 @@ export interface CreatePurchaseOrderRequest {
   supplierId?: string;
   purchaseRequestIds?: string[];
   items: CreatePurchaseOrderItemRequest[];
+}
+
+// ---------- Procurement activity log (BE-07) ----------
+
+export type ProcurementEntityType = 'PURCHASE_REQUEST' | 'PURCHASE_REQUEST_AUTHORIZATION' | 'REALISASI' | 'PURCHASE_ORDER';
+
+/**
+ * One status change on a PR, PRA, Realisasi or PO. Readable by ADMIN or
+ * PROCUREMENT role, or OWNER+ scope — 403 for anyone else.
+ */
+export interface ProcurementActivityEntry {
+  at: string;
+  entityType: ProcurementEntityType;
+  entityId: string;
+  /** PO number or Realisasi external order ref, where one exists. */
+  reference: string | null;
+  tenantId: string;
+  tenantName: string;
+  /** Null for a system-derived change (e.g. a PRA recomputed to FULFILLED) or a row written before BE-07. */
+  actorId: string | null;
+  actorName: string | null;
+  /** Null means the record was created. */
+  previousStatus: string | null;
+  newStatus: string;
+  reason: string | null;
+}
+
+/** Optional filters on GET /procurement/activity. `limit` defaults to 100 server-side, max 500. */
+export interface ProcurementActivityFilters {
+  from?: string;
+  to?: string;
+  tenantId?: string;
+  actorId?: string;
+  type?: ProcurementEntityType;
+  limit?: number;
 }

@@ -10,6 +10,7 @@ import { ApiError } from '../../../api/httpError';
 import type { GoodsReceiptResponse, PurchaseOrderResponse, RealisasiResponse } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
+import { toLocalDateTime } from '../../../lib/dates';
 
 
 type Via = 'po' | 'realisasi';
@@ -65,9 +66,11 @@ export default function CreateGoodsReceiptScreen() {
     if (!selectedPartId) return setError('Select an item to receive.');
     if (attachmentMissing) return setError('Cannot receive — no attachment on file for this realisasi.');
     if (!receivedDate.trim()) return setError('Received date is required.');
+    const receivedAt = toLocalDateTime(receivedDate);
+    if (!receivedAt) return setError('Received date must be a real date in YYYY-MM-DD form.');
     const qty = Number(quantity);
     if (!Number.isFinite(qty) || qty <= 0) return setError('Quantity must be greater than zero.');
-    if (!token) return setError('Not signed in.');
+    if (!token || !user) return setError('Not signed in.');
 
     setSubmitting(true);
     try {
@@ -75,7 +78,10 @@ export default function CreateGoodsReceiptScreen() {
         {
           purchaseOrderId: via === 'po' ? selectedPo!.id : undefined,
           realisasiId: via === 'realisasi' ? selectedRealisasi!.id : undefined,
-          receivedDate: receivedDate.trim(),
+          // The receiver is whoever is holding the device — the API takes it
+          // from the body, not the token.
+          receivedBy: user.id,
+          receivedDate: receivedAt,
           notes: notes.trim() || undefined,
           items: [{ partId: selectedPartId, realisasiItemId: via === 'realisasi' ? (realisasiItemId ?? undefined) : undefined, quantity: qty }],
         },

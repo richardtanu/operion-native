@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { AlertTriangle } from 'lucide-react-native';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout, Card, Chip, Field, Row, Section } from '../../../components';
@@ -24,14 +23,12 @@ function newLine(): Line {
 
 // PROC-07 — Purchase Order (franchise leg). Outlet-to-centre restock,
 // running parallel to PRA/Realisasi, not a marketplace purchase. Cost
-// fields (totalAmount, price) are masked here by the viewer's own scope
-// even though the backend doesn't redact them yet (BE-11 open) — the
-// brief's explicit instruction: draw the intended state, not today's bug.
+// fields (totalAmount, price) come back null below Owner scope (BE-11,
+// redacted server-side) — a null renders masked, never as an error.
 export default function CreatePurchaseOrderScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
-  const { user, token } = useAuth();
-  const ownerPlus = user?.scope === 'OWNER' || user?.scope === 'PRINCIPAL';
+  const { token } = useAuth();
 
   const [suppliers, setSuppliers] = useState<SupplierResponse[]>([]);
   const [approvedPrs, setApprovedPrs] = useState<PurchaseRequestResponse[]>([]);
@@ -111,7 +108,7 @@ export default function CreatePurchaseOrderScreen() {
                 <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
                 <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>{item.quantity}</Text>
               </Row>
-              {ownerPlus ? (
+              {item.price != null ? (
                 <Text style={{ ...textStyle(typeScale.value), color: color.ink, marginTop: 4 }}>{rp(item.price)}</Text>
               ) : (
                 <Text style={{ ...textStyle(typeScale.helper), color: color.mute, marginTop: 4 }}>Price hidden below Owner scope</Text>
@@ -119,25 +116,12 @@ export default function CreatePurchaseOrderScreen() {
             </Card>
           ))}
 
-          {ownerPlus ? (
+          {created.totalAmount != null ? (
             <Card>
               <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute }}>Total</Text>
               <Text style={{ ...textStyle(typeScale.valueLarge), color: color.ink }}>{rp(created.totalAmount)}</Text>
             </Card>
           ) : null}
-
-          <Card tone="danger">
-            <View className="flex-row items-start" style={{ gap: 8 }}>
-              <AlertTriangle size={16} color={color.danger} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...textStyle(typeScale.cardTitle), fontSize: 16, color: color.danger }}>BE-11 open — redaction not live</Text>
-                <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 2 }}>
-                  The backend returns total and price to every scope today; this screen masks them below Owner on the
-                  client so it matches the intended state, not the current gap.
-                </Text>
-              </View>
-            </View>
-          </Card>
 
           {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
 
@@ -224,8 +208,8 @@ export default function CreatePurchaseOrderScreen() {
         <Button label="+ Add line" variant="secondary" onPress={addLine} />
         <Callout>Flat price only. No cost components, no landed cost, no conversion factor on this path.</Callout>
         <Callout tone="warning">
-          Total and per-line price only show above once created, and only to Owner+ — the backend hasn't caught up to
-          that redaction yet (BE-11), but this client enforces it anyway.
+          Total and per-line price only show once created, and only to Owner+ — below that scope the API returns
+          them empty.
         </Callout>
 
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
