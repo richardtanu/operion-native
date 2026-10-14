@@ -111,6 +111,15 @@ export async function markFailed(id: string, error: string): Promise<void> {
   );
 }
 
+/** A transient failure (offline, server error): back to pending for the next pass, with the attempt counted. */
+export async function markRetryable(id: string, error: string): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    `UPDATE ${OUTBOX_TABLE} SET status = 'pending', attempts = attempts + 1, last_error = ?, revision = revision + 1 WHERE id = ?`,
+    [error, id],
+  );
+}
+
 /** Resets a failed item back to pending so the processor picks it up again. */
 export async function retry(id: string): Promise<void> {
   const db = await getDb();
