@@ -1,8 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Chip, type ChipTone } from './Chip';
-import * as tokens from '../theme/tokens';
-
-const { color, font } = tokens;
+import { useTheme } from '../theme/ThemeContext';
 
 export type SyncState = 'queued' | 'confirmed' | 'failed';
 
@@ -23,6 +21,7 @@ const stateConfig: Record<SyncState, { label: string; tone: ChipTone }> = {
 // writes through the outbox — "a scan that goes into the outbox is not an
 // error": three visual states, not two: confirmed, queued, failed.
 export function SyncStateIndicator({ state, onRetry, note }: SyncStateIndicatorProps) {
+  const { color, font } = useTheme();
   const { label, tone } = stateConfig[state];
 
   return (

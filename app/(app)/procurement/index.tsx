@@ -2,10 +2,9 @@ import { Link, type Href } from 'expo-router';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../components';
-import * as tokens from '../../../theme/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
 const SCREENS: { code: string; label: string; href: Href }[] = [
   { code: 'PROC-01', label: 'New purchase request', href: '/(app)/purchase-requests/create' },
@@ -23,6 +22,7 @@ const SCREENS: { code: string; label: string; href: Href }[] = [
 // process), so this menu is the real navigation home for the one module
 // that has.
 export default function ProcurementMenuScreen() {
+  const { color, type: typeScale } = useTheme();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
       <View className="flex-1 gap-md px-xl pt-xl">

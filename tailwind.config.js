@@ -1,4 +1,4 @@
-const { color, space, radius } = require('./theme/tokens.js');
+const { space, radius } = require('./theme/tokens.js');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -6,12 +6,14 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
-      // Flat palette, not nested — matches theme/tokens.js's `color` export
-      // directly (ground/surface/panel/derived/ink/steel/mute/line/hair/tag/
-      // good/warn/danger/info). The semantic `type` scale (screenTitle,
-      // fieldLabel, etc.) isn't linear, so components pull it from
-      // theme/tokens.js via inline style instead of a Tailwind fontSize scale.
-      colors: { ...color },
+      // Color intentionally NOT registered here. Colors now resolve
+      // per-tenant at runtime via theme/ThemeContext.tsx's useTheme(), and
+      // every component reads them through inline `style`, never a
+      // Tailwind class — a `colors` extension here would be frozen to
+      // theme/tokens.js's default palette at build time and silently lie
+      // for any tenant on a different theme. Spacing/radius stay universal
+      // (layout doesn't vary per tenant, only the skin does), so those two
+      // are still fine to load statically from the default token set.
       spacing: {
         xs: `${space.xs}px`,
         sm: `${space.sm}px`,

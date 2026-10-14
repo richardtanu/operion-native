@@ -1,14 +1,13 @@
 import type { PropsWithChildren } from 'react';
 import { View } from 'react-native';
-import * as tokens from '../theme/tokens';
-
-const { color, tone: toneColors, radius, border } = tokens;
+import { useTheme } from '../theme/ThemeContext';
 
 export type CardTone = 'neutral' | 'success' | 'warning' | 'danger';
 
 type CardProps = PropsWithChildren<{ tone?: CardTone }>;
 
 export function Card({ tone, children }: CardProps) {
+  const { color, tone: toneColors, radius, border } = useTheme();
   return (
     <View
       style={{

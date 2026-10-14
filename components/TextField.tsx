@@ -1,8 +1,6 @@
 import { Text, TextInput, View, type TextInputProps } from 'react-native';
-import * as tokens from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 import { textStyle } from '../theme/typeStyle';
-
-const { color, font, type: typeScale, radius, border } = tokens;
 
 type TextFieldProps = TextInputProps & {
   label: string;
@@ -21,6 +19,7 @@ type TextFieldProps = TextInputProps & {
 // value is money, a quantity, an ID, or a picker — TextField is for
 // ordinary text entry only.
 export function TextField({ label, variant = 'editable', error, style, ...inputProps }: TextFieldProps) {
+  const { color, font, type: typeScale, radius, border } = useTheme();
   const isReadonly = variant === 'readonly-derived';
 
   return (

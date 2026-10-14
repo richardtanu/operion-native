@@ -1,15 +1,17 @@
 /**
- * Operion design tokens.
+ * Operion design tokens — the DEFAULT theme (every tenant gets this unless
+ * theme/ThemeContext.tsx's THEMES_BY_TENANT overrides it for their
+ * tenantCode; see theme/themes/tacticalGreen.ts for the one that does).
  *
  * Plain JS on purpose — tailwind.config loads this via Node `require`,
- * which can't parse TS. Types live in tokens.d.ts.
+ * which can't parse TS. Types live in tokens.d.ts. Only spacing/radius are
+ * actually pulled into Tailwind though — colors are runtime/per-tenant via
+ * useTheme(), never a Tailwind class, so a color changes here still only
+ * changes it for tenants on this theme, not globally.
  *
  * Direction: a range safety board. Concrete ground, stencilled labels,
  * hazard yellow as the single loud element. Built for a shared tablet
  * held one-handed in mixed light, not a desk.
- *
- * Replaces the unbranded placeholder set. Every value below is used by
- * the Module 1 screens; nothing here is speculative.
  */
 
 const color = {

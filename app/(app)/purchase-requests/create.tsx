@@ -1,34 +1,46 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, Field, Row, Section } from '../../../components';
+import { Button, Callout, Card, Chip, Field, Row, Section, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { createPurchaseRequest } from '../../../api/procurement';
+import { listParts } from '../../../api/parts';
 import { ApiError } from '../../../api/httpError';
-import type { PurchaseRequestResponse } from '../../../api/types';
-import * as tokens from '../../../theme/tokens';
+import type { PartResponse, PurchaseRequestResponse } from '../../../api/types';
+import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
-type Line = { key: string; partId: string; quantity: string };
+type Line = { key: string; partId: string; partName: string; quantity: string };
 
 let lineKeySeq = 0;
 function newLine(): Line {
   lineKeySeq += 1;
-  return { key: `line-${lineKeySeq}`, partId: '', quantity: '' };
+  return { key: `line-${lineKeySeq}`, partId: '', partName: '', quantity: '' };
 }
 
 // PROC-01 — Purchase Request Create. Blocking-error, manual-retry: calls
 // api/procurement.ts directly, never through the outbox.
 export default function CreatePurchaseRequestScreen() {
+  const { color, type: typeScale } = useTheme();
   const router = useRouter();
   const { user, token } = useAuth();
   const [lines, setLines] = useState<Line[]>([newLine()]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<PurchaseRequestResponse | null>(null);
+
+  const [parts, setParts] = useState<PartResponse[]>([]);
+  const [partsLoading, setPartsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+    listParts(token)
+      .then((all) => setParts(all.filter((p) => !p.retired)))
+      .catch(() => setParts([]))
+      .finally(() => setPartsLoading(false));
+  }, [token]);
 
   const updateLine = (key: string, patch: Partial<Line>) =>
     setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
@@ -46,10 +58,11 @@ export default function CreatePurchaseRequestScreen() {
       return setError('Every line needs a quantity greater than zero.');
     }
     if (!token) return setError('Not signed in.');
+    if (!user?.id) return setError('Could not determine the current user — try signing in again.');
 
     setSubmitting(true);
     try {
-      const response = await createPurchaseRequest({ items }, token);
+      const response = await createPurchaseRequest({ requestedBy: user.id, items }, token);
       setCreated(response);
       setLines([newLine()]);
     } catch (err) {
@@ -90,9 +103,26 @@ export default function CreatePurchaseRequestScreen() {
         {lines.map((line) => (
           <Card key={line.key}>
             <Row>
-              <Field label="Part" value={line.partId} onChangeText={(v) => updateLine(line.key, { partId: v })} placeholder="Part ID" />
+              <SelectField
+                label="Part"
+                value={line.partId || null}
+                loading={partsLoading}
+                placeholder="Select part…"
+                items={parts.map((p) => ({
+                  id: p.id,
+                  label: p.name,
+                  // sublabel: [p.brand, p.categoryName].filter(Boolean).join(' · ') || undefined,
+                  group: p.partTypeName ?? 'Uncategorized',
+                }))}
+                onChange={(id) => {
+                  const part = parts.find((p) => p.id === id);
+                  if (part) updateLine(line.key, { partId: part.id, partName: part.name });
+                }}
+              />
               <View style={{ width: 82 }}>
-                <Field label="Qty" value={line.quantity} onChangeText={(v) => updateLine(line.key, { quantity: v })} placeholder="—" mono keyboardType="numeric" />
+                <Field label="Qty" value={line.quantity} onChangeText={(v) => updateLine(line.key, { quantity: v })} 
+                placeholder=" " 
+                mono keyboardType="numeric" />
               </View>
             </Row>
             {lines.length > 1 ? (
@@ -113,12 +143,15 @@ export default function CreatePurchaseRequestScreen() {
 
         <Callout>No cost fields on this screen — quantity only. Pricing enters at Realisasi, not here.</Callout>
         <Callout tone="warning">No role or scope gate: anyone signed in can submit.</Callout>
-        <Callout tone="warning">
-          No verified endpoint exists in this module for browsing parts, so Part is entered manually here rather than
-          picked from a list.
-        </Callout>
 
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
+
+        {!partsLoading && parts.length === 0 ? (
+          <Callout tone="warning">
+            No parts found. Create one in the Parts module first — Purchase Requests can't reference a part that
+            doesn't exist yet.
+          </Callout>
+        ) : null}
 
         <Button label={submitting ? 'Creating…' : 'Create Request'} onPress={handleSubmit} disabled={submitting} />
       </ScrollView>

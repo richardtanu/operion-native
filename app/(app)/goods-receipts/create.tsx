@@ -8,10 +8,9 @@ import { useAuth } from '../../../auth/AuthContext';
 import { createGoodsReceipt, getRealisasi, listPurchaseOrders, listRealisasi } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
 import type { GoodsReceiptResponse, PurchaseOrderResponse, RealisasiResponse } from '../../../api/types';
-import * as tokens from '../../../theme/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
 type Via = 'po' | 'realisasi';
 
@@ -21,6 +20,7 @@ type Via = 'po' | 'realisasi';
 // the wireframe brief's own "web/back-office only" recommendation for this
 // screen.
 export default function CreateGoodsReceiptScreen() {
+  const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
   const { user, token } = useAuth();
   const [via, setVia] = useState<Via>('realisasi');
@@ -97,7 +97,7 @@ export default function CreateGoodsReceiptScreen() {
           {result.items.map((item) => (
             <Card key={item.id}>
               <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
-              <View style={{ marginTop: 8, borderTopWidth: tokens.border.hair, borderTopColor: color.hair }}>
+              <View style={{ marginTop: 8, borderTopWidth: border.hair, borderTopColor: color.hair }}>
                 <KV k="Received (stock units)" v={String(item.quantity)} strong />
               </View>
             </Card>
@@ -145,9 +145,9 @@ export default function CreateGoodsReceiptScreen() {
                   setSelectedPartId(null);
                 }}
                 style={{
-                  borderWidth: tokens.border.base,
+                  borderWidth: border.base,
                   borderColor: selectedPo?.id === po.id ? color.ink : color.hair,
-                  borderRadius: tokens.radius.sm,
+                  borderRadius: radius.sm,
                   padding: 10,
                   backgroundColor: color.panel,
                 }}
@@ -164,9 +164,9 @@ export default function CreateGoodsReceiptScreen() {
                   setSelectedPartId(null);
                 }}
                 style={{
-                  borderWidth: tokens.border.base,
+                  borderWidth: border.base,
                   borderColor: selectedRealisasi?.id === r.id ? color.ink : color.hair,
-                  borderRadius: tokens.radius.sm,
+                  borderRadius: radius.sm,
                   padding: 10,
                   backgroundColor: color.panel,
                 }}
@@ -189,9 +189,9 @@ export default function CreateGoodsReceiptScreen() {
                   }
                 }}
                 style={{
-                  borderWidth: tokens.border.base,
+                  borderWidth: border.base,
                   borderColor: selectedPartId === item.partId ? color.ink : color.hair,
-                  borderRadius: tokens.radius.sm,
+                  borderRadius: radius.sm,
                   padding: 10,
                   backgroundColor: color.panel,
                 }}

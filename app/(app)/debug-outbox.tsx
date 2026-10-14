@@ -3,16 +3,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout, SyncStateIndicator, type SyncState } from '../../components';
 import { useOutbox } from '../../outbox/OutboxProvider';
 import type { OutboxItem, OutboxStatus } from '../../outbox/types';
-import * as tokens from '../../theme/tokens';
+import { useTheme } from '../../theme/ThemeContext';
 import { textStyle } from '../../theme/typeStyle';
 
-const { color, type: typeScale, radius, border } = tokens;
 
 // Dev-only verification screen — not part of any designed flow. Exists so
 // the outbox can be exercised end-to-end without a real write screen:
 // enqueue a fake item, watch it go queued -> confirmed/failed, and confirm
 // a kill-and-relaunch mid-queue doesn't lose the row.
 export default function DebugOutboxScreen() {
+  const { color, type: typeScale, radius, border } = useTheme();
   const { items, enqueue, retryItem } = useOutbox();
 
   return (
@@ -71,6 +71,7 @@ function toSyncState(status: OutboxStatus): SyncState {
 }
 
 function OutboxRow({ item, onRetry }: { item: OutboxItem; onRetry: () => void }) {
+  const { color, type: typeScale, radius, border } = useTheme();
   return (
     <View
       style={{

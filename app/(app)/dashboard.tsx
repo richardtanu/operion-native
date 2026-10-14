@@ -3,16 +3,16 @@ import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout } from '../../components';
 import { useAuth } from '../../auth/AuthContext';
-import * as tokens from '../../theme/tokens';
+import { useTheme } from '../../theme/ThemeContext';
 import { textStyle } from '../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
 // Scaffolding proof, not a designed screen — module 3 (outlet operator /
 // scan loop) hasn't been through the plan's screen-inventory-and-gates
 // process yet, so there's nothing real to build here beyond an entry point
 // into Procurement (module 1, the one module that has gone through it).
 export default function DashboardScreen() {
+  const { color, type: typeScale } = useTheme();
   const { logout } = useAuth();
 
   return (

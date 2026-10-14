@@ -40,10 +40,17 @@ export async function apiRequest<TResponse>(path: string, options: RequestOption
 
   if (!response.ok) {
     const errorBody = data && typeof data === 'object' ? data : {};
-    const message =
+    const baseMessage =
       ('error' in errorBody && String(errorBody.error)) ||
       ('message' in errorBody && String(errorBody.message)) ||
       response.statusText;
+    // GlobalExceptionHandler puts per-field messages here on a validation
+    // failure (e.g. {requestedBy: "must not be null"}) but the top-level
+    // `error` string is always the generic "Validation failed" — without
+    // this the UI has no way to say what actually needs fixing.
+    const details = 'details' in errorBody && errorBody.details && typeof errorBody.details === 'object' ? (errorBody.details as Record<string, unknown>) : null;
+    const detailText = details ? Object.entries(details).map(([field, msg]) => `${field}: ${msg}`).join('; ') : null;
+    const message = detailText ? `${baseMessage} — ${detailText}` : baseMessage;
     throw new ApiError(response.status, message, data);
   }
 

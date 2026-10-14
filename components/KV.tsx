@@ -1,7 +1,5 @@
 import { Text, View } from 'react-native';
-import * as tokens from '../theme/tokens';
-
-const { color, font } = tokens;
+import { useTheme } from '../theme/ThemeContext';
 
 type KVProps = {
   k: string;
@@ -15,6 +13,7 @@ type KVProps = {
 // Key/value row for card summaries (PRA consumption, Realisasi totals,
 // goods-receipt purchased-vs-received). Matches base_design's KV().
 export function KV({ k, v, strong, derived }: KVProps) {
+  const { color, font } = useTheme();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, paddingVertical: 5 }}>
       <Text style={{ fontFamily: font.body, fontSize: 13, color: color.steel }}>{k}</Text>

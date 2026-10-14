@@ -6,10 +6,9 @@ import { useAuth } from '../../../auth/AuthContext';
 import { createSupplier, listSuppliers } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
 import type { SupplierResponse } from '../../../api/types';
-import * as tokens from '../../../theme/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
 // PROC-06 — Supplier Management. Suppliers are managed centrally at the
 // root tenant. UserProfileResponse carries no tenant-hierarchy field, so
@@ -17,6 +16,7 @@ const { color, type: typeScale } = tokens;
 // before the tap — submit normally and surface the server's actual refusal
 // clearly, rather than fabricating a client-side check.
 export default function SuppliersScreen() {
+  const { color, type: typeScale } = useTheme();
   const { token } = useAuth();
   const [suppliers, setSuppliers] = useState<SupplierResponse[]>([]);
   const [loading, setLoading] = useState(true);

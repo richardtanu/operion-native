@@ -1,8 +1,6 @@
 import { Pressable, Text, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
-import * as tokens from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 import { textStyle } from '../theme/typeStyle';
-
-const { color, font, type: typeScale, radius, border } = tokens;
 
 type ButtonVariant = 'primary' | 'secondary' | 'gated';
 
@@ -21,10 +19,25 @@ type ButtonProps = Omit<PressableProps, 'children' | 'style'> & {
 };
 
 export function Button({ label, variant = 'primary', gate, disabled, style, ...pressableProps }: ButtonProps) {
+  const { color, font, type: typeScale, radius, border, glow } = useTheme();
+
   const backgroundColor = disabled ? color.line : variant === 'primary' ? color.ink : 'transparent';
   const textColor = disabled ? color.panel : variant === 'primary' ? color.panel : color.ink;
   const borderColor = variant === 'gated' ? color.tag : variant === 'secondary' ? color.line : 'transparent';
   const borderWidth = variant === 'gated' ? border.strong : variant === 'secondary' ? border.base : 0;
+  // HUD themes only: a soft glow on the two "do something" variants, not on
+  // plain secondary buttons — matches the theme's own gatedAction/ink accent
+  // rather than being a generic effect slapped on everything.
+  const glowStyle =
+    glow && !disabled && (variant === 'primary' || variant === 'gated')
+      ? {
+          shadowColor: variant === 'gated' ? color.tag : glow.color,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.8,
+          shadowRadius: glow.radius,
+          elevation: 6,
+        }
+      : null;
 
   return (
     <Pressable
@@ -45,6 +58,7 @@ export function Button({ label, variant = 'primary', gate, disabled, style, ...p
           borderWidth,
           borderColor,
         },
+        glowStyle,
         style,
       ]}
       {...pressableProps}

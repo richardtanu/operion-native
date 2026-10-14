@@ -7,10 +7,9 @@ import { useAuth } from '../../../auth/AuthContext';
 import { listRealisasi } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
 import type { RealisasiResponse } from '../../../api/types';
-import * as tokens from '../../../theme/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
 const rp = (n: number | null | undefined) => (n == null ? '—' : `Rp ${Math.round(n).toLocaleString('id-ID')}`);
 
@@ -19,6 +18,7 @@ const rp = (n: number | null | undefined) => (n == null ? '—' : `Rp ${Math.rou
 // don't add). Filter is applied on the device; the API has no filter for
 // this, so it can't paginate correctly once the list grows.
 export default function ReimbursementsScreen() {
+  const { color, type: typeScale } = useTheme();
   const { token } = useAuth();
   const [items, setItems] = useState<RealisasiResponse[]>([]);
   const [loading, setLoading] = useState(true);

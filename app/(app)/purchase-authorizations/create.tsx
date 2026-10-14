@@ -8,10 +8,9 @@ import { useAuth } from '../../../auth/AuthContext';
 import { createPurchaseAuthorization, listPurchaseRequests } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
 import type { PurchaseRequestAuthorizationResponse, PurchaseRequestResponse } from '../../../api/types';
-import * as tokens from '../../../theme/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
 type Line = { key: string; partId: string; authorizedQty: string; maxValue: string };
 
@@ -25,6 +24,7 @@ function newLine(): Line {
 // there is no separate approve step. Ceilings are per line only; there is
 // deliberately no header total (open product decision, not a bug to fix).
 export default function CreatePurchaseAuthorizationScreen() {
+  const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
   const { token } = useAuth();
   const [approvedPrs, setApprovedPrs] = useState<PurchaseRequestResponse[]>([]);
@@ -123,12 +123,12 @@ export default function CreatePurchaseAuthorizationScreen() {
                 style={{
                   width: 19,
                   height: 19,
-                  borderWidth: tokens.border.base,
+                  borderWidth: border.base,
                   borderColor: color.ink,
                   backgroundColor: selectedPrIds.includes(pr.id) ? color.ink : 'transparent',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: tokens.radius.sm,
+                  borderRadius: radius.sm,
                 }}
               >
                 {selectedPrIds.includes(pr.id) ? <Check size={13} color={color.tag} /> : null}

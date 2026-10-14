@@ -9,6 +9,7 @@ import { Barlow_400Regular, Barlow_500Medium } from '@expo-google-fonts/barlow';
 import { BarlowCondensed_600SemiBold, BarlowCondensed_700Bold } from '@expo-google-fonts/barlow-condensed';
 import { IBMPlexMono_400Regular, IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono';
 import { AuthProvider, useAuth } from '../auth/AuthContext';
+import { ThemeProvider } from '../theme/ThemeContext';
 import { OutboxProvider } from '../outbox/OutboxProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -44,9 +45,11 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <OutboxProvider>
-          <AppShell fontsLoaded={fontsLoaded} />
-        </OutboxProvider>
+        <ThemeProvider>
+          <OutboxProvider>
+            <AppShell fontsLoaded={fontsLoaded} />
+          </OutboxProvider>
+        </ThemeProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

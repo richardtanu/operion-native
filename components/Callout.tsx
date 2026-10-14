@@ -1,9 +1,7 @@
 import type { PropsWithChildren } from 'react';
 import { Text, View } from 'react-native';
-import * as tokens from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 import { textStyle } from '../theme/typeStyle';
-
-const { color, tone: toneColors, font, type: typeScale, radius, border } = tokens;
 
 export type CalloutTone = 'neutral' | 'success' | 'warning' | 'danger';
 
@@ -12,18 +10,19 @@ type CalloutProps = PropsWithChildren<{
   tone?: CalloutTone;
 }>;
 
-const TINT_BG: Record<CalloutTone, string> = {
-  neutral: 'transparent',
-  success: `${toneColors.success}0F`,
-  warning: `${toneColors.warning}0F`,
-  danger: `${toneColors.danger}0F`,
-};
-
 // Dashed-border note box. Used to record what a build revealed that a
 // screen record didn't anticipate, or to surface an open question visibly
 // instead of silently resolving it — never used to answer the question.
 export function Callout({ title, tone = 'neutral', children }: CalloutProps) {
+  const { color, tone: toneColors, font, type: typeScale, radius, border } = useTheme();
   const c = tone === 'neutral' ? color.steel : toneColors[tone];
+  const tintBg: Record<CalloutTone, string> = {
+    neutral: 'transparent',
+    success: `${toneColors.success}0F`,
+    warning: `${toneColors.warning}0F`,
+    danger: `${toneColors.danger}0F`,
+  };
+
   return (
     <View
       style={{
@@ -32,7 +31,7 @@ export function Callout({ title, tone = 'neutral', children }: CalloutProps) {
         borderColor: c,
         borderRadius: radius.sm,
         padding: 9,
-        backgroundColor: TINT_BG[tone],
+        backgroundColor: tintBg[tone],
         gap: 4,
       }}
     >

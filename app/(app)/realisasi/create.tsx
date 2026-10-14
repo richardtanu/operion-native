@@ -20,10 +20,9 @@ import type {
   RealisasiResponse,
   SupplierResponse,
 } from '../../../api/types';
-import * as tokens from '../../../theme/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
 const STEPS = ['Receipt', 'Costs', 'Items'] as const;
 
@@ -41,6 +40,7 @@ type PraLineOption = {
 // error if collapsed), two independent status dimensions, supersede-not-
 // edit correction.
 export default function CreateRealisasiScreen() {
+  const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
   const { user, token } = useAuth();
   const [step, setStep] = useState<0 | 1 | 2>(0);
@@ -217,7 +217,7 @@ export default function CreateRealisasiScreen() {
           {result.items.map((item) => (
             <Card key={item.id}>
               <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
-              <View style={{ marginTop: 8, borderTopWidth: tokens.border.hair, borderTopColor: color.hair }}>
+              <View style={{ marginTop: 8, borderTopWidth: border.hair, borderTopColor: color.hair }}>
                 <KV k={`Purchased (${item.purchaseUom})`} v={String(item.purchasedQty)} strong />
                 <KV k="Allocated landed cost" v={rp(item.allocatedLandedCost)} derived />
               </View>
@@ -284,9 +284,9 @@ export default function CreateRealisasiScreen() {
                     key={opt.item.id}
                     onPress={() => setSelectedLine(opt)}
                     style={{
-                      borderWidth: tokens.border.base,
+                      borderWidth: border.base,
                       borderColor: selectedLine?.item.id === opt.item.id ? color.ink : color.hair,
-                      borderRadius: tokens.radius.sm,
+                      borderRadius: radius.sm,
                       padding: 10,
                       backgroundColor: color.panel,
                     }}
@@ -311,9 +311,9 @@ export default function CreateRealisasiScreen() {
                   key={s.id}
                   onPress={() => setSupplierId(s.id)}
                   style={{
-                    borderWidth: tokens.border.base,
+                    borderWidth: border.base,
                     borderColor: supplierId === s.id ? color.ink : color.hair,
-                    borderRadius: tokens.radius.sm,
+                    borderRadius: radius.sm,
                     padding: 10,
                     backgroundColor: color.panel,
                   }}

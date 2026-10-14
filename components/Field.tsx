@@ -1,10 +1,8 @@
 import { Pressable, Text, TextInput, View, type TextInputProps } from 'react-native';
 import { ChevronRight, Lock } from 'lucide-react-native';
-import * as tokens from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 import { textStyle } from '../theme/typeStyle';
 import { FieldLabel } from './FieldLabel';
-
-const { color, font, type: typeScale, radius, border } = tokens;
 
 type FieldVariant = 'edit' | 'derived' | 'picker';
 
@@ -44,6 +42,7 @@ export function Field({
   autoCapitalize,
   secureTextEntry,
 }: FieldProps) {
+  const { color, font, type: typeScale, radius, border } = useTheme();
   const isDerived = variant === 'derived';
   const isPicker = variant === 'picker';
   const isEmpty = !value;

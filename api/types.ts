@@ -51,6 +51,8 @@ export interface UserProfileResponse {
   fullName: string;
   role: Role;
   scope: Scope | null;
+  /** Tenant.code (e.g. "BLITZ_BDG") — added specifically so the client can theme itself per tenant. */
+  tenantCode: string;
 }
 
 /**
@@ -66,19 +68,38 @@ export interface UserProfileResponse {
 /** Six real values, not a two-state flow. */
 export type PurchaseRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'ORDERED' | 'AUTHORIZED' | 'CANCELLED';
 
+/**
+ * Owned by the Part module, not Procurement — confirmed against
+ * PartController.java / PartResponse.java (c:\demo, module/part). Listed
+ * here because PROC-01/03/04/05/07 all reference partId and need real
+ * options to pick from; only the fields the picker UI actually renders are
+ * kept, the rest of PartResponse (stock levels, reorder policy, etc.) is
+ * out of scope for Procurement screens.
+ */
+export interface PartResponse {
+  id: string;
+  name: string;
+  brand: string | null;
+  categoryName: string | null;
+  /** Distinct from category on the backend (partTypeId/partTypeName are their own field pair) — used to segment the Part picker. */
+  partTypeName: string | null;
+  retired: boolean;
+}
+
 export interface CreatePurchaseRequestItemRequest {
   partId: string;
   quantity: number;
 }
 
 /**
- * `requestedBy` is confirmed to exist server-side but the record doesn't
- * say whether the client supplies it or the server derives it from the
- * auth token. Every other write in this app infers the actor from the
- * bearer token, so this follows that pattern rather than inventing a
- * `requestedById` request field the spec never confirmed.
+ * `requestedBy` is a required UUID on the request body — confirmed against
+ * `CreatePurchaseRequestRequest.java` (`@NotNull`), not derived from the
+ * bearer token server-side like most other writes in this app. Omitting it
+ * fails Bean Validation with a generic "Validation failed" error and no
+ * hint which field is missing (see api/client.ts's `details` handling).
  */
 export interface CreatePurchaseRequestRequest {
+  requestedBy: string;
   items: CreatePurchaseRequestItemRequest[];
 }
 

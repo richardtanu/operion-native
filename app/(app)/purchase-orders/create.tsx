@@ -8,10 +8,9 @@ import { useAuth } from '../../../auth/AuthContext';
 import { cancelPurchaseOrder, createPurchaseOrder, listPurchaseRequests, listSuppliers, sendPurchaseOrder } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
 import type { PurchaseOrderResponse, PurchaseRequestResponse, SupplierResponse } from '../../../api/types';
-import * as tokens from '../../../theme/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
 const rp = (n: number | null | undefined) => (n == null ? '—' : `Rp ${Math.round(n).toLocaleString('id-ID')}`);
 
@@ -29,6 +28,7 @@ function newLine(): Line {
 // even though the backend doesn't redact them yet (BE-11 open) — the
 // brief's explicit instruction: draw the intended state, not today's bug.
 export default function CreatePurchaseOrderScreen() {
+  const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
   const { user, token } = useAuth();
   const ownerPlus = user?.scope === 'OWNER' || user?.scope === 'PRINCIPAL';
@@ -172,9 +172,9 @@ export default function CreatePurchaseOrderScreen() {
             key={s.id}
             onPress={() => setSupplierId(supplierId === s.id ? null : s.id)}
             style={{
-              borderWidth: tokens.border.base,
+              borderWidth: border.base,
               borderColor: supplierId === s.id ? color.ink : color.hair,
-              borderRadius: tokens.radius.sm,
+              borderRadius: radius.sm,
               padding: 10,
               backgroundColor: color.panel,
             }}
@@ -197,9 +197,9 @@ export default function CreatePurchaseOrderScreen() {
             key={pr.id}
             onPress={() => togglePr(pr.id)}
             style={{
-              borderWidth: tokens.border.base,
+              borderWidth: border.base,
               borderColor: linkedPrIds.includes(pr.id) ? color.ink : color.hair,
-              borderRadius: tokens.radius.sm,
+              borderRadius: radius.sm,
               padding: 10,
               backgroundColor: color.panel,
             }}

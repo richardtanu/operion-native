@@ -12,10 +12,9 @@ import {
 } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
 import type { PurchaseRequestResponse, PurchaseRequestStatus, StatusHistoryEntry } from '../../../api/types';
-import * as tokens from '../../../theme/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
-const { color, type: typeScale } = tokens;
 
 // The real enum has six values — not the four the original wireframe drew.
 // AUTHORIZED is the state every PR reaches once realised via the
@@ -30,6 +29,7 @@ const canApprove = (scope: string | null | undefined) => scope === 'OWNER' || sc
 // server-side; cancel doesn't — that asymmetry is drawn deliberately, not
 // normalised away.
 export default function PurchaseRequestListScreen() {
+  const { color, type: typeScale } = useTheme();
   const { user, token } = useAuth();
   const [filter, setFilter] = useState<PurchaseRequestStatus>('PENDING');
   const [items, setItems] = useState<PurchaseRequestResponse[]>([]);

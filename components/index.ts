@@ -8,5 +8,6 @@ export { FieldLabel } from './FieldLabel';
 export { KV } from './KV';
 export { Row } from './Row';
 export { Section } from './Section';
+export { SelectField, type SelectFieldItem } from './SelectField';
 export { SyncStateIndicator, type SyncState } from './SyncStateIndicator';
 export { TextField } from './TextField';

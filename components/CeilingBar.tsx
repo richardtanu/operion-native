@@ -1,7 +1,5 @@
 import { Text, View } from 'react-native';
-import * as tokens from '../theme/tokens';
-
-const { color, font, radius } = tokens;
+import { useTheme } from '../theme/ThemeContext';
 
 type CeilingBarProps = {
   authorized: number;
@@ -13,6 +11,7 @@ type CeilingBarProps = {
 // both computed from `authorized`/`consumed`, matching PRA's own rule that
 // remaining is never a stored field. Matches base_design's CeilingBar().
 export function CeilingBar({ authorized, consumed }: CeilingBarProps) {
+  const { color, font, radius } = useTheme();
   const pct = authorized > 0 ? Math.min(100, (consumed / authorized) * 100) : 0;
   return (
     <View>
