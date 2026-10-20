@@ -6,8 +6,9 @@ session; a background/headless session cannot reach them at all. Confirmed this 
 `get_app_state` errored "a file needs to be open in the editor" with no `.pen` file open
 here.)
 
-**Status:** Not started. Revised 15 Oct 2026 (see "Revision 2" below). This is a full
-handoff, not a continuation — read everything below before touching `operion.pen`.
+**Status:** Done 15 Oct 2026 — Revision 2 and the full redraw are both carried out in
+`operion.pen`. See "Completion report" at the end for what was drawn, what the file
+couldn't express, and the gate findings. Kept below as the spec of record.
 
 ---
 
@@ -392,3 +393,158 @@ change: the gate colour still marks only scope-gated actions."
 Report back when done: which screens redrew cleanly, which (if any) needed a stop-and-
 report on missing information, and the consolidated gate findings — same shape as
 `SESSION_BRIEF_B`'s own closing section.
+
+---
+
+## Completion report — 15 Oct 2026
+
+No screen needed a stop-and-report on missing information.
+
+### Mobile board — all redrawn from the kit
+
+Every column on "Mobile Wireframes — Procurement (React Native)" was rebuilt from kit
+instances (Button, Field, Chip, Callout, Section, Card, KV, CeilingBar, Mobile Shell) with
+real titles and screen IDs. The old columns still had Inter type, the placeholder palette
+and "Screen Title" headers. Extra states are drawn as small bordered frames under or beside
+each device, labelled `STATE · …`.
+
+| Screen | What's drawn |
+|---|---|
+| PROC-01 | Restyle only, plus the queued sync state from the reference JSX |
+| PROC-02 | Six status filters; Approve/Reject gated `OWNER+`; Cancel plain; reject reason field |
+| PROC-03 | Create gated `MANAGER+`; disabled state with "Your scope can't create authorizations — it needs Manager or above."; neutral BE-07 notification callout; purchased/remaining value shown as Restricted for a Manager, max value visible; Owner+ state alongside |
+| PROC-04 | Six devices: steps 1–3 (Receipt / Costs / Items), result inside ceiling (auto-approved), result escalated (Approve `OWNER+`, Reject, Supersede), and supersede mode with the required "Reason for correction" above "Save correction", plus an after-save state showing both linked records. Purchased-at is `YYYY-MM-DD` |
+| PROC-05 form | Path toggle; derived "Received by: you (current user)"; blocked card for a missing attachment; "no notification on receipt" callout kept; separate purchase-order path state |
+| PROC-06 | Create form disabled with a lock and explanation. Plain disabled, not the gate border — it's a tenant rule, not a scope check |
+| PROC-07 | Create form with no Order date input (derived "Set to today when created"); created PO as a below-Owner viewer sees it ("Price hidden below Owner scope", no Total card, derived Order date); Owner+ state alongside. BE-11 card and note deleted |
+| PROC-08 | View-only list; below-Owner state with names and no amounts; no mark-reimbursed button |
+| PROC-05 list (new) | Goods Receipts: Receive goods, All / By realisasi / By purchase order filter, one card per receipt, empty state |
+| PROC-09 (new) | Activity log with both filter rows, day groups, one expanded card, a System (no actor) entry, Load more; states for the 500 cap, no access and empty period; the Procurement menu with the gated `ADMIN·PROC·OWNER+` entry, enabled and disabled |
+| Notifications (new) | Inbox with unread and read cards; Dashboard entry button; nothing-unread and empty-inbox states |
+
+### Desktop frames — Rev 2 applied
+
+- **PROC-03:** create is Gated `MANAGER+` with a below-Manager state; BE-07 notification
+  callout added; scope/cost callout rewritten; purchased/remaining value redacted (viewer:
+  Manager), max value visible.
+- **PROC-04:** Purchased At is `YYYY-MM-DD`; supersede footer with "Reason for correction"
+  and "Save correction".
+- **PROC-05:** "no list endpoint" callout replaced with the BE-08 list; Received By is
+  "you (current user)".
+- **PROC-07:** "BE-11 open" card deleted; cost callout rewritten; derived "Order date" added.
+- The desktop frames overlapped on the canvas; they are now stacked with 100px gaps, with
+  the Mobile Shell component and the mobile board below them.
+
+### Kit and theme panel
+
+- Button labels raised from 16 to 17 to match `type.button`.
+- "Theme — Tactical Green (BLITZ_BDG)" sits above the kit: Default and Tactical Green
+  columns built from Button instances, the eight `tg-` variables, and the closing callout.
+
+### What the file couldn't express
+
+- **Dashed callout borders:** Pencil strokes have no dash option, so callouts use a solid
+  tone-coloured border.
+- **Tinted callout backgrounds:** dropped; they would need raw hex with alpha.
+- **Glows:** the two theme-panel glows use raw hex with alpha (`#8CFFB0CC`, `#FFB238CC`),
+  as this brief specifies; opacity can't be set any other way.
+- **Unknown empty frame:** an empty 800×600 white frame named "Frame" sits at the canvas
+  origin. Not created by this pass; left for the owner to delete.
+
+### Gate findings
+
+1. **Orphan check.** Every screen has an entry point: the Procurement menu (now drawn in
+   the PROC-09 column), the Dashboard for Notifications, the Goods Receipts list for the
+   PROC-05 form. PROC-06 and PROC-08 are still reachable only from the menu, never from
+   inside the flow.
+2. **Dead-end check.** Unchanged from the original sweep. New soft dead end: tapping a
+   notification only marks it read; there is no route to the record.
+3. **Segregation of duties.** The three rules now read differently:
+   - PROC-04: warning tone, user-check icon, "Owner and Principal are exempt".
+   - PROC-05 by realisasi: danger tone, user-x icon, "no Owner exemption".
+   - PROC-05 by purchase order: neutral tone, "no separation rule at all".
+4. **Cost visibility.** PROC-03/04/07/08 draw what the API returns: cost fields null below
+   Owner. PROC-03's max value is the only money figure visible at every scope.
+5. **Deferred-decision log.** Carried forward from `SESSION_BRIEF_B` Gate 5, updated:
+   1. PR creation's scope/role restriction — **decided 16 Oct 2026, backend task BE-14
+      (open)**: Manager scope or above, or the ADMIN or PROCUREMENT role. Accounting is
+      view-only. HQ staff pick the store from a required dropdown; a Store Manager's store
+      is a locked derived field. Redraw PROC-01 once BE-14 merges: gated create button
+      `MANAGER+·ADMIN·PROC` plus the store field.
+   2. PR cancel/approve scope asymmetry — **decided 16 Oct 2026, backend task BE-15
+      (open)**: a pending PR can be cancelled by its requester or Owner+; an approved PR
+      by Owner+ only. A reason is required, and the requester is notified when someone
+      else cancels. Redraw PROC-02 once BE-15 merges: Cancel becomes gated
+      (`REQUESTER·OWNER+` while pending, `OWNER+` once approved).
+   3. PRA header-level cap — **decided 16 Oct 2026: no cap; ceilings stay per line.**
+      Budgets live at store level instead (backend task BE-16, open). Every store is
+      independent and its Owner can set an optional monthly budget that warns, never
+      blocks. HQ can read every store's spending for business intelligence and advise the
+      Owner, but can't set or block anything. After BE-16: a spending header on PROC-02
+      for Owner+, and a new HQ spending dashboard that needs a screen-inventory record
+      first. "Spent" and "committed" are defined once, in BE-16's Definitions section
+      (backend `OPERION_BE_CHANGE_QUEUE.md`); screens use those words with those meanings
+      only.
+   4. PRA/Realisasi absence of scope gating — **decided 19 Oct 2026, backend task BE-17
+      (open)**. The store Owner sets spending limits (PRA create/cancel moves from
+      Manager+ to Owner+, superseding BE-13); the Store Manager mostly buys. Logging a
+      purchase: Manager+ or the PROCUREMENT role, and HQ procurement can log for a store
+      via a store picker. Reject: Owner+. Supersede: the record's creator or Owner+.
+      Redraw after BE-17: PROC-03 badge `OWNER+`; PROC-04 Reject gated `OWNER+`,
+      Supersede gated `CREATOR·OWNER+`, create gated `MANAGER+·PROC`. The gate colour
+      check list (gate 7) grows to match.
+   5. Reimbursement completion and its SoD question — **decided 19 Oct 2026, backend task
+      BE-18 (open)**. The store Owner pays the SM back and marks it paid (one or several
+      at once, no fixed schedule: that's the branch's matter). The person owed can never
+      mark their own; HQ can read, not mark. Undo with a reason; the SM is notified; the SM
+      sees the amounts owed to them. A rejected purchase is still owed. Office/branch
+      needs that aren't parts become a separate expense claim (BE-19, proposed). Redraw
+      PROC-08 after BE-18: "Owed" / "Paid back" tabs, select several + "Mark paid back".
+   6. PO-path missing creator≠receiver check — **decided 19 Oct 2026, backend task BE-20
+      (open)**. PO path: no rule, deliberately (the Owner sends, the SM receives, the
+      centre knows what it shipped). The receiver is whoever opens the package and is
+      always the signed-in user. Realisasi path: the SM may receive their own purchase
+      only with a photo of the goods; the receipt is flagged "self-received" and the
+      Owner is notified (visibility instead of a hard block). Photos need file upload,
+      which the backend doesn't have yet. QR labels per item are parked for module 3.
+      Redraw PROC-05 after BE-20: photo field instead of the blocked state, a
+      "Self-received" chip on the list.
+   7. Non-root outlet's silent read of the root supplier list — **decided 19 Oct 2026,
+      by design; backend task BE-21 (open)**. Suppliers are HQ's; stores see the list on
+      purpose, labelled "Managed by HQ". Behind it, the supply model: HQ sells a catalog,
+      some items are mandatory (BB, gas, paper targets, plate targets, gel balls — must be
+      bought from HQ), everything else can be bought anywhere; the store decides when and
+      how much. Two ways to buy: "Buy from HQ" (PROC-07, HQ catalog only) and "Buy
+      elsewhere" (PROC-04, non-mandatory only, seller as free text). Redraw PROC-04,
+      PROC-06 and PROC-07 after BE-21.
+   8. PO cost-visibility gap — **resolved (BE-11)**.
+   9. No scope gating on the PO path, including "send to supplier" — **decided 19 Oct
+      2026, backend task BE-20 (open)**. Draft: Manager+ or PROCUREMENT. Send to the
+      centre: Owner+. Cancel: a draft by its creator or Owner+; once sent, Owner+ with a
+      reason. Redraw PROC-07 after BE-20: Send and Cancel become gated.
+   10. `reimbursedTo`/`reimbursedAt` missing from the response — **closed by BE-18**
+       (added to the response together with the payment method and reference).
+   11. **New — PROC-04 step navigation.** Create can be pressed from any step, and the app
+       reports missing step-1 data ("Select a PRA line in step 1 first") while the user is
+       on step 3. **Decided 20 Oct 2026 (app-only, no backend task):** keep tabs, not a
+       wizard. Each tab shows its state (check when complete, dot when something's
+       missing). Create validates all steps and jumps to the first step with a problem,
+       highlighting the field. Step 3 explains itself when no PRA line is picked yet, with
+       a "Go to step 1" button. Supersede opens on step 1 with everything copied from the
+       original, changed fields marked "changed from original", and the reason field above
+       Save on every step. **Save as draft:** an SM often doesn't know the final price or
+       items yet, so a half-finished entry is kept as a draft on the phone (several
+       allowed) until it's created or discarded; drafts older than 3 days get a reminder
+       on the dashboard, because the purchase already happened and stays invisible to the
+       Owner until it's logged.
+   12. **New — PROC-09 "System" actor.** It covers both server-derived changes and rows
+       written before actors were recorded; the two can't be told apart on screen.
+       **Decided 20 Oct 2026, backend task BE-22 (open):** automatic changes name what
+       triggered them ("Automatic · after Rina Wijaya — REA-2026-0114 approved"). Rows
+       without an actor exist only in test data; the app goes live on a clean database,
+       and any such row shows "Not recorded". Redraw PROC-09's line 3 after BE-22.
+6. **Raw colour check.** Passes. No raw hex on the mobile board (the only `#` strings are
+   short record IDs such as `#8ca7fca9`). `tg-` variables appear only in the theme panel.
+7. **Gate colour check.** Passes. The `tag` border appears only on PROC-02 approve/reject
+   (`OWNER+`), PROC-03 create (`MANAGER+`), PROC-04 approve (`OWNER+`), the PROC-09 menu
+   entry, and the theme panel's demo button.
