@@ -9,5 +9,6 @@ export { KV } from './KV';
 export { Row } from './Row';
 export { Section } from './Section';
 export { SelectField, type SelectFieldItem } from './SelectField';
+export { StepTabs, type StepState } from './StepTabs';
 export { SyncStateIndicator, type SyncState } from './SyncStateIndicator';
 export { TextField } from './TextField';

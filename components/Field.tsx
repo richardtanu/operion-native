@@ -22,6 +22,14 @@ type FieldProps = {
   mono?: boolean;
   /** Helper caption below the field — unit labels, backend-rule notes. */
   sub?: string;
+  /** What's wrong with the value. Danger border and caption; replaces `sub` while set. */
+  error?: string;
+  /**
+   * The value this field had on the record being corrected (supersede), shown
+   * as "Changed from …" in the info colour when the current value differs.
+   * Ignored while `error` is set.
+   */
+  changedFrom?: string;
   onChangeText?: (text: string) => void;
   onPress?: () => void;
   keyboardType?: TextInputProps['keyboardType'];
@@ -36,6 +44,8 @@ export function Field({
   variant = 'edit',
   mono,
   sub,
+  error,
+  changedFrom,
   onChangeText,
   onPress,
   keyboardType,
@@ -46,6 +56,7 @@ export function Field({
   const isDerived = variant === 'derived';
   const isPicker = variant === 'picker';
   const isEmpty = !value;
+  const isChanged = !error && changedFrom !== undefined && changedFrom !== value;
 
   const boxStyle = {
     flexDirection: 'row' as const,
@@ -53,8 +64,8 @@ export function Field({
     justifyContent: 'space-between' as const,
     gap: 8,
     borderRadius: radius.sm,
-    borderWidth: isDerived ? 0 : border.base,
-    borderColor: color.line,
+    borderWidth: isDerived ? 0 : error || isChanged ? border.strong : border.base,
+    borderColor: error ? color.danger : isChanged ? color.info : color.line,
     backgroundColor: isDerived ? color.derived : color.panel,
     paddingVertical: 9,
     paddingHorizontal: 10,
@@ -101,7 +112,13 @@ export function Field({
         </View>
       )}
 
-      {sub ? (
+      {error ? (
+        <Text style={{ ...textStyle(typeScale.helper), color: color.danger, marginTop: 3 }}>{error}</Text>
+      ) : isChanged ? (
+        <Text style={{ ...textStyle(typeScale.helper), color: color.info, marginTop: 3 }}>
+          Changed from {changedFrom || 'empty'}
+        </Text>
+      ) : sub ? (
         <Text style={{ ...textStyle(typeScale.helper), color: color.mute, marginTop: 3 }}>{sub}</Text>
       ) : null}
     </View>
