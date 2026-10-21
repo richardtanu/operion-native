@@ -7,6 +7,8 @@ import type { Theme } from './themeTypes';
 /** Add a tenant here to give it its own look; anything not listed gets `defaultTheme`. */
 const THEMES_BY_TENANT: Record<string, Theme> = {
   BLITZ_BDG: tacticalGreenTheme,
+  // HQ above BLITZ_BDG (BE-21, decided 21 Oct 2026); Tactical Green is HQ's main theme too.
+  HQ_BANDUNG: tacticalGreenTheme,
 };
 
 /**
