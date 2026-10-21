@@ -2,11 +2,12 @@ import * as tokens from '../tokens';
 import type { Theme } from '../themeTypes';
 
 /**
- * BLITZ_BDG's theme — phosphor-green night-vision HUD, styling cue lifted
+ * The app's default theme since 21 Oct 2026 (first BLITZ_BDG's own) —
+ * phosphor-green night-vision HUD, styling cue lifted
  * from an internal tactical-sim reference (Breach.html): dark ground,
  * glowing single-hue accent, multi-color status signals against it (cyan
- * "queued"/info, amber warn, red danger — same roles as the default theme,
- * different hues). Reuses the default theme's font/type/space/radius/
+ * "queued"/info, amber warn, red danger — same roles as the light theme,
+ * different hues). Reuses the light theme's font/type/space/radius/
  * border/touch as-is: this is a palette + glow swap, not a new visual
  * system, and Barlow Condensed/Barlow/IBM Plex Mono already read
  * "stencilled tactical" without pulling in Rajdhani/Share Tech Mono and

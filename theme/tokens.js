@@ -1,7 +1,9 @@
 /**
- * Operion design tokens — the DEFAULT theme (every tenant gets this unless
- * theme/ThemeContext.tsx's THEMES_BY_TENANT overrides it for their
- * tenantCode; see theme/themes/tacticalGreen.ts for the one that does).
+ * Operion design tokens — the LIGHT theme ("range safety board"), wrapped by
+ * theme/themes/light.ts. Since 21 Oct 2026 the app's default theme is
+ * Tactical Green (theme/themes/tacticalGreen.ts, chosen in
+ * theme/ThemeContext.tsx); a tenant gets this one only through a
+ * THEMES_BY_TENANT entry. The design file (operion.pen) is still drawn in it.
  *
  * Plain JS on purpose — tailwind.config loads this via Node `require`,
  * which can't parse TS. Types live in tokens.d.ts. Only spacing/radius are
