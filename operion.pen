@@ -2809,91 +2809,58 @@
           "gap": 4,
           "children": [
             {
-              "type": "frame",
-              "id": "p6jL0",
-              "name": "Step — 1. RECEIPT",
+              "id": "HXLkx",
+              "type": "ref",
+              "ref": "CH9VO",
+              "name": "StepTab — 1. RECEIPT",
+              "width": "fill_container",
+              "descendants": {
+                "kDJ8d": {
+                  "content": "1. RECEIPT",
+                  "fill": "$steel"
+                },
+                "jgKcT": {
+                  "enabled": true,
+                  "fill": "$good"
+                }
+              }
+            },
+            {
+              "id": "t5EAst",
+              "type": "ref",
+              "ref": "CH9VO",
+              "name": "StepTab — 2. COSTS",
               "width": "fill_container",
               "fill": "$ink",
-              "cornerRadius": "$radius-sm",
               "stroke": "$ink",
-              "strokeWidth": 1.5,
-              "padding": [
-                7,
-                0
-              ],
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "g4Ipcl",
-                  "name": "Label",
-                  "fill": "$panel",
-                  "content": "1. RECEIPT",
-                  "textAlign": "center",
-                  "fontFamily": "$font-display",
-                  "fontSize": 13,
-                  "fontWeight": "700",
-                  "letterSpacing": 1.2
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "iMOFl",
-              "name": "Step — 2. COSTS",
-              "width": "fill_container",
-              "fill": "#00000000",
-              "cornerRadius": "$radius-sm",
-              "stroke": "$line",
-              "strokeWidth": 1.5,
-              "padding": [
-                7,
-                0
-              ],
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "hcpym",
-                  "name": "Label",
-                  "fill": "$steel",
+              "descendants": {
+                "kDJ8d": {
                   "content": "2. COSTS",
-                  "textAlign": "center",
-                  "fontFamily": "$font-display",
-                  "fontSize": 13,
-                  "fontWeight": "700",
-                  "letterSpacing": 1.2
+                  "fill": "$panel"
+                },
+                "bDaC8": {
+                  "enabled": true,
+                  "stroke": "$panel",
+                  "strokeWidth": 1.5
                 }
-              ]
+              }
             },
             {
-              "type": "frame",
-              "id": "s0pMC",
-              "name": "Step — 3. ITEMS",
+              "id": "qpo3F",
+              "type": "ref",
+              "ref": "CH9VO",
+              "name": "StepTab — 3. ITEMS",
               "width": "fill_container",
-              "fill": "#00000000",
-              "cornerRadius": "$radius-sm",
-              "stroke": "$line",
-              "strokeWidth": 1.5,
-              "padding": [
-                7,
-                0
-              ],
-              "justifyContent": "center",
-              "children": [
-                {
-                  "type": "text",
-                  "id": "d9i5km",
-                  "name": "Label",
-                  "fill": "$steel",
+              "descendants": {
+                "kDJ8d": {
                   "content": "3. ITEMS",
-                  "textAlign": "center",
-                  "fontFamily": "$font-display",
-                  "fontSize": 13,
-                  "fontWeight": "700",
-                  "letterSpacing": 1.2
+                  "fill": "$steel"
+                },
+                "jgKcT": {
+                  "enabled": true,
+                  "fill": "$good"
                 }
-              ]
+              }
             }
           ]
         },
@@ -9019,53 +8986,47 @@
                                   "gap": 4,
                                   "children": [
                                     {
-                                      "id": "Tk81U",
+                                      "id": "mza12",
                                       "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — 1. Receipt",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 1. RECEIPT",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
+                                      "fill": "$ink",
+                                      "stroke": "$ink",
                                       "descendants": {
-                                        "jPcGi": {
+                                        "kDJ8d": {
                                           "content": "1. RECEIPT",
-                                          "fontSize": 13
+                                          "fill": "$panel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$panel"
                                         }
                                       }
                                     },
                                     {
-                                      "id": "v2MMkm",
+                                      "id": "YPCAp",
                                       "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — 2. Costs",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 2. COSTS",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
                                       "descendants": {
-                                        "zwEB2": {
+                                        "kDJ8d": {
                                           "content": "2. COSTS",
-                                          "fontSize": 13
+                                          "fill": "$steel"
                                         }
                                       }
                                     },
                                     {
-                                      "id": "Jr9dt",
+                                      "id": "GFQCa",
                                       "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — 3. Items",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 3. ITEMS",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
                                       "descendants": {
-                                        "zwEB2": {
+                                        "kDJ8d": {
                                           "content": "3. ITEMS",
-                                          "fontSize": 13
+                                          "fill": "$steel"
                                         }
                                       }
                                     }
@@ -9246,16 +9207,37 @@
                               "padding": 13,
                               "children": [
                                 {
-                                  "id": "XfXan",
-                                  "type": "ref",
-                                  "ref": "okhbu",
-                                  "name": "Button — Create",
+                                  "type": "frame",
+                                  "id": "dNvge",
+                                  "name": "Actions",
                                   "width": "fill_container",
-                                  "descendants": {
-                                    "jPcGi": {
-                                      "content": "CREATE"
+                                  "gap": 8,
+                                  "children": [
+                                    {
+                                      "id": "CKWlf",
+                                      "type": "ref",
+                                      "ref": "WyJCa",
+                                      "name": "Button — Save draft",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "zwEB2": {
+                                          "content": "SAVE DRAFT"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "lHWJp",
+                                      "type": "ref",
+                                      "ref": "okhbu",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "jPcGi": {
+                                          "content": "CREATE"
+                                        }
+                                      }
                                     }
-                                  }
+                                  ]
                                 }
                               ]
                             }
@@ -9312,53 +9294,47 @@
                                   "gap": 4,
                                   "children": [
                                     {
-                                      "id": "KM87C",
+                                      "id": "k8KrG",
                                       "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — 1. Receipt",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 1. RECEIPT",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
                                       "descendants": {
-                                        "zwEB2": {
+                                        "kDJ8d": {
                                           "content": "1. RECEIPT",
-                                          "fontSize": 13
+                                          "fill": "$steel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$good"
                                         }
                                       }
                                     },
                                     {
-                                      "id": "wdmw4",
+                                      "id": "V7yxok",
                                       "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — 2. Costs",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 2. COSTS",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
+                                      "fill": "$ink",
+                                      "stroke": "$ink",
                                       "descendants": {
-                                        "jPcGi": {
+                                        "kDJ8d": {
                                           "content": "2. COSTS",
-                                          "fontSize": 13
+                                          "fill": "$panel"
                                         }
                                       }
                                     },
                                     {
-                                      "id": "Y93OW",
+                                      "id": "KksJo",
                                       "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — 3. Items",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 3. ITEMS",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
                                       "descendants": {
-                                        "zwEB2": {
+                                        "kDJ8d": {
                                           "content": "3. ITEMS",
-                                          "fontSize": 13
+                                          "fill": "$steel"
                                         }
                                       }
                                     }
@@ -9592,16 +9568,37 @@
                               "padding": 13,
                               "children": [
                                 {
-                                  "id": "YZWUa",
-                                  "type": "ref",
-                                  "ref": "okhbu",
-                                  "name": "Button — Create",
+                                  "type": "frame",
+                                  "id": "ZTJi6",
+                                  "name": "Actions",
                                   "width": "fill_container",
-                                  "descendants": {
-                                    "jPcGi": {
-                                      "content": "CREATE"
+                                  "gap": 8,
+                                  "children": [
+                                    {
+                                      "id": "C5bztO",
+                                      "type": "ref",
+                                      "ref": "WyJCa",
+                                      "name": "Button — Save draft",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "zwEB2": {
+                                          "content": "SAVE DRAFT"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "KgsWZ",
+                                      "type": "ref",
+                                      "ref": "okhbu",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "jPcGi": {
+                                          "content": "CREATE"
+                                        }
+                                      }
                                     }
-                                  }
+                                  ]
                                 }
                               ]
                             }
@@ -9658,53 +9655,55 @@
                                   "gap": 4,
                                   "children": [
                                     {
-                                      "id": "y1S8tL",
+                                      "id": "AWvt1",
                                       "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — 1. Receipt",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 1. RECEIPT",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
                                       "descendants": {
-                                        "zwEB2": {
+                                        "kDJ8d": {
                                           "content": "1. RECEIPT",
-                                          "fontSize": 13
+                                          "fill": "$steel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$good"
                                         }
                                       }
                                     },
                                     {
-                                      "id": "ua31a",
+                                      "id": "SqLqe",
                                       "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — 2. Costs",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 2. COSTS",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
                                       "descendants": {
-                                        "zwEB2": {
+                                        "kDJ8d": {
                                           "content": "2. COSTS",
-                                          "fontSize": 13
+                                          "fill": "$steel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$good"
                                         }
                                       }
                                     },
                                     {
-                                      "id": "aOvbH",
+                                      "id": "EyWxR",
                                       "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — 3. Items",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 3. ITEMS",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
+                                      "fill": "$ink",
+                                      "stroke": "$ink",
                                       "descendants": {
-                                        "jPcGi": {
+                                        "kDJ8d": {
                                           "content": "3. ITEMS",
-                                          "fontSize": 13
+                                          "fill": "$panel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$panel"
                                         }
                                       }
                                     }
@@ -9879,16 +9878,37 @@
                               "padding": 13,
                               "children": [
                                 {
-                                  "id": "pORvj",
-                                  "type": "ref",
-                                  "ref": "okhbu",
-                                  "name": "Button — Create",
+                                  "type": "frame",
+                                  "id": "Jsb7V",
+                                  "name": "Actions",
                                   "width": "fill_container",
-                                  "descendants": {
-                                    "jPcGi": {
-                                      "content": "CREATE"
+                                  "gap": 8,
+                                  "children": [
+                                    {
+                                      "id": "h6d7y",
+                                      "type": "ref",
+                                      "ref": "WyJCa",
+                                      "name": "Button — Save draft",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "zwEB2": {
+                                          "content": "SAVE DRAFT"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "wbblQ",
+                                      "type": "ref",
+                                      "ref": "okhbu",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "jPcGi": {
+                                          "content": "CREATE"
+                                        }
+                                      }
                                     }
-                                  }
+                                  ]
                                 }
                               ]
                             }
@@ -10646,7 +10666,7 @@
                                   "fill": "$steel",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "Correcting REA-2026-0114. It flips to SUPERSEDED when this saves; both stay visible.",
+                                  "content": "Everything is copied from the original. Fields you change are marked in blue; the original stays visible, read-only.",
                                   "lineHeight": 1.4,
                                   "fontFamily": "$font-body",
                                   "fontSize": 12,
@@ -10660,53 +10680,55 @@
                                   "gap": 4,
                                   "children": [
                                     {
-                                      "id": "ZsdIQ",
+                                      "id": "YB1JM",
                                       "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — 1. Receipt",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 1. RECEIPT",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
                                       "descendants": {
-                                        "zwEB2": {
+                                        "kDJ8d": {
                                           "content": "1. RECEIPT",
-                                          "fontSize": 13
+                                          "fill": "$steel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$good"
                                         }
                                       }
                                     },
                                     {
-                                      "id": "SX18G",
+                                      "id": "Hx4JO",
                                       "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — 2. Costs",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 2. COSTS",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
+                                      "fill": "$ink",
+                                      "stroke": "$ink",
                                       "descendants": {
-                                        "jPcGi": {
+                                        "kDJ8d": {
                                           "content": "2. COSTS",
-                                          "fontSize": 13
+                                          "fill": "$panel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$panel"
                                         }
                                       }
                                     },
                                     {
-                                      "id": "I8sUH9",
+                                      "id": "LeLuN",
                                       "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — 3. Items",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 3. ITEMS",
                                       "width": "fill_container",
-                                      "padding": [
-                                        6,
-                                        0
-                                      ],
                                       "descendants": {
-                                        "zwEB2": {
+                                        "kDJ8d": {
                                           "content": "3. ITEMS",
-                                          "fontSize": 13
+                                          "fill": "$steel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$good"
                                         }
                                       }
                                     }
@@ -10798,9 +10820,20 @@
                                         "yByEc": {
                                           "content": "+ SHIPPING"
                                         },
+                                        "PEyea": {
+                                          "stroke": "$info",
+                                          "strokeWidth": 2
+                                        },
                                         "Ss3L7": {
                                           "content": "25,000",
                                           "fontFamily": "$font-mono"
+                                        },
+                                        "S2adUY": {
+                                          "enabled": true,
+                                          "content": "Changed from 35000",
+                                          "fill": "$info",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container"
                                         }
                                       }
                                     }
@@ -11110,6 +11143,1499 @@
                               "fontWeight": "normal"
                             }
                           ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CfwLE",
+                          "name": "State — Save pressed without a reason",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$line",
+                          "strokeWidth": 1.5,
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 13,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "e9Knj",
+                              "name": "State Label",
+                              "fill": "$steel",
+                              "content": "STATE · SAVE PRESSED WITHOUT A REASON",
+                              "fontFamily": "$font-display",
+                              "fontSize": 12,
+                              "fontWeight": "700",
+                              "letterSpacing": 1.3
+                            },
+                            {
+                              "id": "l4eqh",
+                              "type": "ref",
+                              "ref": "FMohd",
+                              "name": "Field — Reason for correction",
+                              "width": "fill_container",
+                              "descendants": {
+                                "yByEc": {
+                                  "content": "REASON FOR CORRECTION"
+                                },
+                                "PEyea": {
+                                  "stroke": "$danger",
+                                  "strokeWidth": 2
+                                },
+                                "Ss3L7": {
+                                  "content": "e.g. wrong shipping cost entered",
+                                  "fill": "$mute"
+                                },
+                                "S2adUY": {
+                                  "enabled": true,
+                                  "content": "Required — the correction is refused without a reason.",
+                                  "fill": "$danger",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container"
+                                }
+                              }
+                            },
+                            {
+                              "id": "JNzgU",
+                              "type": "ref",
+                              "ref": "okhbu",
+                              "name": "Button — Save correction",
+                              "width": "fill_container",
+                              "descendants": {
+                                "jPcGi": {
+                                  "content": "SAVE CORRECTION"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "mVFk0",
+                  "name": "Steps & drafts (decision #11)",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "XPsI6",
+                      "name": "After Create · a gap on step 2",
+                      "width": 300,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "jlFWJ",
+                          "name": "State Label",
+                          "fill": "$steel",
+                          "content": "AFTER CREATE · A GAP ON STEP 2",
+                          "fontFamily": "$font-display",
+                          "fontSize": 12,
+                          "fontWeight": "700",
+                          "letterSpacing": 1.3
+                        },
+                        {
+                          "id": "CQ9GR",
+                          "type": "ref",
+                          "ref": "z1c2Sh",
+                          "name": "Device",
+                          "descendants": {
+                            "HEElt": {
+                              "content": "New Realisasi"
+                            },
+                            "w3M5g9": {
+                              "content": "PROC-04"
+                            },
+                            "B3IoyE": {
+                              "type": "frame",
+                              "id": "x9trcz",
+                              "name": "Body",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "layout": "vertical",
+                              "gap": 14,
+                              "padding": 14,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "DQuRQ",
+                                  "name": "Step Selector",
+                                  "width": "fill_container",
+                                  "gap": 4,
+                                  "children": [
+                                    {
+                                      "id": "uvBjb",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 1. RECEIPT",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "1. RECEIPT",
+                                          "fill": "$steel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$good"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "jcQQc",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 2. COSTS",
+                                      "width": "fill_container",
+                                      "fill": "$ink",
+                                      "stroke": "$ink",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "2. COSTS",
+                                          "fill": "$panel"
+                                        },
+                                        "bDaC8": {
+                                          "enabled": true,
+                                          "stroke": "$panel",
+                                          "strokeWidth": 1.5
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "G7GOl",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 3. ITEMS",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "3. ITEMS",
+                                          "fill": "$steel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$good"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "n7r7Px",
+                                  "type": "ref",
+                                  "ref": "QfPQH",
+                                  "name": "Callout — danger",
+                                  "width": "fill_container",
+                                  "stroke": "$danger",
+                                  "descendants": {
+                                    "knoLi": {
+                                      "fill": "$danger",
+                                      "icon": "octagon-alert"
+                                    },
+                                    "z13SH": {
+                                      "content": "1 thing to fix on this step before you can create.",
+                                      "fill": "$danger",
+                                      "lineHeight": 1.45
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "OPUz2",
+                                  "type": "ref",
+                                  "ref": "WK3br",
+                                  "name": "Section — Landed cost — six separate inputs",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "I6N8Vt": {
+                                      "content": "LANDED COST — SIX SEPARATE INPUTS"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "zouqU",
+                                  "name": "Row",
+                                  "width": "fill_container",
+                                  "gap": 10,
+                                  "children": [
+                                    {
+                                      "id": "k82nHL",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — Subtotal",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "SUBTOTAL"
+                                        },
+                                        "PEyea": {
+                                          "stroke": "$danger",
+                                          "strokeWidth": 2
+                                        },
+                                        "Ss3L7": {
+                                          "content": "—",
+                                          "fontFamily": "$font-mono",
+                                          "fill": "$mute"
+                                        },
+                                        "S2adUY": {
+                                          "enabled": true,
+                                          "content": "Required.",
+                                          "fill": "$danger",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "IG5Ad",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — − Seller discount",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "− SELLER DISCOUNT"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "50,000",
+                                          "fontFamily": "$font-mono"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "daqxU",
+                                  "name": "Row",
+                                  "width": "fill_container",
+                                  "gap": 10,
+                                  "children": [
+                                    {
+                                      "id": "AFATw",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — − Platform voucher",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "− PLATFORM VOUCHER"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "20,000",
+                                          "fontFamily": "$font-mono"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "JenI9",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — + Shipping",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "+ SHIPPING"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "35,000",
+                                          "fontFamily": "$font-mono"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "DOqZk",
+                                  "name": "Row",
+                                  "width": "fill_container",
+                                  "gap": 10,
+                                  "children": [
+                                    {
+                                      "id": "A5p9E",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — + Insurance",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "+ INSURANCE"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "10,000",
+                                          "fontFamily": "$font-mono"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "d2c1M",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — + Service fee",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "+ SERVICE FEE"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "15,000",
+                                          "fontFamily": "$font-mono"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "UJgnT": {
+                              "type": "frame",
+                              "id": "q2zFRY",
+                              "name": "Bottom Bar",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "stroke": "$line",
+                              "strokeWidth": {
+                                "top": 1.5
+                              },
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 13,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "bbLOX",
+                                  "name": "Actions",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "children": [
+                                    {
+                                      "id": "fJHTs",
+                                      "type": "ref",
+                                      "ref": "WyJCa",
+                                      "name": "Button — Save draft",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "zwEB2": {
+                                          "content": "SAVE DRAFT"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "ju3MD",
+                                      "type": "ref",
+                                      "ref": "okhbu",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "jPcGi": {
+                                          "content": "CREATE"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zC3rx",
+                      "name": "Step 3 · before a PRA line is picked",
+                      "width": 300,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "EzXKI",
+                          "name": "State Label",
+                          "fill": "$steel",
+                          "content": "STEP 3 · BEFORE A PRA LINE IS PICKED",
+                          "fontFamily": "$font-display",
+                          "fontSize": 12,
+                          "fontWeight": "700",
+                          "letterSpacing": 1.3
+                        },
+                        {
+                          "id": "XKuOJ",
+                          "type": "ref",
+                          "ref": "z1c2Sh",
+                          "name": "Device",
+                          "descendants": {
+                            "HEElt": {
+                              "content": "New Realisasi"
+                            },
+                            "w3M5g9": {
+                              "content": "PROC-04"
+                            },
+                            "B3IoyE": {
+                              "type": "frame",
+                              "id": "bktU2",
+                              "name": "Body",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "layout": "vertical",
+                              "gap": 14,
+                              "padding": 14,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "tGzwz",
+                                  "name": "Step Selector",
+                                  "width": "fill_container",
+                                  "gap": 4,
+                                  "children": [
+                                    {
+                                      "id": "IEIPn",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 1. RECEIPT",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "1. RECEIPT",
+                                          "fill": "$steel"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "NCbKA",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 2. COSTS",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "2. COSTS",
+                                          "fill": "$steel"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "Z4ymMq",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 3. ITEMS",
+                                      "width": "fill_container",
+                                      "fill": "$ink",
+                                      "stroke": "$ink",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "3. ITEMS",
+                                          "fill": "$panel"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "qgqhy",
+                                  "type": "ref",
+                                  "ref": "WK3br",
+                                  "name": "Section — Item",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "I6N8Vt": {
+                                      "content": "ITEM"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "kjZuV",
+                                  "type": "ref",
+                                  "ref": "fkVML",
+                                  "name": "Card",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "zvMaG": {
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "b4k01",
+                                          "name": "Title",
+                                          "fill": "$ink",
+                                          "content": "Pick a PRA line in step 1 first.",
+                                          "fontFamily": "$font-body",
+                                          "fontSize": 14,
+                                          "fontWeight": "normal"
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "x01yce",
+                                          "name": "Helper",
+                                          "fill": "$steel",
+                                          "textGrowth": "fixed-width",
+                                          "width": "fill_container",
+                                          "content": "The part and its purchase unit come from that line, so there's nothing to fill in here yet.",
+                                          "lineHeight": 1.4,
+                                          "fontFamily": "$font-body",
+                                          "fontSize": 12,
+                                          "fontWeight": "normal"
+                                        },
+                                        {
+                                          "id": "x9BUW",
+                                          "type": "ref",
+                                          "ref": "WyJCa",
+                                          "name": "Button — Go to step 1",
+                                          "width": "fill_container",
+                                          "descendants": {
+                                            "zwEB2": {
+                                              "content": "GO TO STEP 1"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "UMaec",
+                                  "type": "ref",
+                                  "ref": "QfPQH",
+                                  "name": "Callout — warning",
+                                  "width": "fill_container",
+                                  "stroke": "$warn",
+                                  "descendants": {
+                                    "knoLi": {
+                                      "fill": "$warn",
+                                      "icon": "triangle-alert"
+                                    },
+                                    "z13SH": {
+                                      "content": "Only escalated purchases go to PENDING_APPROVAL. A purchase inside the ceiling auto-approves the moment it's created.",
+                                      "fill": "$warn",
+                                      "lineHeight": 1.45
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "UJgnT": {
+                              "type": "frame",
+                              "id": "uPFU8",
+                              "name": "Bottom Bar",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "stroke": "$line",
+                              "strokeWidth": {
+                                "top": 1.5
+                              },
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 13,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "r4VHc",
+                                  "name": "Actions",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "children": [
+                                    {
+                                      "id": "IhhXx",
+                                      "type": "ref",
+                                      "ref": "WyJCa",
+                                      "name": "Button — Save draft",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "zwEB2": {
+                                          "content": "SAVE DRAFT"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "Y62V5t",
+                                      "type": "ref",
+                                      "ref": "okhbu",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "jPcGi": {
+                                          "content": "CREATE"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oxcrS",
+                      "name": "Unfinished purchases",
+                      "width": 300,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "JnByV",
+                          "name": "State Label",
+                          "fill": "$steel",
+                          "content": "UNFINISHED PURCHASES",
+                          "fontFamily": "$font-display",
+                          "fontSize": 12,
+                          "fontWeight": "700",
+                          "letterSpacing": 1.3
+                        },
+                        {
+                          "id": "khe4V",
+                          "type": "ref",
+                          "ref": "z1c2Sh",
+                          "name": "Device",
+                          "descendants": {
+                            "HEElt": {
+                              "content": "New Realisasi"
+                            },
+                            "w3M5g9": {
+                              "content": "PROC-04"
+                            },
+                            "B3IoyE": {
+                              "type": "frame",
+                              "id": "jXDJS",
+                              "name": "Body",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "layout": "vertical",
+                              "gap": 14,
+                              "padding": 14,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "pPPdj",
+                                  "name": "Drafts",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 8,
+                                  "children": [
+                                    {
+                                      "id": "Hy5Z9",
+                                      "type": "ref",
+                                      "ref": "WK3br",
+                                      "name": "Section — Unfinished purchases · 2",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "I6N8Vt": {
+                                          "content": "UNFINISHED PURCHASES · 2"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "n7BTvh",
+                                      "type": "ref",
+                                      "ref": "fkVML",
+                                      "name": "Draft — 6mm BBs 0.25g",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "zvMaG": {
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "svZfX",
+                                              "name": "Head",
+                                              "width": "fill_container",
+                                              "gap": 8,
+                                              "justifyContent": "space_between",
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "smPVA",
+                                                  "name": "Part",
+                                                  "fill": "$ink",
+                                                  "content": "6mm BBs 0.25g",
+                                                  "fontFamily": "$font-body",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                },
+                                                {
+                                                  "id": "Z45Ce",
+                                                  "type": "ref",
+                                                  "ref": "Ayr7m",
+                                                  "name": "Chip — Draft",
+                                                  "stroke": "$steel",
+                                                  "descendants": {
+                                                    "yKzvx": {
+                                                      "content": "DRAFT",
+                                                      "fill": "$steel"
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "Mg2f7",
+                                              "name": "Saved",
+                                              "fill": "$steel",
+                                              "content": "Saved Today 14:32 · step 2 of 3",
+                                              "fontFamily": "$font-body",
+                                              "fontSize": 12,
+                                              "fontWeight": "normal"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "Q3N6nX",
+                                              "name": "Actions",
+                                              "width": "fill_container",
+                                              "gap": 8,
+                                              "children": [
+                                                {
+                                                  "id": "asiFk",
+                                                  "type": "ref",
+                                                  "ref": "WyJCa",
+                                                  "name": "Button — Continue",
+                                                  "width": "fill_container",
+                                                  "padding": [
+                                                    8,
+                                                    14
+                                                  ],
+                                                  "descendants": {
+                                                    "zwEB2": {
+                                                      "content": "CONTINUE"
+                                                    }
+                                                  }
+                                                },
+                                                {
+                                                  "id": "j6ni1",
+                                                  "type": "ref",
+                                                  "ref": "WyJCa",
+                                                  "name": "Button — Discard",
+                                                  "width": "fill_container",
+                                                  "padding": [
+                                                    8,
+                                                    14
+                                                  ],
+                                                  "descendants": {
+                                                    "zwEB2": {
+                                                      "content": "DISCARD"
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "C0qAA",
+                                      "type": "ref",
+                                      "ref": "fkVML",
+                                      "name": "Draft — No PRA line picked yet",
+                                      "width": "fill_container",
+                                      "stroke": "$warn",
+                                      "descendants": {
+                                        "zvMaG": {
+                                          "children": [
+                                            {
+                                              "type": "frame",
+                                              "id": "PNhyH",
+                                              "name": "Head",
+                                              "width": "fill_container",
+                                              "gap": 8,
+                                              "justifyContent": "space_between",
+                                              "alignItems": "center",
+                                              "children": [
+                                                {
+                                                  "type": "text",
+                                                  "id": "rzb6Q",
+                                                  "name": "Part",
+                                                  "fill": "$ink",
+                                                  "content": "No PRA line picked yet",
+                                                  "fontFamily": "$font-body",
+                                                  "fontSize": 14,
+                                                  "fontWeight": "normal"
+                                                },
+                                                {
+                                                  "id": "BxVmv",
+                                                  "type": "ref",
+                                                  "ref": "Ayr7m",
+                                                  "name": "Chip — 6 days old",
+                                                  "stroke": "$warn",
+                                                  "descendants": {
+                                                    "yKzvx": {
+                                                      "content": "6 DAYS OLD",
+                                                      "fill": "$warn"
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "i8QoPV",
+                                              "name": "Saved",
+                                              "fill": "$steel",
+                                              "content": "Saved 14 Oct 2026 09:10 · step 1 of 3",
+                                              "fontFamily": "$font-body",
+                                              "fontSize": 12,
+                                              "fontWeight": "normal"
+                                            },
+                                            {
+                                              "type": "frame",
+                                              "id": "oVUPb",
+                                              "name": "Actions",
+                                              "width": "fill_container",
+                                              "gap": 8,
+                                              "children": [
+                                                {
+                                                  "id": "meh16",
+                                                  "type": "ref",
+                                                  "ref": "WyJCa",
+                                                  "name": "Button — Continue",
+                                                  "width": "fill_container",
+                                                  "padding": [
+                                                    8,
+                                                    14
+                                                  ],
+                                                  "descendants": {
+                                                    "zwEB2": {
+                                                      "content": "CONTINUE"
+                                                    }
+                                                  }
+                                                },
+                                                {
+                                                  "id": "MUxMw",
+                                                  "type": "ref",
+                                                  "ref": "WyJCa",
+                                                  "name": "Button — Confirm",
+                                                  "width": "fill_container",
+                                                  "padding": [
+                                                    8,
+                                                    14
+                                                  ],
+                                                  "descendants": {
+                                                    "zwEB2": {
+                                                      "content": "CONFIRM"
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "pHsWV",
+                                              "name": "Helper",
+                                              "fill": "$danger",
+                                              "textGrowth": "fixed-width",
+                                              "width": "fill_container",
+                                              "content": "Tap Confirm to delete this draft.",
+                                              "lineHeight": 1.4,
+                                              "fontFamily": "$font-body",
+                                              "fontSize": 11,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "GgA8X",
+                                      "name": "Helper",
+                                      "fill": "$mute",
+                                      "textGrowth": "fixed-width",
+                                      "width": "fill_container",
+                                      "content": "Drafts stay on this phone until you create or discard them. Or start a new purchase below.",
+                                      "lineHeight": 1.4,
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "EfeeQ",
+                                  "name": "Step Selector",
+                                  "width": "fill_container",
+                                  "gap": 4,
+                                  "children": [
+                                    {
+                                      "id": "A2JS5a",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 1. RECEIPT",
+                                      "width": "fill_container",
+                                      "fill": "$ink",
+                                      "stroke": "$ink",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "1. RECEIPT",
+                                          "fill": "$panel"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "yOphq",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 2. COSTS",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "2. COSTS",
+                                          "fill": "$steel"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "V9rXXI",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 3. ITEMS",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "3. ITEMS",
+                                          "fill": "$steel"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "ylsSh",
+                                  "type": "ref",
+                                  "ref": "WK3br",
+                                  "name": "Section — PRA line",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "I6N8Vt": {
+                                      "content": "PRA LINE"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "XilZE",
+                                  "type": "ref",
+                                  "ref": "mAqnO",
+                                  "name": "Field — PRA / line",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "zwy7z": {
+                                      "content": "PRA / LINE"
+                                    },
+                                    "QNIgX": {
+                                      "content": "select…",
+                                      "fill": "$mute"
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "UJgnT": {
+                              "type": "frame",
+                              "id": "wEM1U",
+                              "name": "Bottom Bar",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "stroke": "$line",
+                              "strokeWidth": {
+                                "top": 1.5
+                              },
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 13,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "zG9Bg",
+                                  "name": "Actions",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "children": [
+                                    {
+                                      "id": "Y9SBJ",
+                                      "type": "ref",
+                                      "ref": "WyJCa",
+                                      "name": "Button — Save draft",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "zwEB2": {
+                                          "content": "SAVE DRAFT"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "g5USS",
+                                      "type": "ref",
+                                      "ref": "okhbu",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "jPcGi": {
+                                          "content": "CREATE"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "rxrm8",
+                  "name": "Draft saved (decision #11)",
+                  "width": "fill_container",
+                  "gap": 24,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "m6y4d",
+                      "name": "Draft saved",
+                      "width": 300,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "xLGJz",
+                          "name": "State Label",
+                          "fill": "$steel",
+                          "content": "DRAFT SAVED",
+                          "fontFamily": "$font-display",
+                          "fontSize": 12,
+                          "fontWeight": "700",
+                          "letterSpacing": 1.3
+                        },
+                        {
+                          "id": "qGV6l",
+                          "type": "ref",
+                          "ref": "z1c2Sh",
+                          "name": "Device",
+                          "descendants": {
+                            "HEElt": {
+                              "content": "New Realisasi · draft"
+                            },
+                            "w3M5g9": {
+                              "content": "PROC-04"
+                            },
+                            "B3IoyE": {
+                              "type": "frame",
+                              "id": "X9HqX",
+                              "name": "Body",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "layout": "vertical",
+                              "gap": 14,
+                              "padding": 14,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "MmHMG",
+                                  "name": "Step Selector",
+                                  "width": "fill_container",
+                                  "gap": 4,
+                                  "children": [
+                                    {
+                                      "id": "F6Vy7",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 1. RECEIPT",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "1. RECEIPT",
+                                          "fill": "$steel"
+                                        },
+                                        "jgKcT": {
+                                          "enabled": true,
+                                          "fill": "$good"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "gX67Q",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 2. COSTS",
+                                      "width": "fill_container",
+                                      "fill": "$ink",
+                                      "stroke": "$ink",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "2. COSTS",
+                                          "fill": "$panel"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "gOXbW",
+                                      "type": "ref",
+                                      "ref": "CH9VO",
+                                      "name": "StepTab — 3. ITEMS",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "kDJ8d": {
+                                          "content": "3. ITEMS",
+                                          "fill": "$steel"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "UsBPe",
+                                  "type": "ref",
+                                  "ref": "WK3br",
+                                  "name": "Section — Landed cost — six separate inputs",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "I6N8Vt": {
+                                      "content": "LANDED COST — SIX SEPARATE INPUTS"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "i115Dp",
+                                  "name": "Row",
+                                  "width": "fill_container",
+                                  "gap": 10,
+                                  "children": [
+                                    {
+                                      "id": "bXrH0",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — Subtotal",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "SUBTOTAL"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "1,200,000",
+                                          "fontFamily": "$font-mono"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "A6PSy",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — − Seller discount",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "− SELLER DISCOUNT"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "50,000",
+                                          "fontFamily": "$font-mono"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "snVFu",
+                                  "name": "Row",
+                                  "width": "fill_container",
+                                  "gap": 10,
+                                  "children": [
+                                    {
+                                      "id": "VdXRg",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — − Platform voucher",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "− PLATFORM VOUCHER"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "—",
+                                          "fontFamily": "$font-mono",
+                                          "fill": "$mute"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "ditUy",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — + Shipping",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "+ SHIPPING"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "—",
+                                          "fontFamily": "$font-mono",
+                                          "fill": "$mute"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "f40PCn",
+                                  "name": "Row",
+                                  "width": "fill_container",
+                                  "gap": 10,
+                                  "children": [
+                                    {
+                                      "id": "g40tWW",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — + Insurance",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "+ INSURANCE"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "—",
+                                          "fontFamily": "$font-mono",
+                                          "fill": "$mute"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "m1mLnW",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — + Service fee",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "+ SERVICE FEE"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "—",
+                                          "fontFamily": "$font-mono",
+                                          "fill": "$mute"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "ez1t7",
+                                  "type": "ref",
+                                  "ref": "fkVML",
+                                  "name": "Card",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "zvMaG": {
+                                      "children": [
+                                        {
+                                          "type": "text",
+                                          "id": "I9Uy6",
+                                          "name": "Field Label",
+                                          "fill": "$mute",
+                                          "content": "TOTAL COST — COMPUTED, NEVER ENTERED",
+                                          "fontFamily": "$font-display",
+                                          "fontSize": 10,
+                                          "fontWeight": "600",
+                                          "letterSpacing": 1.4
+                                        },
+                                        {
+                                          "type": "text",
+                                          "id": "fjqOj",
+                                          "name": "Total",
+                                          "fill": "$ink",
+                                          "content": "Rp 1,150,000",
+                                          "fontFamily": "$font-mono",
+                                          "fontSize": 26,
+                                          "fontWeight": "600"
+                                        }
+                                      ]
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "UJgnT": {
+                              "type": "frame",
+                              "id": "UgFNC",
+                              "name": "Bottom Bar",
+                              "width": "fill_container",
+                              "fill": "$surface",
+                              "stroke": "$line",
+                              "strokeWidth": {
+                                "top": 1.5
+                              },
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 13,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "rp67x",
+                                  "name": "Helper",
+                                  "fill": "$steel",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Saved on this phone at 14:32.",
+                                  "lineHeight": 1.4,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "peFTo",
+                                  "name": "Actions",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "children": [
+                                    {
+                                      "id": "xi0B6",
+                                      "type": "ref",
+                                      "ref": "WyJCa",
+                                      "name": "Button — Save draft",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "zwEB2": {
+                                          "content": "SAVE DRAFT"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "xvo2q",
+                                      "type": "ref",
+                                      "ref": "okhbu",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "jPcGi": {
+                                          "content": "CREATE"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "i0f2u",
+                      "name": "Why",
+                      "width": 300,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": [
+                        24,
+                        0,
+                        0,
+                        0
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lZYQH",
+                          "name": "State Label",
+                          "fill": "$steel",
+                          "content": "HOW DRAFTS BEHAVE",
+                          "fontFamily": "$font-display",
+                          "fontSize": 12,
+                          "fontWeight": "700",
+                          "letterSpacing": 1.3
+                        },
+                        {
+                          "type": "text",
+                          "id": "QX2yj",
+                          "name": "Point",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "· Kept on this phone only, separately for each signed-in user.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tMQei",
+                          "name": "Point",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "· Several at once: each unfinished purchase is its own draft.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "fEbIV",
+                          "name": "Point",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "· Opening a draft whose PRA line is no longer active says so and asks for another line.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "u9Xq1",
+                          "name": "Point",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "· Creating the purchase deletes its draft.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "XTMxb",
+                          "name": "Point",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "· After 3 days the dashboard reminds the SM: the money is spent but the Owner can't see it yet.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TzQ1s",
+                          "name": "Point",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "· Corrections are never saved as drafts.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -11292,6 +12818,50 @@
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "While superseding, a required 'Reason for correction' sits above Save correction; the API rejects a supersede without one. Purchased-at stays a YYYY-MM-DD field — the app sends it as a datetime.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 12.5,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "RP63z",
+                      "name": "Note — Decision #11",
+                      "width": "fill_container",
+                      "stroke": "$good",
+                      "strokeWidth": {
+                        "left": 3
+                      },
+                      "layout": "vertical",
+                      "gap": 2,
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        11
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "yc62l",
+                          "name": "Head",
+                          "fill": "$good",
+                          "content": "DECISION #11",
+                          "fontFamily": "$font-display",
+                          "fontSize": 12,
+                          "fontWeight": "700",
+                          "letterSpacing": 1.3
+                        },
+                        {
+                          "type": "text",
+                          "id": "B1vFdj",
+                          "name": "Text",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Free tabs that report their own state; Create jumps to the first step with a problem; corrections open prefilled with changes marked in blue; drafts on the phone with a 3-day dashboard reminder.",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
@@ -16958,7 +18528,7 @@
                           "id": "BPOj5",
                           "name": "State Label",
                           "fill": "$steel",
-                          "content": "ENTRY POINT · DASHBOARD",
+                          "content": "ENTRY POINT · DASHBOARD, WITH A 3-DAY-OLD DRAFT",
                           "fontFamily": "$font-display",
                           "fontSize": 12,
                           "fontWeight": "700",
@@ -17015,6 +18585,76 @@
                                   }
                                 },
                                 {
+                                  "type": "frame",
+                                  "id": "V6g96l",
+                                  "name": "Stale draft reminder",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 8,
+                                  "children": [
+                                    {
+                                      "id": "bVoI8",
+                                      "type": "ref",
+                                      "ref": "QfPQH",
+                                      "name": "Callout — warning, with title",
+                                      "width": "fill_container",
+                                      "stroke": "$warn",
+                                      "descendants": {
+                                        "knoLi": {
+                                          "fill": "$warn",
+                                          "icon": "triangle-alert"
+                                        },
+                                        "z13SH": {
+                                          "type": "frame",
+                                          "id": "qvlPH",
+                                          "name": "Text",
+                                          "width": "fill_container",
+                                          "layout": "vertical",
+                                          "gap": 4,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "aDMiJ",
+                                              "name": "Title",
+                                              "fill": "$warn",
+                                              "content": "UNFINISHED PURCHASES",
+                                              "fontFamily": "$font-display",
+                                              "fontSize": 12,
+                                              "fontWeight": "700",
+                                              "letterSpacing": 1.1
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "Mv76x",
+                                              "name": "Note",
+                                              "fill": "$warn",
+                                              "textGrowth": "fixed-width",
+                                              "width": "fill_container",
+                                              "content": "2 purchases were saved as a draft more than 3 days ago. The money is already spent, but the Owner can't see it until you create them.",
+                                              "lineHeight": 1.45,
+                                              "fontFamily": "$font-body",
+                                              "fontSize": 12,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "pADN6",
+                                      "type": "ref",
+                                      "ref": "WyJCa",
+                                      "name": "Button — Open drafts",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "zwEB2": {
+                                          "content": "OPEN DRAFTS"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
                                   "id": "kDkys",
                                   "type": "ref",
                                   "ref": "okhbu",
@@ -17056,6 +18696,29 @@
                               "enabled": false
                             }
                           }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "a3yyoC",
+                          "name": "Note — reminder",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "aA2cd",
+                              "name": "Helper",
+                              "fill": "$mute",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "The Unfinished purchases reminder only appears when a draft on this phone is 3 or more days old.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         },
                         {
                           "type": "frame",
@@ -17899,6 +19562,64 @@
               "lineHeight": 1.45
             }
           }
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "CH9VO",
+      "x": 444,
+      "y": -260,
+      "name": "StepTab",
+      "reusable": true,
+      "width": 110,
+      "height": 44,
+      "cornerRadius": "$radius-sm",
+      "stroke": "$line",
+      "strokeWidth": 1.5,
+      "gap": 5,
+      "padding": [
+        0,
+        4
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "kDJ8d",
+          "name": "Label",
+          "fill": "$steel",
+          "content": "1. RECEIPT",
+          "fontFamily": "$font-display",
+          "fontSize": 13,
+          "fontWeight": "700",
+          "letterSpacing": 1.1
+        },
+        {
+          "type": "icon",
+          "id": "jgKcT",
+          "x": 0,
+          "y": 0,
+          "name": "Check",
+          "enabled": false,
+          "width": 14,
+          "height": 14,
+          "icon": "check",
+          "library": "lucide",
+          "fill": "$good"
+        },
+        {
+          "type": "rectangle",
+          "cornerRadius": "$radius-sm",
+          "id": "bDaC8",
+          "x": 0,
+          "y": 0,
+          "name": "Dot",
+          "enabled": false,
+          "fill": "$danger",
+          "width": 8,
+          "height": 8
         }
       ]
     }
