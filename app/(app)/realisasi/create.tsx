@@ -795,20 +795,16 @@ export default function CreateRealisasiScreen() {
         {supersedeTargetId ? (
           <Button label={submitting ? 'Saving…' : 'Save correction'} onPress={handleSubmit} disabled={submitting} />
         ) : (
-          <Row>
-            <View style={{ flex: 1 }}>
-              <Button label="Save draft" variant="secondary" onPress={handleSaveDraft} disabled={submitting} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Button
-                label={submitting ? 'Saving…' : 'Create'}
-                variant="gated"
-                gate="MANAGER+·PROC"
-                onPress={handleSubmit}
-                disabled={submitting || !mayLog}
-              />
-            </View>
-          </Row>
+          <>
+            <Button
+              label={submitting ? 'Saving…' : 'Create'}
+              variant="gated"
+              gate="MANAGER+·PROC"
+              onPress={handleSubmit}
+              disabled={submitting || !mayLog}
+            />
+            <Button label="Save draft" variant="secondary" onPress={handleSaveDraft} disabled={submitting} />
+          </>
         )}
       </ScrollView>
     </SafeAreaView>

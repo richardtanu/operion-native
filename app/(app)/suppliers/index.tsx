@@ -86,7 +86,7 @@ export default function SuppliersScreen() {
           <Card key={s.id}>
             <View className="flex-row items-center justify-between" style={{ gap: 8 }}>
               <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{s.name}</Text>
-              {s.franchiseCentre ? <Chip label="HQ · sells to stores" tone="pending" /> : null}
+              {s.franchiseCentre ? <Chip label="HQ · seller" tone="pending" /> : null}
             </View>
             <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>{s.contact}</Text>
           </Card>
