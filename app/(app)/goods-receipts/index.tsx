@@ -25,6 +25,7 @@ export default function GoodsReceiptListScreen() {
   const { color, type: typeScale } = useTheme();
   const { token } = useAuth();
   const [filter, setFilter] = useState<PathFilter>('ALL');
+  const [selfOnly, setSelfOnly] = useState(false);
   const [items, setItems] = useState<GoodsReceiptResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,13 +35,15 @@ export default function GoodsReceiptListScreen() {
     setLoading(true);
     setError(null);
     try {
-      setItems(await listGoodsReceipts({ path: filter === 'ALL' ? undefined : filter }, token));
+      setItems(
+        await listGoodsReceipts({ path: filter === 'ALL' ? undefined : filter, selfReceived: selfOnly ? true : undefined }, token),
+      );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not load goods receipts.');
     } finally {
       setLoading(false);
     }
-  }, [filter, token]);
+  }, [filter, selfOnly, token]);
 
   useEffect(() => {
     load();
@@ -65,6 +68,12 @@ export default function GoodsReceiptListScreen() {
               style={{ width: 'auto', paddingHorizontal: 10, paddingVertical: 6 }}
             />
           ))}
+          <Button
+            label="Self-received"
+            variant={selfOnly ? 'primary' : 'secondary'}
+            onPress={() => setSelfOnly((v) => !v)}
+            style={{ width: 'auto', paddingHorizontal: 10, paddingVertical: 6 }}
+          />
         </View>
 
         {error ? <Callout tone="danger">{error}</Callout> : null}
@@ -80,7 +89,10 @@ export default function GoodsReceiptListScreen() {
                 <Text style={{ ...textStyle(typeScale.value), color: color.ink, flex: 1 }}>
                   {gr.purchaseOrderId ? gr.poNumber ?? gr.purchaseOrderId : gr.externalOrderRef ?? gr.realisasiId}
                 </Text>
-                <Chip label={gr.purchaseOrderId ? 'PO' : 'Realisasi'} tone="neutral" />
+                <View className="flex-row" style={{ gap: 6 }}>
+                  {gr.selfReceived ? <Chip label="Self-received" tone="warning" /> : null}
+                  <Chip label={gr.purchaseOrderId ? 'PO' : 'Realisasi'} tone="neutral" />
+                </View>
               </View>
               <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 2 }}>
                 received {new Date(gr.receivedDate).toLocaleDateString()} by {gr.receivedByName}

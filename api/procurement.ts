@@ -1,5 +1,7 @@
 import { apiRequest } from './client';
 import type {
+  CancelPurchaseOrderRequest,
+  CatalogItemResponse,
   CreateGoodsReceiptRequest,
   CreatePurchaseOrderRequest,
   CreatePurchaseRequestAuthorizationRequest,
@@ -8,14 +10,17 @@ import type {
   CreateSupplierRequest,
   GoodsReceiptFilters,
   GoodsReceiptResponse,
+  MarkReimbursedRequest,
   ProcurementActivityEntry,
   ProcurementActivityFilters,
   PurchaseOrderResponse,
   PurchaseRequestAuthorizationResponse,
   PurchaseRequestResponse,
+  RealisasiFilters,
   RealisasiResponse,
   RejectRequest,
   StatusHistoryEntry,
+  StoreSpendingResponse,
   SupersedeRealisasiRequest,
   SupplierResponse,
 } from './types';
@@ -57,8 +62,9 @@ export function rejectPurchaseRequest(id: string, request: RejectRequest, token:
   return apiRequest<PurchaseRequestResponse>(`/purchase-requests/${id}/reject`, { method: 'PATCH', body: request, token });
 }
 
-export function cancelPurchaseRequest(id: string, token: string): Promise<PurchaseRequestResponse> {
-  return apiRequest<PurchaseRequestResponse>(`/purchase-requests/${id}/cancel`, { method: 'PATCH', token });
+/** BE-15: PENDING → the requester or the store's OWNER+; APPROVED → OWNER+ only. Reason required. */
+export function cancelPurchaseRequest(id: string, request: RejectRequest, token: string): Promise<PurchaseRequestResponse> {
+  return apiRequest<PurchaseRequestResponse>(`/purchase-requests/${id}/cancel`, { method: 'PATCH', body: request, token });
 }
 
 // ---------- PROC-03 — Purchase Request Authorization (PRA) ----------
@@ -92,8 +98,9 @@ export function createRealisasi(request: CreateRealisasiRequest, token: string):
   return apiRequest<RealisasiResponse>('/realisasi', { method: 'POST', body: request, token });
 }
 
-export function listRealisasi(token: string): Promise<RealisasiResponse[]> {
-  return apiRequest<RealisasiResponse[]>('/realisasi', { token });
+/** BE-18: `paymentMethod` / `reimbursementStatus` are filtered on the server. */
+export function listRealisasi(token: string, filters: RealisasiFilters = {}): Promise<RealisasiResponse[]> {
+  return apiRequest<RealisasiResponse[]>(`/realisasi${queryString(filters)}`, { token });
 }
 
 export function getRealisasi(id: string, token: string): Promise<RealisasiResponse> {
@@ -105,8 +112,19 @@ export function approveRealisasi(id: string, token: string): Promise<RealisasiRe
   return apiRequest<RealisasiResponse>(`/realisasi/${id}/approve`, { method: 'PATCH', token });
 }
 
-export function rejectRealisasi(id: string, token: string): Promise<RealisasiResponse> {
-  return apiRequest<RealisasiResponse>(`/realisasi/${id}/reject`, { method: 'PATCH', token });
+/** BE-17: OWNER+, from PENDING_APPROVAL or APPROVED. Reason required (it always was — `RejectRealisasiRequest`). */
+export function rejectRealisasi(id: string, request: RejectRequest, token: string): Promise<RealisasiResponse> {
+  return apiRequest<RealisasiResponse>(`/realisasi/${id}/reject`, { method: 'PATCH', body: request, token });
+}
+
+/** BE-18: the store's own OWNER+ marks one or several personal purchases paid back. All-or-nothing. */
+export function markReimbursed(request: MarkReimbursedRequest, token: string): Promise<RealisasiResponse[]> {
+  return apiRequest<RealisasiResponse[]>('/realisasi/reimbursements/mark-paid', { method: 'PATCH', body: request, token });
+}
+
+/** BE-18: REIMBURSED → PENDING, with a reason. Same rule as mark-paid. */
+export function undoReimbursement(id: string, request: RejectRequest, token: string): Promise<RealisasiResponse> {
+  return apiRequest<RealisasiResponse>(`/realisasi/${id}/reimbursement/undo`, { method: 'PATCH', body: request, token });
 }
 
 /** Correction, not edit — flips the original to SUPERSEDED and creates a new record linked by supersedesId. */
@@ -170,8 +188,23 @@ export function sendPurchaseOrder(id: string, token: string): Promise<PurchaseOr
   return apiRequest<PurchaseOrderResponse>(`/purchase-orders/${id}/send`, { method: 'PATCH', token });
 }
 
-export function cancelPurchaseOrder(id: string, token: string): Promise<PurchaseOrderResponse> {
-  return apiRequest<PurchaseOrderResponse>(`/purchase-orders/${id}/cancel`, { method: 'PATCH', token });
+/** BE-20: DRAFT → creator or OWNER+; ORDERED / PARTIALLY_RECEIVED → OWNER+ with a reason. */
+export function cancelPurchaseOrder(id: string, request: CancelPurchaseOrderRequest, token: string): Promise<PurchaseOrderResponse> {
+  return apiRequest<PurchaseOrderResponse>(`/purchase-orders/${id}/cancel`, { method: 'PATCH', body: request, token });
+}
+
+// ---------- HQ catalog (BE-21) ----------
+
+/** What HQ sells, with the caller's own store's linked copy. Any signed-in user. */
+export function getCatalog(token: string): Promise<CatalogItemResponse[]> {
+  return apiRequest<CatalogItemResponse[]>('/catalog', { token });
+}
+
+// ---------- Spending (BE-16) ----------
+
+/** OWNER+ only (403 below). `month` is `yyyy-MM`. Omit `tenantId` for every store in the caller's tree. */
+export function getSpending(month: string, token: string, tenantId?: string): Promise<StoreSpendingResponse[]> {
+  return apiRequest<StoreSpendingResponse[]>(`/procurement/spending${queryString({ month, tenantId })}`, { token });
 }
 
 export function getPurchaseOrderHistory(id: string, token: string): Promise<StatusHistoryEntry[]> {
@@ -179,10 +212,9 @@ export function getPurchaseOrderHistory(id: string, token: string): Promise<Stat
 }
 
 // ---------- PROC-08 — Reimbursement Queue ----------
-// No dedicated endpoint or DTO — reuses GET /realisasi (listRealisasi above),
-// client-filtered to paymentMethod=PERSONAL_REIMBURSABLE &&
-// reimbursementStatus=PENDING. No markReimbursed function exists here on
-// purpose: the backend has no endpoint for it (orphan action, don't add).
+// GET /realisasi with paymentMethod=PERSONAL_REIMBURSABLE and a
+// reimbursementStatus filter (server-side since BE-18), plus markReimbursed /
+// undoReimbursement above.
 
 // ---------- Activity log (BE-07) ----------
 

@@ -5,8 +5,48 @@ import type { UserProfileResponse } from '../api/types';
  * show. The server still enforces each one; a mismatch shows up as a 403.
  */
 
+type User = UserProfileResponse | null;
+
+const managerPlus = (u: User) => u?.scope === 'MANAGER' || u?.scope === 'OWNER' || u?.scope === 'PRINCIPAL';
+export const ownerPlus = (u: User) => u?.scope === 'OWNER' || u?.scope === 'PRINCIPAL';
+
 /** GET /procurement/activity: ADMIN or PROCUREMENT role, or OWNER+ scope (BE-07). */
-export function canReadActivityLog(user: UserProfileResponse | null): boolean {
+export function canReadActivityLog(user: User): boolean {
   if (!user) return false;
-  return user.role === 'ADMIN' || user.role === 'PROCUREMENT' || user.scope === 'OWNER' || user.scope === 'PRINCIPAL';
+  return user.role === 'ADMIN' || user.role === 'PROCUREMENT' || ownerPlus(user);
+}
+
+/** POST /purchase-requests: MANAGER+ scope, or ADMIN / PROCUREMENT role (BE-14). Accounting can't. */
+export function canCreatePurchaseRequest(user: User): boolean {
+  return managerPlus(user) || user?.role === 'ADMIN' || user?.role === 'PROCUREMENT';
+}
+
+/** Filing for a store other than your own (BE-14): ADMIN or PROCUREMENT role, or OWNER+. */
+export function canFileForAnotherStore(user: User): boolean {
+  return user?.role === 'ADMIN' || user?.role === 'PROCUREMENT' || ownerPlus(user);
+}
+
+/** Setting or cancelling spending limits (PRA): OWNER+ (BE-17, superseding BE-13's Manager+). */
+export function canSetSpendingLimits(user: User): boolean {
+  return ownerPlus(user);
+}
+
+/** Logging a purchase (Realisasi): MANAGER+ scope or PROCUREMENT role (BE-17). */
+export function canLogPurchase(user: User): boolean {
+  return managerPlus(user) || user?.role === 'PROCUREMENT';
+}
+
+/** HQ buying for a store (BE-17): PROCUREMENT role or OWNER+. */
+export function canBuyForAnotherStore(user: User): boolean {
+  return user?.role === 'PROCUREMENT' || ownerPlus(user);
+}
+
+/** Drafting an order to HQ: MANAGER+ or PROCUREMENT (BE-20). */
+export function canDraftOrder(user: User): boolean {
+  return managerPlus(user) || user?.role === 'PROCUREMENT';
+}
+
+/** Spending summary (BE-16): OWNER+. */
+export function canReadSpending(user: User): boolean {
+  return ownerPlus(user);
 }

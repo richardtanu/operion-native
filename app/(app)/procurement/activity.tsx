@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowRight, Lock } from 'lucide-react-native';
-import { Button, Callout, Card, Chip, KV, Section, type ChipTone } from '../../../components';
+import { Button, Callout, Card, Chip, KV, Section, actorLabel, type ChipTone } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { getProcurementActivity } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
@@ -187,14 +187,23 @@ export default function ActivityLogScreen() {
 
                     {/* Line 3 — who, where */}
                     <View className="flex-row items-center" style={{ gap: 6, marginTop: 8 }}>
-                      {entry.actorName ? (
+                      {entry.actorKind === 'USER' && entry.actorName ? (
                         <Text style={{ ...textStyle(typeScale.body), color: color.ink, flexShrink: 1 }}>{entry.actorName}</Text>
                       ) : (
-                        // Server-derived (e.g. PRA recomputed to FULFILLED) or written before
-                        // actors were recorded — the derived treatment, never a blank.
-                        <View className="flex-row items-center" style={{ gap: 4 }}>
+                        // BE-22: an automatic change names whose action caused it; a row with no
+                        // actor at all (test data only) says so. The derived treatment, never a blank.
+                        <View className="flex-row items-center" style={{ gap: 4, flexShrink: 1 }}>
                           <Lock size={12} color={color.steel} />
-                          <Text style={{ ...textStyle(typeScale.body), fontStyle: 'italic', color: color.steel }}>System</Text>
+                          <Text
+                            style={{
+                              ...textStyle(typeScale.body),
+                              fontStyle: 'italic',
+                              color: entry.actorKind === 'AUTOMATIC' ? color.steel : color.mute,
+                              flexShrink: 1,
+                            }}
+                          >
+                            {actorLabel(entry, entry.actorName)}
+                          </Text>
                         </View>
                       )}
                       <Text style={{ ...textStyle(typeScale.helper), color: color.mute, flexShrink: 1 }} numberOfLines={1}>
@@ -211,7 +220,7 @@ export default function ActivityLogScreen() {
                         <KV k="Record ID" v={entry.entityId} />
                         <KV k="When" v={at ? `${formatDayLabel(at)} ${formatTime(at)}` : entry.at} />
                         <KV k="Branch" v={entry.tenantName} />
-                        {!entry.actorName ? <KV k="Changed by" v="System or pre-log change" derived /> : null}
+                        {entry.actorKind !== 'USER' ? <KV k="Changed by" v={actorLabel(entry, entry.actorName)} derived /> : null}
                       </View>
                     ) : null}
                   </Card>
