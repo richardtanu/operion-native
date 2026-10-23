@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout, Card, Chip, Field, KV, Row, Section, SelectField } from '../../../components';
@@ -11,6 +11,7 @@ import type { CatalogItemResponse, PurchaseOrderResponse, PurchaseRequestRespons
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 import { rp } from '../../../lib/money';
+import { decodeLines } from '../../../lib/stockLevel';
 
 
 type Line = { key: string; catalogId: string; quantity: string; price: string };
@@ -26,9 +27,11 @@ function newLine(): Line {
 // and how much. Draft: MANAGER+ or PROCUREMENT. Send to HQ commits the store's
 // money: OWNER+. Cancel: a draft by its creator or OWNER+; once sent, OWNER+
 // with a reason. Prices and the total come back null below Owner (BE-11).
+// Restock (INV-02) opens it with `lines=catalogId:qty,…` filled in.
 export default function CreatePurchaseOrderScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
+  const params = useLocalSearchParams<{ lines?: string }>();
   const { user, token } = useAuth();
 
   const [catalog, setCatalog] = useState<CatalogItemResponse[]>([]);
@@ -49,13 +52,17 @@ export default function CreatePurchaseOrderScreen() {
   useEffect(() => {
     if (!token) return;
     getCatalog(token)
-      .then(setCatalog)
+      .then((items) => {
+        setCatalog(items);
+        const prefill = decodeLines(params.lines).filter((l) => items.some((c) => c.id === l.partId));
+        if (prefill.length) setLines(prefill.map((l) => ({ ...newLine(), catalogId: l.partId, quantity: l.quantity })));
+      })
       .catch(() => setCatalog([]))
       .finally(() => setCatalogLoading(false));
     listPurchaseRequests(token)
       .then((all) => setApprovedPrs(all.filter((pr) => pr.status === 'APPROVED')))
       .catch(() => setApprovedPrs([]));
-  }, [token]);
+  }, [token, params.lines]);
 
   const togglePr = (id: string) => setLinkedPrIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const updateLine = (key: string, patch: Partial<Line>) => setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));

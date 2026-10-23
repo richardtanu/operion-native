@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout, Card, Chip, Field, Row, Section, SelectField } from '../../../components';
@@ -12,6 +12,7 @@ import { ApiError } from '../../../api/httpError';
 import type { PartResponse, PurchaseRequestResponse, TenantResponse } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
+import { decodeLines } from '../../../lib/stockLevel';
 
 
 type Line = { key: string; partId: string; partName: string; quantity: string };
@@ -25,10 +26,12 @@ function newLine(): Line {
 // PROC-01 — Purchase Request Create. Blocking-error, manual-retry: calls
 // api/procurement.ts directly, never through the outbox. BE-14: only
 // MANAGER+ or ADMIN / PROCUREMENT may file; HQ picks the store (required, no
-// default), a Store Manager's store is fixed.
+// default), a Store Manager's store is fixed. Restock (INV-02) and Stock
+// (INV-01) open it with `lines=partId:qty,…` filled in.
 export default function CreatePurchaseRequestScreen() {
   const { color, type: typeScale } = useTheme();
   const router = useRouter();
+  const params = useLocalSearchParams<{ lines?: string }>();
   const { user, token } = useAuth();
   const [lines, setLines] = useState<Line[]>([newLine()]);
   const [submitting, setSubmitting] = useState(false);
@@ -46,13 +49,22 @@ export default function CreatePurchaseRequestScreen() {
   useEffect(() => {
     if (!token) return;
     listParts(token)
-      .then((all) => setParts(all.filter((p) => !p.retired)))
+      .then((all) => {
+        const active = all.filter((p) => !p.retired);
+        setParts(active);
+        const prefill = decodeLines(params.lines)
+          .map((l) => ({ part: active.find((p) => p.id === l.partId), quantity: l.quantity }))
+          .filter((l) => l.part);
+        if (prefill.length) {
+          setLines(prefill.map((l) => ({ ...newLine(), partId: l.part!.id, partName: l.part!.name, quantity: l.quantity })));
+        }
+      })
       .catch(() => setParts([]))
       .finally(() => setPartsLoading(false));
     getTenantTree(token)
       .then(setStores)
       .catch(() => setStores([]));
-  }, [token]);
+  }, [token, params.lines]);
 
   const updateLine = (key: string, patch: Partial<Line>) =>
     setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
