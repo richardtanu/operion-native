@@ -80,15 +80,69 @@ export interface PartResponse {
   id: string;
   name: string;
   brand: string | null;
+  categoryId: string | null;
   categoryName: string | null;
+  partTypeId: string | null;
   /** Distinct from category on the backend (partTypeId/partTypeName are their own field pair) — used to segment the Part picker. */
   partTypeName: string | null;
+  expectedLifespanDays: number | null;
+  notes: string | null;
+  currentStock: number;
+  /** Drives "low" for items without usage data (BE-27's rule). */
+  minimumStock: number | null;
+  reorderQuantity: number | null;
+  manualDailyUsage: number | null;
+  manualReorderPoint: number | null;
   retired: boolean;
   /** BE-21: the HQ catalog item this store part is linked to, if any. */
   catalogPartId: string | null;
   /** BE-21, read from HQ's row: HQ sells it / it must be bought from HQ. */
   soldByHq: boolean;
   mandatoryFromHq: boolean;
+}
+
+/** POST /parts (BE-25: the store's MANAGER+ or ADMIN). Category and type are required by the service. */
+export interface CreatePartRequest {
+  name: string;
+  brand?: string;
+  categoryId: string;
+  partTypeId: string;
+  expectedLifespanDays?: number;
+  minimumStock?: number;
+  reorderQuantity?: number;
+  notes?: string;
+}
+
+/**
+ * PUT /parts/{id} — partial; only non-null fields apply. Note the different
+ * names from create: `manufacturer` is the brand, `expectedLifespan` the
+ * lifespan in days. A new categoryId needs its partTypeId too.
+ */
+export interface UpdatePartRequest {
+  name?: string;
+  manufacturer?: string;
+  categoryId?: string;
+  partTypeId?: string;
+  expectedLifespan?: number;
+  minimumStock?: number;
+  reorderQuantity?: number;
+  notes?: string;
+}
+
+/** `consumable` decides whether items are counted by quantity or one by one (part instances). */
+export interface PartCategoryResponse {
+  id: string;
+  name: string;
+  description: string | null;
+  consumable: boolean | null;
+}
+
+export interface PartTypeResponse {
+  id: string;
+  categoryId: string;
+  categoryName: string;
+  name: string;
+  description: string | null;
 }
 
 /**
@@ -487,9 +541,145 @@ export interface StoreSpendingResponse {
   spent: number;
   committed: number;
   budget: number | null;
-  /** spent + committed > budget; null without a budget. A warning, never a block. */
+  /** BE-19: active expenses dated this month, and their HQ / Branch specific split. */
+  otherExpenses: number;
+  otherExpensesHq: number;
+  otherExpensesBranch: number;
+  /** spent + committed + otherExpenses > budget; null without a budget. A warning, never a block. */
   overBudget: boolean | null;
   topParts: SpendingPartResponse[];
+}
+
+// ---------- Expenses (BE-19, PROC-10) ----------
+
+/** A label for visibility, not a charge: the branch pays both, both count in its budget. */
+export type ExpenseCategory = 'HQ' | 'BRANCH_SPECIFIC';
+/** `PERSONAL` is "paid by me" on screen; it's paid back by the store Owner like a purchase. */
+export type ExpensePaidBy = 'STORE' | 'PERSONAL';
+/** No edit: a wrong entry is voided with a reason and entered again. */
+export type ExpenseStatus = 'ACTIVE' | 'VOIDED';
+
+/**
+ * POST /expenses — the store's MANAGER+; `STORE` only OWNER+. Always the
+ * caller's own store. A `PERSONAL` expense needs at least one receipt
+ * (EXPENSE_RECEIPT upload). `expenseDate` (`yyyy-MM-dd`) defaults to today.
+ */
+export interface CreateExpenseRequest {
+  description: string;
+  amount: number;
+  expenseDate?: string;
+  category: ExpenseCategory;
+  paidBy: ExpensePaidBy;
+  receiptUploadIds: string[];
+}
+
+/** `amount` is null below OWNER, except the claimant's own PERSONAL expense (BE-18's exception). */
+export interface ExpenseResponse {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  description: string;
+  amount: number | null;
+  /** `yyyy-MM-dd`. */
+  expenseDate: string;
+  category: ExpenseCategory;
+  paidBy: ExpensePaidBy;
+  status: ExpenseStatus;
+  createdById: string;
+  createdByName: string;
+  createdAt: string;
+  receiptUploadIds: string[];
+  voidedByName: string | null;
+  voidedAt: string | null;
+  voidReason: string | null;
+  /** `NOT_APPLICABLE` when paid by the store, and once voided. */
+  reimbursementStatus: ReimbursementStatus;
+  reimbursedByName: string | null;
+  reimbursedAt: string | null;
+  reimbursementMethod: ReimbursementMethod | null;
+  reimbursementReference: string | null;
+  reimbursementUndoReason: string | null;
+}
+
+/** GET /expenses filters, all server-side. Owed = `paidBy=PERSONAL&reimbursementStatus=PENDING`. */
+export interface ExpenseFilters {
+  category?: ExpenseCategory;
+  paidBy?: ExpensePaidBy;
+  reimbursementStatus?: ReimbursementStatus;
+  status?: ExpenseStatus;
+  from?: string;
+  to?: string;
+}
+
+// ---------- Inventory (module 2) ----------
+
+/** Computed on read from minimum stock only: OUT at ≤ 0, LOW at ≤ minimumStock. BE-27 replaces it with one rule. */
+export type InventoryStockStatus = 'NORMAL' | 'LOW_STOCK' | 'OUT_OF_STOCK';
+
+/** One row of GET /inventory/stock-summary (every item) or /inventory/low-stock (below minimum, lowest first). */
+export interface StockSummaryRow {
+  partId: string;
+  partName: string;
+  currentStock: number;
+  minimumStock: number | null;
+  status: InventoryStockStatus;
+}
+
+/** GET /inventory/dashboard. "Used today" counts repair usage only until BE-26. */
+export interface InventoryDashboardResponse {
+  totalParts: number;
+  totalStock: number;
+  lowStock: number;
+  outOfStock: number;
+  stockReceivedToday: number;
+  stockUsedToday: number;
+}
+
+/** COMPUTED / MANUAL_RATE have usage data; MANUAL_LEVEL / NONE don't (days of cover is null, never 0). */
+export type BurnRateSource = 'COMPUTED' | 'MANUAL_RATE' | 'MANUAL_LEVEL' | 'NONE';
+
+/** GET /burn-rate (every item) or /burn-rate/{partId}. */
+export interface BurnRateResponse {
+  partId: string;
+  partName: string;
+  currentStock: number;
+  burnRateSource: BurnRateSource;
+  /** Units a day. */
+  burnRate: number | null;
+  observationDays: number | null;
+  eventCount: number | null;
+  daysOfCover: number | null;
+  targetDays: number | null;
+  suggestedQty: number | null;
+  manualReorderPoint: number | null;
+  belowLevel: boolean | null;
+}
+
+export type StockAdjustmentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+/** POST /stock-adjustments (BE-25: the store's MANAGER+). `quantity` is signed: −1 removes one. */
+export interface CreateStockAdjustmentRequest {
+  partId: string;
+  quantity: number;
+  reason: string;
+}
+
+/**
+ * Approve: the store's own OWNER+ (HQ gets 400 "not found"). Your own
+ * request needs another Owner (403) unless you're the store's only one —
+ * then it's approved with `selfApproved: true`.
+ */
+export interface StockAdjustmentResponse {
+  id: string;
+  partId: string;
+  partName: string;
+  quantity: number;
+  reason: string;
+  status: StockAdjustmentStatus;
+  requestedById: string;
+  requestedByName: string;
+  selfApproved: boolean;
+  createdAt: string;
 }
 
 // ---------- Uploads (BE-23) ----------
@@ -577,7 +767,8 @@ export type NotificationType =
   | 'PURCHASE_AUTHORIZATION_CREATED'
   | 'PURCHASE_REQUEST_CANCELLED'
   | 'REIMBURSEMENT_PAID'
-  | 'GOODS_SELF_RECEIVED';
+  | 'GOODS_SELF_RECEIVED'
+  | 'STOCK_ADJUSTMENT_REQUESTED';
 
 /** Only ever the caller's own notifications. Nobody is notified of their own action (BE-07). */
 export interface NotificationResponse {

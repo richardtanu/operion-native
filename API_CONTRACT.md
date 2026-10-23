@@ -10,6 +10,33 @@ Regenerate this by re-reading the backend rather than hand-editing if it drifts 
 
 ---
 
+## Changes since BE-23 (backend `main` d51096e, 23 Oct 2026)
+
+Read from source on backend `main` (`module/expense`, `module/stockadjustment`, `module/inventory`, `module/part`, `module/burnrate`) and the change queue's "What was done" notes for BE-19 and BE-25. Where these contradict a section below, these win.
+
+| Change | Status / shape | Mobile handling |
+|---|---|---|
+| `POST /expenses` (BE-19) | `{description @NotBlank ≤255, amount @Positive, expenseDate? (yyyy-MM-dd, default today), category: HQ\|BRANCH_SPECIFIC, paidBy: STORE\|PERSONAL, receiptUploadIds}`. The store's MANAGER+ (403 below); `STORE` needs OWNER+ (403). Always the caller's own store. `PERSONAL` without a receipt → 400 "Add a photo of the receipt…". Receipts are BE-23 uploads with purpose `EXPENSE_RECEIPT` | PROC-10 Add expense (`expenses/create.tsx`), gated `MANAGER+`; "Store" disabled below Owner; `PhotoPicker` required for "Me" |
+| `GET /expenses`, `GET /expenses/{id}` (BE-19) | Filters `category`, `paidBy`, `reimbursementStatus`, `status` (ACTIVE\|VOIDED), `from`, `to`, all server-side. Caller's tree (HQ reads every store's). `ExpenseResponse{id, tenantId, tenantName, description, amount, expenseDate, category, paidBy, status, createdById, createdByName, createdAt, receiptUploadIds, voidedByName, voidedAt, voidReason, reimbursementStatus, reimbursedByName, reimbursedAt, reimbursementMethod, reimbursementReference, reimbursementUndoReason}`. `amount` null below OWNER except the claimant's own PERSONAL one | PROC-10 list (`expenses/index.tsx`): HQ / Branch specific tabs; Owed / Paid back / Paid by store / Voided filters |
+| `PATCH /expenses/{id}/void {reason}` (BE-19) | The creator or that store's OWNER+ (HQ → 403). ACTIVE only; a paid-back one must be undone first (400). Voided → `reimbursementStatus` NOT_APPLICABLE | Void with reason, gated `CREATOR·OWNER+` |
+| `PATCH /expenses/reimbursements/mark-paid`, `PATCH /expenses/{id}/reimbursement/undo {reason}` (BE-19) | BE-18's `MarkReimbursedRequest` and rules exactly: the store's own OWNER+, one or several, all-or-nothing, never money owed to yourself; the claimant gets one `REIMBURSEMENT_PAID` | Mark paid back / undo on PROC-10, gated `STORE OWNER` |
+| `GET /procurement/spending` (BE-19) | + `otherExpenses`, `otherExpensesHq`, `otherExpensesBranch` (ACTIVE, by `expenseDate` month). `overBudget` = spent + committed + otherExpenses > budget | `SpendingSummary`: "Other expenses" line, HQ / Branch split beside it |
+| Stock shortcuts (BE-25) | `POST /inventory/adjust` and `/inventory/receive`: ADMIN role, else 403; `reason` required (400). The movement note carries "Data repair by {name}: {reason}" until BE-26 adds an actor | Not called by the app (data repair only) |
+| `POST /stock-adjustments` (BE-25) | `{partId, quantity (signed: −1 removes one), reason @NotBlank}`. The store's MANAGER+ (403). The store's OWNER+ users get `STOCK_ADJUSTMENT_REQUESTED`, never the requester | INV-04 Adjust count (`inventory/adjust.tsx`), gated `MANAGER+` |
+| `PATCH /stock-adjustments/{id}/approve`, `/reject {reason}` (BE-25) | The store's own OWNER+ (`findOwned`: HQ → 400 "Stock adjustment not found"). Approving your own → 403 "Another Owner must approve your own adjustment" while the store has another OWNER+ user; as its only one → approved with `selfApproved: true`. Rejecting your own just withdraws it | INV-04 Adjustments (`inventory/adjustments.tsx`): Waiting / History, gated `OWNER+`, "Self-approved" chip |
+| `GET /stock-adjustments[?selfApproved=true]`, `/pending`, `/{id}/history` | Caller's tree. `StockAdjustmentResponse{id, partId, partName, quantity, reason, status: PENDING\|APPROVED\|REJECTED, requestedById, requestedByName, selfApproved, createdAt}` — no stock before/after; the app joins `GET /parts` | Waiting shows `current → after` from the parts list |
+| Items (BE-25) | `POST /parts`, `PUT /parts/{id}`: the store's MANAGER+ or ADMIN; `PATCH …/retire`, `/restore`: OWNER+ or ADMIN (403). Categories and types: create/edit/delete/seed `@PreAuthorize ADMIN`; reads open (BE-29 narrows to HQ admins, one list) | INV-06 Items (`inventory/items.tsx`, `item-form.tsx`) gated `MANAGER+·ADMIN` / `OWNER+·ADMIN` |
+| `PATCH /parts/{id}/catalog-link {catalogPartId}` (BE-25) | HQ admins as before (link, re-link, unlink). Otherwise the store's own MANAGER+ may only **create** a link on their own unlinked item, to an item HQ sells (400 otherwise); re-link or unlink → 403. For everyone: items counted differently → 400 "These two items are counted differently" | INV-06 edit: "Same as HQ's item" picker + Link, gated `MANAGER+`; linked items read-only |
+| Notifications | New type `STOCK_ADJUSTMENT_REQUESTED`, reference type `STOCK_ADJUSTMENT`; `REIMBURSEMENT_PAID` also for expenses (reference type `EXPENSE`) | Labelled "Adjustment to approve" |
+
+**Inventory reads the app now uses (unchanged by BE-25, read from source):**
+- `GET /inventory/stock-summary` and `/inventory/low-stock` → `{partId, partName, currentStock, minimumStock, status: NORMAL|LOW_STOCK|OUT_OF_STOCK}`; status is minimum-stock only (OUT ≤ 0, LOW ≤ minimum).
+- `GET /inventory/dashboard` → `{totalParts, totalStock, lowStock, outOfStock, stockReceivedToday, stockUsedToday}`; "used today" counts `MAINTENANCE_USAGE` only (BE-26 adds consumable takes).
+- `GET /burn-rate`, `/burn-rate/{partId}` → `{partId, partName, currentStock, burnRateSource: COMPUTED|MANUAL_RATE|MANUAL_LEVEL|NONE, burnRate, observationDays, eventCount, daysOfCover, targetDays, suggestedQty, manualReorderPoint, belowLevel}`. `daysOfCover` is null (never 0) without usage data.
+- The app applies the decided "low" rule on the phone (`lib/stockLevel.ts`) from these two lists until BE-27 returns `lowBecause` from the server.
+
+**Known gaps the app works around (BE-26):** inventory rows carry no store, so an HQ caller sees every store's items mixed together — the Inventory menu tells HQ so, and the dashboard hides the stock tiles for HQ. No per-item stock history endpoint yet; INV-05 says so.
+
 ## Changes since BE-13 (backend `main` e828f9e, 22 Oct 2026)
 
 Read from source (controllers and DTOs on backend `main`) and the change queue's "What was done" notes for BE-14…BE-23. Where these contradict a section below, these win.
@@ -137,7 +164,7 @@ Response `data`: `UserProfileResponse` (same shape as `/auth/me`)
 
 Not owned by Procurement, but every create screen in Module 1 needs it for a real Part picker.
 
-### `POST /parts` — authenticated, no role/scope gate
+### `POST /parts` — the store's MANAGER+ or ADMIN (BE-25)
 | Field | Type | Required |
 |---|---|---|
 | `name` | String | not annotated — service doesn't null-check either, effectively optional |
@@ -159,11 +186,13 @@ Returns active parts (`active=true`) for tenant + descendants. `data: PartRespon
 ### `PUT /parts/{partId}` — authenticated, partial update
 All fields optional (`UpdatePartRequest`); only non-null/non-blank fields are applied. If `categoryId` is
 supplied, `partTypeId` must be too (or throws) — you can't change category without re-confirming type.
+⚠️ The field names differ from create: the brand is `manufacturer` and the lifespan is `expectedLifespan`
+(days). Only the caller's own store's item (`findByIdAndTenantId`). Gated since BE-25 — see the top section.
 
-### `PATCH /parts/{partId}/retire` — authenticated
+### `PATCH /parts/{partId}/retire` — OWNER+ or ADMIN (BE-25)
 Request: `{ reason: string }` — `@NotBlank`. Throws if `currentStock > 0` or the part is currently installed.
 
-### `PATCH /parts/{partId}/restore` — authenticated
+### `PATCH /parts/{partId}/restore` — OWNER+ or ADMIN (BE-25)
 No body. Throws if the part isn't currently retired.
 
 ### `PartResponse`
@@ -189,7 +218,7 @@ retiredAt: string | null        // LocalDateTime
 
 ### Picker-backing endpoints — confirmed to exist, so `categoryId`/`partTypeId` are never raw-UUID-blind
 
-**`PartCategoryController` (`/part-categories`)** — all authenticated, no role/scope gate:
+**`PartCategoryController` (`/part-categories`)** — reads open to anyone; create/edit/delete/seed ADMIN only (BE-25):
 - `POST /part-categories` — `{ name, description, consumable: boolean }`, no validation annotations
 - `GET /part-categories` — `data: PartCategoryResponse[]`
 - `PUT /part-categories/{id}` — ⚠️ returns the raw `PartCategoryResponse`, **not** wrapped in the `{success,message,data}` envelope — inconsistent with the rest of the API, don't assume `.data` unwrapping works here
@@ -198,7 +227,7 @@ retiredAt: string | null        // LocalDateTime
 
 `PartCategoryResponse`: `{ id: UUID, name: string, description: string | null, consumable: boolean | null }`
 
-**`PartTypeController` (`/part-types`)** — all authenticated, no role/scope gate:
+**`PartTypeController` (`/part-types`)** — reads open to anyone; create/edit/delete/seed ADMIN only (BE-25):
 - `POST /part-types` — `{ categoryId: UUID, name: string, description: string }`, no validation annotations
 - `GET /part-types` — all types for tenant
 - `GET /part-types/category/{categoryId}` — filtered by category, ideal for a dependent Category → Type picker
