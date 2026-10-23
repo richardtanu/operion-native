@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ban } from 'lucide-react-native';
-import { Button, Callout, Card, Field, KV, Row, Section, TextField } from '../../../components';
+import { Button, Callout, Card, Chip, Field, KV, PhotoPicker, Row, Section, TextField, type UploadedPhoto } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { createGoodsReceipt, getRealisasi, listPurchaseOrders, listRealisasi } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
@@ -16,10 +16,10 @@ import { toLocalDateTime } from '../../../lib/dates';
 type Via = 'po' | 'realisasi';
 
 // PROC-05 — Goods Receipt. Exactly one of purchaseOrderId / realisasiId,
-// never both — the two paths are different kinds of purchase, not two ways
-// of doing one. Built for mobile per this session's deliberate override of
-// the wireframe brief's own "web/back-office only" recommendation for this
-// screen.
+// never both — the two paths are different kinds of purchase. The receiver is
+// whoever is signed in (BE-20: taken from the token). Receiving a Realisasi
+// you bought yourself is allowed only with a photo of the goods; the receipt
+// is flagged self-received and the store Owner is notified.
 export default function CreateGoodsReceiptScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
@@ -36,6 +36,7 @@ export default function CreateGoodsReceiptScreen() {
   const [receivedDate, setReceivedDate] = useState('');
   const [notes, setNotes] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +59,7 @@ export default function CreateGoodsReceiptScreen() {
   }, [selectedRealisasi?.id, token]);
 
   const attachmentMissing = via === 'realisasi' && selectedRealisasi && !selectedRealisasi.attachments;
+  const selfReceiving = via === 'realisasi' && !!selectedRealisasi && selectedRealisasi.createdById === user?.id;
 
   const handleSubmit = async () => {
     setError(null);
@@ -71,6 +73,7 @@ export default function CreateGoodsReceiptScreen() {
     const qty = Number(quantity);
     if (!Number.isFinite(qty) || qty <= 0) return setError('Quantity must be greater than zero.');
     if (!token || !user) return setError('Not signed in.');
+    if (selfReceiving && photos.length === 0) return setError('You bought this: add a photo of the goods to receive it.');
 
     setSubmitting(true);
     try {
@@ -78,9 +81,7 @@ export default function CreateGoodsReceiptScreen() {
         {
           purchaseOrderId: via === 'po' ? selectedPo!.id : undefined,
           realisasiId: via === 'realisasi' ? selectedRealisasi!.id : undefined,
-          // The receiver is whoever is holding the device — the API takes it
-          // from the body, not the token.
-          receivedBy: user.id,
+          goodsPhotoUploadIds: photos.length ? photos.map((ph) => ph.uploadId) : undefined,
           receivedDate: receivedAt,
           notes: notes.trim() || undefined,
           items: [{ partId: selectedPartId, realisasiItemId: via === 'realisasi' ? (realisasiItemId ?? undefined) : undefined, quantity: qty }],
@@ -100,6 +101,7 @@ export default function CreateGoodsReceiptScreen() {
       <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
         <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
           <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Receipt recorded</Text>
+          {result.selfReceived ? <Chip label="Self-received" tone="warning" /> : null}
           {result.items.map((item) => (
             <Card key={item.id}>
               <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
@@ -108,9 +110,11 @@ export default function CreateGoodsReceiptScreen() {
               </View>
             </Card>
           ))}
-          <Callout tone="danger">
-            Nothing is notified on receipt, unlike every screen upstream of it. The flow ends silently.
-          </Callout>
+          {result.selfReceived ? (
+            <Callout tone="warning">You received your own purchase, so the store Owner has been told, with your photo.</Callout>
+          ) : (
+            <Callout>Stock is updated. Nobody is notified of a receipt unless the buyer received it themself.</Callout>
+          )}
           <Button label="Back to Procurement" onPress={() => router.replace('/(app)/procurement')} />
         </ScrollView>
       </SafeAreaView>
@@ -177,8 +181,10 @@ export default function CreateGoodsReceiptScreen() {
                   backgroundColor: color.panel,
                 }}
               >
-                <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{r.id}</Text>
-                <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{r.channel}</Text>
+                <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{r.externalOrderRef ?? r.id}</Text>
+                <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                  {[r.sellerName ?? r.supplierName, r.channel, `bought by ${r.createdByName}`].filter(Boolean).join(' · ')}
+                </Text>
               </Pressable>
             ))}
 
@@ -231,15 +237,24 @@ export default function CreateGoodsReceiptScreen() {
           </Card>
         ) : null}
 
-        {via === 'realisasi' ? (
-          <Callout tone="warning">
-            Receiver must differ from the Realisasi's creator, with no Owner exemption — unlike the PRA rule, which
-            has one.
-          </Callout>
-        ) : (
-          <Callout>PO path has no attachment requirement and no receiver check — there is no creator concept on that path.</Callout>
-        )}
-        <Callout tone="danger">Nothing is notified on receipt, unlike every screen upstream of it.</Callout>
+        {token ? (
+          <PhotoPicker
+            label={selfReceiving ? 'Photo of the goods (required)' : 'Photo of the goods (optional)'}
+            purpose="GOODS_RECEIPT_PHOTO"
+            token={token}
+            photos={photos}
+            onChange={setPhotos}
+            sub={
+              selfReceiving
+                ? 'You bought this yourself, so a photo is required. The receipt is marked self-received and the Owner is told.'
+                : 'Take it when you open the package.'
+            }
+          />
+        ) : null}
+
+        {via === 'po' ? (
+          <Callout>Orders from HQ need no receipt attachment and no receiver check: the Owner sent the order and HQ knows what it shipped.</Callout>
+        ) : null}
 
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 

@@ -2,48 +2,56 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, Field, KV, Row, Section } from '../../../components';
+import { Button, Callout, Card, Chip, Field, KV, Row, Section, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
-import { cancelPurchaseOrder, createPurchaseOrder, listPurchaseRequests, listSuppliers, sendPurchaseOrder } from '../../../api/procurement';
+import { canDraftOrder, ownerPlus as isOwnerPlus } from '../../../auth/permissions';
+import { cancelPurchaseOrder, createPurchaseOrder, getCatalog, listPurchaseRequests, sendPurchaseOrder } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
-import type { PurchaseOrderResponse, PurchaseRequestResponse, SupplierResponse } from '../../../api/types';
+import type { CatalogItemResponse, PurchaseOrderResponse, PurchaseRequestResponse } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
+import { rp } from '../../../lib/money';
 
 
-const rp = (n: number | null | undefined) => (n == null ? '—' : `Rp ${Math.round(n).toLocaleString('id-ID')}`);
-
-type Line = { key: string; partId: string; quantity: string; price: string };
+type Line = { key: string; catalogId: string; quantity: string; price: string };
 
 let lineKeySeq = 0;
 function newLine(): Line {
   lineKeySeq += 1;
-  return { key: `line-${lineKeySeq}`, partId: '', quantity: '', price: '' };
+  return { key: `line-${lineKeySeq}`, catalogId: '', quantity: '', price: '' };
 }
 
-// PROC-07 — Purchase Order (franchise leg). Outlet-to-centre restock,
-// running parallel to PRA/Realisasi, not a marketplace purchase. Cost
-// fields (totalAmount, price) come back null below Owner scope (BE-11,
-// redacted server-side) — a null renders masked, never as an error.
+// PROC-07 — Order from HQ (BE-20, BE-21). The store orders from HQ's catalog
+// only; HQ is always the supplier, set by the server. The store decides when
+// and how much. Draft: MANAGER+ or PROCUREMENT. Send to HQ commits the store's
+// money: OWNER+. Cancel: a draft by its creator or OWNER+; once sent, OWNER+
+// with a reason. Prices and the total come back null below Owner (BE-11).
 export default function CreatePurchaseOrderScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
-  const { token } = useAuth();
+  const { user, token } = useAuth();
 
-  const [suppliers, setSuppliers] = useState<SupplierResponse[]>([]);
+  const [catalog, setCatalog] = useState<CatalogItemResponse[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [approvedPrs, setApprovedPrs] = useState<PurchaseRequestResponse[]>([]);
-  const [supplierId, setSupplierId] = useState<string | null>(null);
   const [linkedPrIds, setLinkedPrIds] = useState<string[]>([]);
   const [lines, setLines] = useState<Line[]>([newLine()]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<PurchaseOrderResponse | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const mayDraft = canDraftOrder(user);
+  const ownerPlus = isOwnerPlus(user);
+
   useEffect(() => {
     if (!token) return;
-    listSuppliers(token).then(setSuppliers).catch(() => setSuppliers([]));
+    getCatalog(token)
+      .then(setCatalog)
+      .catch(() => setCatalog([]))
+      .finally(() => setCatalogLoading(false));
     listPurchaseRequests(token)
       .then((all) => setApprovedPrs(all.filter((pr) => pr.status === 'APPROVED')))
       .catch(() => setApprovedPrs([]));
@@ -52,14 +60,15 @@ export default function CreatePurchaseOrderScreen() {
   const togglePr = (id: string) => setLinkedPrIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const updateLine = (key: string, patch: Partial<Line>) => setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   const addLine = () => setLines((prev) => [...prev, newLine()]);
+  const removeLine = (key: string) => setLines((prev) => prev.filter((l) => l.key !== key));
 
   const handleSubmit = async () => {
     setError(null);
     const items = lines
-      .filter((l) => l.partId.trim().length > 0)
-      .map((l) => ({ partId: l.partId.trim(), quantity: Number(l.quantity), price: Number(l.price) }));
+      .filter((l) => l.catalogId)
+      .map((l) => ({ partId: l.catalogId, quantity: Number(l.quantity), price: Number(l.price) }));
 
-    if (items.length === 0) return setError('Add at least one line.');
+    if (items.length === 0) return setError('Add at least one item from the HQ catalog.');
     if (items.some((i) => !Number.isFinite(i.quantity) || i.quantity <= 0 || !Number.isFinite(i.price) || i.price <= 0)) {
       return setError('Every line needs a quantity and price greater than zero.');
     }
@@ -67,13 +76,9 @@ export default function CreatePurchaseOrderScreen() {
 
     setSubmitting(true);
     try {
-      const response = await createPurchaseOrder(
-        { supplierId: supplierId ?? undefined, purchaseRequestIds: linkedPrIds.length ? linkedPrIds : undefined, items },
-        token,
-      );
-      setCreated(response);
+      setCreated(await createPurchaseOrder({ purchaseRequestIds: linkedPrIds.length ? linkedPrIds : undefined, items }, token));
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not create this purchase order.');
+      setError(err instanceof ApiError ? err.message : 'Could not create this order.');
     } finally {
       setSubmitting(false);
     }
@@ -84,6 +89,7 @@ export default function CreatePurchaseOrderScreen() {
     setBusy(true);
     try {
       setCreated(await fn());
+      setCancelReason('');
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : 'Action failed.');
     } finally {
@@ -92,6 +98,10 @@ export default function CreatePurchaseOrderScreen() {
   };
 
   if (created) {
+    const isDraft = created.status === 'DRAFT';
+    const isSent = created.status === 'ORDERED' || created.status === 'PARTIALLY_RECEIVED';
+    const isCreator = created.createdById === user?.id;
+    const mayCancel = isDraft ? isCreator || ownerPlus : isSent && ownerPlus;
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
         <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
@@ -100,7 +110,11 @@ export default function CreatePurchaseOrderScreen() {
           <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
             Also reachable: draft · ordered · partially_received · received · cancelled
           </Text>
-          <KV k="Order date" v={created.orderDate ?? '—'} derived />
+          <Card>
+            <KV k="From" v={created.supplierName ?? 'HQ'} />
+            <KV k="Order date" v={created.orderDate ?? '—'} derived />
+            <KV k="Drafted by" v={created.createdByName ?? 'Not recorded'} derived={!created.createdByName} />
+          </Card>
 
           {created.items.map((item) => (
             <Card key={item.id}>
@@ -125,18 +139,35 @@ export default function CreatePurchaseOrderScreen() {
 
           {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
 
-          <Row>
-            <View style={{ flex: 1 }}>
-              <Button label="Send to supplier" variant="secondary" disabled={busy} onPress={() => runAction(() => sendPurchaseOrder(created.id, token!))} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Button label="Cancel" variant="secondary" disabled={busy} onPress={() => runAction(() => cancelPurchaseOrder(created.id, token!))} />
-            </View>
-          </Row>
-          <Callout tone="warning">
-            Neither action has a scope check today, so both stay plain — including "send to supplier," arguably as
-            consequential as a PRA authorization.
-          </Callout>
+          {isDraft ? (
+            <>
+              <Button
+                label="Send to HQ"
+                variant="gated"
+                gate="OWNER+"
+                disabled={busy || !ownerPlus}
+                onPress={() => runAction(() => sendPurchaseOrder(created.id, token!))}
+              />
+              <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                Sending commits the store's money, so the store Owner sends it.
+              </Text>
+            </>
+          ) : null}
+
+          {isSent ? (
+            <Field label="Reason (required to cancel a sent order)" value={cancelReason} onChangeText={setCancelReason} placeholder="e.g. HQ is out of stock" />
+          ) : null}
+          {isDraft || isSent ? (
+            <Button
+              label="Cancel order"
+              variant="gated"
+              gate={isDraft ? 'CREATOR·OWNER+' : 'OWNER+'}
+              disabled={busy || !mayCancel || (isSent && !cancelReason.trim())}
+              onPress={() =>
+                runAction(() => cancelPurchaseOrder(created.id, cancelReason.trim() ? { reason: cancelReason.trim() } : {}, token!))
+              }
+            />
+          ) : null}
 
           <Button label="Back to Procurement" onPress={() => router.replace('/(app)/procurement')} />
         </ScrollView>
@@ -147,72 +178,102 @@ export default function CreatePurchaseOrderScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
       <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>New Purchase Order</Text>
-        <Callout>Outlet-to-centre restock — the franchise leg, running parallel to PRA/Realisasi. Not a marketplace purchase.</Callout>
-
-        <Section>Supplier (legacy, optional)</Section>
-        {suppliers.map((s) => (
-          <Pressable
-            key={s.id}
-            onPress={() => setSupplierId(supplierId === s.id ? null : s.id)}
-            style={{
-              borderWidth: border.base,
-              borderColor: supplierId === s.id ? color.ink : color.hair,
-              borderRadius: radius.sm,
-              padding: 10,
-              backgroundColor: color.panel,
-            }}
-          >
-            <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{s.name}</Text>
-          </Pressable>
-        ))}
+        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Order from HQ</Text>
         <Callout>
-          Supplier on this path predates the split. New code shouldn't rely on a PO carrying a real external
-          supplier — that role moved to Realisasi.
+          Restock from HQ, on your store's own timing. Mandatory items (BB, gas, targets, gel balls) can only come from
+          here; anything else HQ sells can come from here too.
         </Callout>
 
         <Field label="Order date" value="Set to today when created" variant="derived" />
 
-        <Section>From purchase requests (optional)</Section>
-        {approvedPrs.map((pr) => (
-          <Pressable
-            key={pr.id}
-            onPress={() => togglePr(pr.id)}
-            style={{
-              borderWidth: border.base,
-              borderColor: linkedPrIds.includes(pr.id) ? color.ink : color.hair,
-              borderRadius: radius.sm,
-              padding: 10,
-              backgroundColor: color.panel,
-            }}
-          >
-            <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{pr.id}</Text>
-          </Pressable>
-        ))}
-        <Callout>Every linked PR must already be APPROVED — the API refuses otherwise.</Callout>
+        {approvedPrs.length > 0 ? (
+          <>
+            <Section>From purchase requests (optional)</Section>
+            {approvedPrs.map((pr) => (
+              <Pressable
+                key={pr.id}
+                onPress={() => togglePr(pr.id)}
+                style={{
+                  borderWidth: border.base,
+                  borderColor: linkedPrIds.includes(pr.id) ? color.ink : color.hair,
+                  borderRadius: radius.sm,
+                  padding: 10,
+                  backgroundColor: color.panel,
+                }}
+              >
+                <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>
+                  {pr.items.map((i) => `${i.partName} × ${i.quantity}`).join(', ')}
+                </Text>
+                <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                  requested by {pr.requestedByName} · {pr.tenantName}
+                </Text>
+              </Pressable>
+            ))}
+          </>
+        ) : null}
 
         <Section>Items</Section>
-        {lines.map((line) => (
-          <Card key={line.key}>
-            <Field label="Part" value={line.partId} onChangeText={(v) => updateLine(line.key, { partId: v })} placeholder="Part ID" />
-            <View style={{ marginTop: 9 }}>
-              <Row>
-                <Field label="Qty" value={line.quantity} onChangeText={(v) => updateLine(line.key, { quantity: v })} mono keyboardType="numeric" />
-                <Field label="Price" value={line.price} onChangeText={(v) => updateLine(line.key, { price: v })} mono keyboardType="numeric" />
-              </Row>
-            </View>
-          </Card>
-        ))}
+        {lines.map((line) => {
+          const item = catalog.find((c) => c.id === line.catalogId);
+          return (
+            <Card key={line.key}>
+              <SelectField
+                label="Item from HQ"
+                value={line.catalogId || null}
+                loading={catalogLoading}
+                placeholder="Pick from HQ's catalog…"
+                items={catalog.map((c) => ({
+                  id: c.id,
+                  label: c.name,
+                  sublabel: [c.mandatoryFromHq ? 'Mandatory' : null, c.storeCurrentStock != null ? `${c.storeCurrentStock} in stock here` : null]
+                    .filter(Boolean)
+                    .join(' · ') || undefined,
+                  group: c.categoryName ?? 'Other',
+                }))}
+                onChange={(id) => updateLine(line.key, { catalogId: id })}
+              />
+              {item?.mandatoryFromHq ? (
+                <View style={{ marginTop: 6 }}>
+                  <Chip label="Mandatory from HQ" tone="warning" />
+                </View>
+              ) : null}
+              <View style={{ marginTop: 9 }}>
+                <Row>
+                  <Field label="Qty" value={line.quantity} onChangeText={(v) => updateLine(line.key, { quantity: v })} mono keyboardType="numeric" />
+                  <Field label="Price" value={line.price} onChangeText={(v) => updateLine(line.key, { price: v })} mono keyboardType="numeric" />
+                </Row>
+              </View>
+              {lines.length > 1 ? (
+                <View style={{ marginTop: 8 }}>
+                  <Button label="Remove line" variant="secondary" onPress={() => removeLine(line.key)} />
+                </View>
+              ) : null}
+            </Card>
+          );
+        })}
         <Button label="+ Add line" variant="secondary" onPress={addLine} />
-        <Callout>Flat price only. No cost components, no landed cost, no conversion factor on this path.</Callout>
+        {!catalogLoading && catalog.length === 0 ? (
+          <Callout tone="warning">HQ's catalog is empty. HQ marks the items it sells before stores can order them.</Callout>
+        ) : null}
         <Callout tone="warning">
-          Total and per-line price only show once created, and only to Owner+ — below that scope the API returns
-          them empty.
+          Total and per-line price only show once created, and only to Owner+ — below that scope the API returns them
+          empty.
         </Callout>
 
+        {!mayDraft ? (
+          <Callout tone="warning" title="Not available for your account">
+            Orders to HQ are drafted by the Store Manager (Manager scope or above) or HQ Procurement.
+          </Callout>
+        ) : null}
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 
-        <Button label={submitting ? 'Creating…' : 'Create (draft)'} onPress={handleSubmit} disabled={submitting} />
+        <Button
+          label={submitting ? 'Creating…' : 'Create (draft)'}
+          variant="gated"
+          gate="MANAGER+·PROC"
+          onPress={handleSubmit}
+          disabled={submitting || !mayDraft}
+        />
       </ScrollView>
     </SafeAreaView>
   );

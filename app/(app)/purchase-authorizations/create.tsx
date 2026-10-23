@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Check } from 'lucide-react-native';
 import { Button, Callout, CeilingBar, Card, Chip, Field, KV, Row, Section } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
+import { canSetSpendingLimits } from '../../../auth/permissions';
 import { createPurchaseAuthorization, listPurchaseRequests } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
 import type { PurchaseRequestAuthorizationResponse, PurchaseRequestResponse } from '../../../api/types';
@@ -23,13 +24,14 @@ function newLine(): Line {
 // PROC-03 — PRA Authorization. Creating this record IS the authorization —
 // there is no separate approve step. Ceilings are per line only; there is
 // deliberately no header total (open product decision, not a bug to fix).
-// Create needs MANAGER scope or above (BE-13): the Owner approves the need,
-// Manager+ sets the spending ceiling. Below that the API answers 403.
+// Create needs OWNER scope or above (BE-17, superseding BE-13's Manager+):
+// the store Owner sets the spending limits and the Store Manager buys against
+// them, so nobody controls both. Below Owner the API answers 403.
 export default function CreatePurchaseAuthorizationScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
   const { user, token } = useAuth();
-  const managerPlus = user?.scope === 'MANAGER' || user?.scope === 'OWNER' || user?.scope === 'PRINCIPAL';
+  const mayCreate = canSetSpendingLimits(user);
   const [approvedPrs, setApprovedPrs] = useState<PurchaseRequestResponse[]>([]);
   const [selectedPrIds, setSelectedPrIds] = useState<string[]>([]);
   const [lines, setLines] = useState<Line[]>([newLine()]);
@@ -71,7 +73,7 @@ export default function CreatePurchaseAuthorizationScreen() {
       setCreated(response);
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
-        setError('Creating an authorization needs Manager scope or above.');
+        setError('Setting spending limits needs Owner scope or above.');
       } else {
         setError(err instanceof ApiError ? err.message : 'Could not create the authorization.');
       }
@@ -175,14 +177,16 @@ export default function CreatePurchaseAuthorizationScreen() {
 
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 
-        {!managerPlus ? <Callout tone="warning">Your scope can't create authorizations — it needs Manager or above.</Callout> : null}
+        {!mayCreate ? (
+          <Callout tone="warning">Your scope can't set spending limits — the store Owner does. Ask them to create this.</Callout>
+        ) : null}
 
         <Button
           label={submitting ? 'Creating…' : 'Create (= authorize)'}
           variant="gated"
-          gate="MANAGER+"
+          gate="OWNER+"
           onPress={handleSubmit}
-          disabled={submitting || !managerPlus}
+          disabled={submitting || !mayCreate}
         />
       </ScrollView>
     </SafeAreaView>

@@ -10,6 +10,33 @@ Regenerate this by re-reading the backend rather than hand-editing if it drifts 
 
 ---
 
+## Changes since BE-13 (backend `main` e828f9e, 22 Oct 2026)
+
+Read from source (controllers and DTOs on backend `main`) and the change queue's "What was done" notes for BE-14…BE-23. Where these contradict a section below, these win.
+
+| Change | Status / shape | Mobile handling |
+|---|---|---|
+| `POST /purchase-requests` (BE-14) | MANAGER+ scope, or ADMIN / PROCUREMENT role, else 403. Optional `tenantId` (target store): another store needs ADMIN/PROCUREMENT/OWNER+ (else 403), outside the tree → 400 "Store not found". `requestedBy`: the caller or a user of the target store | PROC-01 create gated `MANAGER+·ADMIN·PROC`; store picker for HQ, locked store for a Store Manager |
+| `PurchaseRequestResponse` (BE-14) | + `tenantId`, `tenantName` | Shown on PROC-02 rows and detail |
+| `GET /tenants/tree` (BE-14) | Caller's tenant first, then every descendant; never ancestors. Any signed-in user. `TenantResponse{id, name, code, active, parentId, parentName, monthlyPurchaseBudget}` | `api/tenants.ts`; store pickers, "am I at HQ" on PROC-06 |
+| `PATCH /purchase-requests/{id}/cancel` (BE-15) | Body `{reason}` required. PENDING → requester (anywhere in tree) or the store's own OWNER+; APPROVED → the store's own OWNER+. `GET /{id}`, `/history`, cancel now look across the caller's tree; approve/reject stay own-store | PROC-02 cancel gated by status, reason field shared with reject |
+| `PATCH /tenants/{id}/purchase-budget` (BE-16) | `{amount \| null}`; only OWNER+ signed in at that very store | Budget editor on the PROC-02 spending card |
+| `GET /procurement/spending?month=yyyy-MM[&tenantId=]` (BE-16) | OWNER+ only. Rows per store: `spentFromCentre`, `spentOutside`, `spent`, `committed`, `budget`, `overBudget`, `topParts[{partId, partName, amount}]` | `SpendingSummary` on PROC-02 |
+| PRA create / cancel (BE-17) | **OWNER+** (was MANAGER+, BE-13) | PROC-03 badge `OWNER+` |
+| `POST /realisasi` (BE-17, BE-21) | MANAGER+ scope or PROCUREMENT role, else 403. Optional `tenantId` (HQ buying for a store: PROCUREMENT or OWNER+). New `sellerName`. A `mandatoryFromHq` item without the franchise-centre `supplierId` → 400 "This item must be bought from HQ: …" | PROC-04 create gated `MANAGER+·PROC`; "Bought from: Elsewhere (seller) / At HQ"; mandatory lines marked |
+| `PATCH /realisasi/{id}/reject` (BE-17) | OWNER+, from PENDING_APPROVAL or APPROVED. Body `{reason}` `@NotBlank` (it always was — the app used to send none) | Reject with reason, gated `OWNER+` |
+| `POST /realisasi/{id}/supersede` (BE-17) | The original's creator or OWNER+; original must be PENDING_APPROVAL or APPROVED | Supersede gated `CREATOR·OWNER+` |
+| Reimbursement (BE-18) | `PATCH /realisasi/reimbursements/mark-paid {ids, paidAt, method: CASH\|TRANSFER, reference?}` and `PATCH /realisasi/{id}/reimbursement/undo {reason}` — the store's own OWNER+, never for money owed to yourself. `GET /realisasi?paymentMethod=&reimbursementStatus=` filtered on the server. Response + `reimbursedToName`, `reimbursedAt`, `reimbursementMethod`, `reimbursementReference`. The person owed sees `totalCost` of their own personal purchase | PROC-08 rewritten: Owed / Paid back, select several, mark paid back, undo |
+| Uploads (BE-23) | `POST /uploads {purpose, contentType, sizeBytes}` → `{uploadId, putUrl, method, headers, expiresAt}`; PUT the file to `putUrl` with exactly those headers. `GET /uploads/{id}` → 5-minute view link. JPEG/PNG/WebP/PDF ≤ 5 MB. **503 until the R2 bucket is configured** | `api/uploads.ts` (resize to 1600 px, JPEG 0.7, then PUT); `PhotoPicker` |
+| Purchase orders (BE-20, BE-21) | Draft: MANAGER+ or PROCUREMENT. Send: OWNER+. Cancel: DRAFT → creator or OWNER+; sent → OWNER+ with `{reason}`. + `createdById`, `createdByName`. Lines must be HQ catalog items (or the store's linked part); supplier set by the server to HQ's franchise centre, `supplierId` ignored | PROC-07 rewritten as "Order from HQ" |
+| `GET /catalog` (BE-21) | HQ's sold items: `{id, name, brand, categoryName, partTypeName, consumable, mandatoryFromHq, storePartId, storeCurrentStock}` | PROC-07 item picker |
+| Parts, suppliers (BE-21) | `PartResponse` + `catalogPartId`, `soldByHq`, `mandatoryFromHq`; `SupplierResponse` + `franchiseCentre`. `PATCH /parts/{id}/hq-flags`, `/catalog-link` (HQ only) | Mandatory items marked on PROC-04; HQ's supplier labelled on PROC-06 |
+| Goods receipts (BE-20) | Receiver taken from the token (`receivedBy` optional, must equal the caller). Buyer = receiver on the Realisasi path needs `goodsPhotoUploadIds` (≥ 1) → `selfReceived: true`, Owner notified. Filter `selfReceived=true` | PROC-05: photo field, no `receivedBy`; list chip and filter |
+| History and activity (BE-22) | `actorKind` (`USER` \| `AUTOMATIC` \| `NOT_RECORDED`), `triggeredByName`, `triggerReference` on `StatusHistoryResponse` and activity entries | `HistoryList`; PROC-09 shows "Automatic · after {name} — {what}" |
+| Notifications | New types `PURCHASE_REQUEST_CANCELLED`, `REIMBURSEMENT_PAID`, `GOODS_SELF_RECEIVED` | Labelled in the inbox |
+
+**Known gaps the app works around (not yet backend tasks):** `PartResponse` and `PurchaseRequestAuthorizationResponse` carry no store, so when HQ files or buys for a store the app can't filter the part or PRA lists to that store — the server refuses a wrong-store pick. HQ's catalog has no price, so the store types the price on an order to HQ.
+
 ## Changes since BE-12 (backend `main` 19f5b73, 14 Oct 2026)
 
 Read from source in the backend repo (`c:\richards stuff\demo`). Where these contradict a section below, these win.

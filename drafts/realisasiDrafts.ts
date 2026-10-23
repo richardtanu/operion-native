@@ -25,6 +25,12 @@ export type RealisasiDraftForm = {
   partName: string | null;
   channel: string;
   supplierId: string | null;
+  /** Free-text seller for a purchase outside HQ (BE-21). Missing on drafts saved before 22 Oct 2026. */
+  sellerName: string;
+  /** Bought at HQ, paid on the spot (BE-21) — the franchise-centre supplier is sent instead of a seller. */
+  boughtAtHq?: boolean;
+  /** HQ Procurement buying for a store (BE-17). */
+  storeId?: string | null;
   paymentMethod: string;
   paymentRef: string;
   purchasedAt: string;

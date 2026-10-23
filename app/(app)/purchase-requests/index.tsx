@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, KV, Row, Section, TextField } from '../../../components';
+import { Button, Callout, Card, HistoryList, KV, Row, Section, SpendingSummary, TextField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import {
   approvePurchaseRequest,
@@ -10,6 +10,8 @@ import {
   listPurchaseRequests,
   rejectPurchaseRequest,
 } from '../../../api/procurement';
+import { getTenantTree } from '../../../api/tenants';
+import { canReadSpending, ownerPlus as isOwnerPlus } from '../../../auth/permissions';
 import { ApiError } from '../../../api/httpError';
 import type { PurchaseRequestResponse, PurchaseRequestStatus, StatusHistoryEntry } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -21,13 +23,11 @@ import { textStyle } from '../../../theme/typeStyle';
 // direct-purchase path.
 const FILTERS: PurchaseRequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'ORDERED', 'AUTHORIZED', 'CANCELLED'];
 
-const canApprove = (scope: string | null | undefined) => scope === 'OWNER' || scope === 'PRINCIPAL';
-
 // PROC-02 — PR Approval Console. List + detail + actions collapsed onto one
-// screen (matches the design reference's own collapsed treatment — one
-// wireframe per record, not navigation state). Approve/reject need Owner+
-// server-side; cancel doesn't — that asymmetry is drawn deliberately, not
-// normalised away.
+// screen. Approve/reject: the store's own OWNER+ (HQ can't decide for a
+// store). Cancel (BE-15): a PENDING request by its requester or the store's
+// OWNER+, an APPROVED one by the store's OWNER+ only, always with a reason.
+// OWNER+ also sees the store's spending this month (BE-16).
 export default function PurchaseRequestListScreen() {
   const { color, type: typeScale } = useTheme();
   const { user, token } = useAuth();
@@ -40,6 +40,14 @@ export default function PurchaseRequestListScreen() {
   const [reason, setReason] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [ownTenantId, setOwnTenantId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    getTenantTree(token)
+      .then((tree) => setOwnTenantId(tree[0]?.id ?? null))
+      .catch(() => setOwnTenantId(null));
+  }, [token]);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -85,12 +93,21 @@ export default function PurchaseRequestListScreen() {
   };
 
   const filtered = items.filter((i) => i.status === filter);
-  const ownerPlus = canApprove(user?.scope);
+  const ownerPlus = isOwnerPlus(user);
+  const ownStore = !!selected && selected.tenantId === ownTenantId;
+  const mayDecide = ownerPlus && ownStore;
+  const isRequester = !!selected && selected.requestedById === user?.id;
+  const mayCancel =
+    !!selected &&
+    ((selected.status === 'PENDING' && (isRequester || mayDecide)) || (selected.status === 'APPROVED' && mayDecide));
+  const hasReason = reason.trim().length > 0;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
       <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
         <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Requests</Text>
+
+        {token && canReadSpending(user) ? <SpendingSummary token={token} /> : null}
 
         <View className="flex-row flex-wrap" style={{ gap: 6 }}>
           {FILTERS.map((f) => (
@@ -117,7 +134,9 @@ export default function PurchaseRequestListScreen() {
                 <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink }} onPress={() => setSelectedId(pr.id === selectedId ? null : pr.id)}>
                   {pr.items.length} line{pr.items.length === 1 ? '' : 's'}
                 </Text>
-                <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>requested by {pr.requestedByName}</Text>
+                <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                  requested by {pr.requestedByName} · for {pr.tenantName}
+                </Text>
               </View>
             </Card>
           ))}
@@ -128,29 +147,31 @@ export default function PurchaseRequestListScreen() {
             <Section>Selected — {selected.id}</Section>
             <Card>
               <KV k="Status" v={selected.status} />
+              <KV k="Store" v={selected.tenantName} />
               <KV k="Requested by" v={selected.requestedByName} />
               <KV k="Created" v={new Date(selected.createdAt).toLocaleString()} />
             </Card>
 
             {history.length > 0 ? (
               <Card>
-                {history.map((h, idx) => (
-                  <KV key={h.id ?? idx} k={h.status ?? 'change'} v={h.createdAt ? new Date(h.createdAt).toLocaleString() : '—'} />
-                ))}
+                <HistoryList entries={history} />
               </Card>
             ) : null}
 
             {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
 
-            <TextField label="Reason (required for reject)" value={reason} onChangeText={setReason} placeholder="Why is this rejected?" />
+            {selected.status === 'PENDING' || selected.status === 'APPROVED' ? (
+              <TextField label="Reason (required to reject or cancel)" value={reason} onChangeText={setReason} placeholder="e.g. bought locally already" />
+            ) : null}
 
+            {selected.status === 'PENDING' ? (
             <Row>
               <View style={{ flex: 1 }}>
                 <Button
                   label="Approve"
                   variant="gated"
                   gate="OWNER+"
-                  disabled={!ownerPlus || busy}
+                  disabled={!mayDecide || busy}
                   onPress={() => runAction(() => approvePurchaseRequest(selected.id, token!))}
                 />
               </View>
@@ -159,16 +180,24 @@ export default function PurchaseRequestListScreen() {
                   label="Reject"
                   variant="gated"
                   gate="OWNER+"
-                  disabled={!ownerPlus || busy || reason.trim().length === 0}
+                  disabled={!mayDecide || busy || !hasReason}
                   onPress={() => runAction(() => rejectPurchaseRequest(selected.id, { reason: reason.trim() }, token!))}
                 />
               </View>
             </Row>
-            <Button label="Cancel" variant="secondary" disabled={busy} onPress={() => runAction(() => cancelPurchaseRequest(selected.id, token!))} />
-            <Callout tone="warning">
-              The asymmetry is real: approve and reject need Owner+, cancel needs nothing. The gated border carries
-              that at a glance.
-            </Callout>
+            ) : null}
+            {selected.status === 'PENDING' || selected.status === 'APPROVED' ? (
+              <Button
+                label="Cancel request"
+                variant="gated"
+                gate={selected.status === 'PENDING' ? 'REQUESTER·OWNER+' : 'OWNER+'}
+                disabled={!mayCancel || busy || !hasReason}
+                onPress={() => runAction(() => cancelPurchaseRequest(selected.id, { reason: reason.trim() }, token!))}
+              />
+            ) : null}
+            {ownerPlus && !ownStore && !isRequester ? (
+              <Callout>This request belongs to {selected.tenantName}. Approving, rejecting and cancelling it is that store's Owner's call.</Callout>
+            ) : null}
           </>
         ) : null}
       </ScrollView>

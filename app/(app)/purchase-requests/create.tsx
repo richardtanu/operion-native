@@ -5,9 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout, Card, Chip, Field, Row, Section, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { createPurchaseRequest } from '../../../api/procurement';
+import { getTenantTree } from '../../../api/tenants';
+import { canCreatePurchaseRequest, canFileForAnotherStore } from '../../../auth/permissions';
 import { listParts } from '../../../api/parts';
 import { ApiError } from '../../../api/httpError';
-import type { PartResponse, PurchaseRequestResponse } from '../../../api/types';
+import type { PartResponse, PurchaseRequestResponse, TenantResponse } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
@@ -21,7 +23,9 @@ function newLine(): Line {
 }
 
 // PROC-01 — Purchase Request Create. Blocking-error, manual-retry: calls
-// api/procurement.ts directly, never through the outbox.
+// api/procurement.ts directly, never through the outbox. BE-14: only
+// MANAGER+ or ADMIN / PROCUREMENT may file; HQ picks the store (required, no
+// default), a Store Manager's store is fixed.
 export default function CreatePurchaseRequestScreen() {
   const { color, type: typeScale } = useTheme();
   const router = useRouter();
@@ -30,6 +34,11 @@ export default function CreatePurchaseRequestScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<PurchaseRequestResponse | null>(null);
+
+  const [stores, setStores] = useState<TenantResponse[]>([]);
+  const [storeId, setStoreId] = useState<string | null>(null);
+  const mayCreate = canCreatePurchaseRequest(user);
+  const picksStore = canFileForAnotherStore(user) && stores.length > 1;
 
   const [parts, setParts] = useState<PartResponse[]>([]);
   const [partsLoading, setPartsLoading] = useState(true);
@@ -40,6 +49,9 @@ export default function CreatePurchaseRequestScreen() {
       .then((all) => setParts(all.filter((p) => !p.retired)))
       .catch(() => setParts([]))
       .finally(() => setPartsLoading(false));
+    getTenantTree(token)
+      .then(setStores)
+      .catch(() => setStores([]));
   }, [token]);
 
   const updateLine = (key: string, patch: Partial<Line>) =>
@@ -59,10 +71,14 @@ export default function CreatePurchaseRequestScreen() {
     }
     if (!token) return setError('Not signed in.');
     if (!user?.id) return setError('Could not determine the current user — try signing in again.');
+    if (picksStore && !storeId) return setError('Pick the store this request is for.');
 
     setSubmitting(true);
     try {
-      const response = await createPurchaseRequest({ requestedBy: user.id, items }, token);
+      const response = await createPurchaseRequest(
+        { requestedBy: user.id, items, ...(picksStore && storeId ? { tenantId: storeId } : {}) },
+        token,
+      );
       setCreated(response);
       setLines([newLine()]);
     } catch (err) {
@@ -83,7 +99,7 @@ export default function CreatePurchaseRequestScreen() {
               <Chip label={created.status} tone="pending" />
             </Row>
             <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 6 }}>
-              {created.items.length} line item(s)
+              {created.items.length} line item(s) · for {created.tenantName}
             </Text>
             <Text style={{ ...textStyle(typeScale.helper), color: color.mute, marginTop: 2 }}>ID: {created.id}</Text>
           </Card>
@@ -134,7 +150,24 @@ export default function CreatePurchaseRequestScreen() {
         ))}
         <Button label="+ Add line" variant="secondary" onPress={addLine} />
 
+        {picksStore ? (
+          <SelectField
+            label="Store"
+            value={storeId}
+            placeholder="Pick the store…"
+            items={stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))}
+            onChange={setStoreId}
+          />
+        ) : (
+          <Field label="Store" value={stores[0]?.name ?? 'Your store'} variant="derived" />
+        )}
         <Field label="Requested by" value={user?.fullName ?? 'you (current user)'} variant="derived" />
+        {picksStore ? (
+          <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+            The part list shows every store's items. Pick the ones that belong to the store above — the server
+            refuses another store's part.
+          </Text>
+        ) : null}
 
         <View>
           <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute, marginBottom: 3 }}>Starts at</Text>
@@ -142,7 +175,11 @@ export default function CreatePurchaseRequestScreen() {
         </View>
 
         <Callout>No cost fields on this screen — quantity only. Pricing enters at Realisasi, not here.</Callout>
-        <Callout tone="warning">No role or scope gate: anyone signed in can submit.</Callout>
+        {!mayCreate ? (
+          <Callout tone="warning" title="Not available for your account">
+            Requests are filed by the Store Manager (Manager scope or above), or by HQ Admin and Procurement.
+          </Callout>
+        ) : null}
 
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 
@@ -153,7 +190,13 @@ export default function CreatePurchaseRequestScreen() {
           </Callout>
         ) : null}
 
-        <Button label={submitting ? 'Creating…' : 'Create Request'} onPress={handleSubmit} disabled={submitting} />
+        <Button
+          label={submitting ? 'Creating…' : 'Create Request'}
+          variant="gated"
+          gate="MANAGER+·ADMIN·PROC"
+          onPress={handleSubmit}
+          disabled={submitting || !mayCreate}
+        />
       </ScrollView>
     </SafeAreaView>
   );
