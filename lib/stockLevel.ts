@@ -1,17 +1,20 @@
-import type { BurnRateResponse, PartResponse, StockSummaryRow } from '../api/types';
+import type { BurnRateResponse, PartResponse, ServerLowBecause, StockSummaryRow } from '../api/types';
 
 /**
- * The one meaning of "low" decided on 23 Oct (BE-27): with usage data
- * (COMPUTED / MANUAL_RATE), an item is low when it runs out before its target
- * days; without, when it's at or below minimum stock. Out of stock is ≤ 0
- * either way. Until BE-27 puts this on the server, the app applies it here
- * from the stock summary and burn-rate lists, joined on partId.
+ * The one meaning of "low" (decided 23 Oct, on the server since BE-27): with
+ * usage data an item is low when it runs out before its target days; without,
+ * when it's at or below minimum stock. Out of stock (≤ 0) shows on top. The
+ * app reads the server's answer from the stock summary — it no longer works
+ * it out itself — and adds burn rate only for the suggested amount.
  */
-export type LowBecause = 'OUT' | 'RUNS_OUT_SOON' | 'BELOW_MINIMUM';
+export type LowBecause = 'OUT' | ServerLowBecause;
 
 export type StockLine = {
   partId: string;
   name: string;
+  tenantId: string;
+  tenantName: string;
+  catalogPartId: string | null;
   currentStock: number;
   minimumStock: number | null;
   /** Null without usage data — shown as "no usage data", never "0 days". */
@@ -22,31 +25,28 @@ export type StockLine = {
   part: PartResponse | null;
 };
 
-const hasUsageData = (b: BurnRateResponse | undefined) => b?.burnRateSource === 'COMPUTED' || b?.burnRateSource === 'MANUAL_RATE';
-
-export function lowBecause(currentStock: number, minimumStock: number | null, burn: BurnRateResponse | undefined): LowBecause | null {
-  if (currentStock <= 0) return 'OUT';
-  if (hasUsageData(burn)) {
-    return burn!.daysOfCover != null && burn!.targetDays != null && burn!.daysOfCover < burn!.targetDays ? 'RUNS_OUT_SOON' : null;
-  }
-  return minimumStock != null && currentStock <= minimumStock ? 'BELOW_MINIMUM' : null;
+/** The server's verdict on one stock-summary row, with out of stock first. */
+export function lowOf(row: StockSummaryRow): LowBecause | null {
+  return row.status === 'OUT_OF_STOCK' ? 'OUT' : row.lowBecause;
 }
 
 export function buildStockLines(summary: StockSummaryRow[], burns: BurnRateResponse[], parts: PartResponse[]): StockLine[] {
   const burnById = new Map(burns.map((b) => [b.partId, b]));
   const partById = new Map(parts.map((p) => [p.id, p]));
   return summary.map((s) => {
-    const burn = burnById.get(s.partId);
     const part = partById.get(s.partId) ?? null;
     return {
       partId: s.partId,
       name: s.partName,
+      tenantId: s.tenantId,
+      tenantName: s.tenantName,
+      catalogPartId: s.catalogPartId,
       currentStock: s.currentStock,
       minimumStock: s.minimumStock,
-      daysOfCover: hasUsageData(burn) ? burn!.daysOfCover : null,
-      targetDays: burn?.targetDays ?? null,
-      suggestedQty: suggestedAmount(s.currentStock, s.minimumStock, burn, part),
-      lowBecause: lowBecause(s.currentStock, s.minimumStock, burn),
+      daysOfCover: s.daysOfCover,
+      targetDays: s.targetDays,
+      suggestedQty: suggestedAmount(s.currentStock, s.minimumStock, burnById.get(s.partId), part),
+      lowBecause: lowOf(s),
       part,
     };
   });
@@ -82,7 +82,7 @@ export function lowReasonLabel(line: StockLine): string | null {
     case 'RUNS_OUT_SOON':
       return `Runs out before its ${line.targetDays ?? 14}-day target`;
     case 'BELOW_MINIMUM':
-      return `Below minimum ${line.minimumStock}`;
+      return `Below minimum ${line.minimumStock ?? 0}`;
     default:
       return null;
   }

@@ -22,6 +22,7 @@ export default function RestockScreen() {
   const { lines, loading, error } = useStockLines(token);
   const [unselected, setUnselected] = useState<string[]>([]);
 
+  const multiStore = new Set(lines.map((l) => l.tenantId)).size > 1;
   const low = lines.filter((l) => l.lowBecause != null).sort(worstFirst);
   // An item that must be bought from HQ can only be ordered from HQ — and only once it's linked to HQ's item.
   const fromHq = low.filter((l) => l.part?.mandatoryFromHq && l.part.catalogPartId);
@@ -68,7 +69,7 @@ export default function RestockScreen() {
             <View style={{ flex: 1 }}>
               <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink }}>{l.name}</Text>
               <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>
-                {`${l.currentStock} left${l.suggestedQty != null ? ` · suggest ${l.suggestedQty}` : ''}`}
+                {`${multiStore ? `${l.tenantName} · ` : ''}${l.currentStock} left${l.suggestedQty != null ? ` · suggest ${l.suggestedQty}` : ''}`}
               </Text>
               <Text style={{ ...textStyle(typeScale.helper), color: l.lowBecause === 'OUT' ? color.danger : color.warn }}>{lowReasonLabel(l)}</Text>
             </View>

@@ -14,7 +14,7 @@ import { useStockLines } from '../../../lib/useStockLines';
 type Filter = 'ALL' | 'LOW' | 'OUT';
 
 // INV-01 — Stock. Everything the store holds, how much is left and what's
-// running low, by the one "low" rule (lib/stockLevel). A low item opens a
+// running low, by the server's one "low" rule (BE-27). A low item opens a
 // request with the amount filled in — or, for an item that must be bought
 // from HQ, an order from HQ. Opened from the dashboard tiles with
 // `filter=low|out`.
@@ -26,6 +26,7 @@ export default function StockScreen() {
   const [filter, setFilter] = useState<Filter>(params.filter === 'low' ? 'LOW' : params.filter === 'out' ? 'OUT' : 'ALL');
   const { lines, loading, error } = useStockLines(token);
 
+  const multiStore = new Set(lines.map((l) => l.tenantId)).size > 1;
   const low = lines.filter((l) => l.lowBecause != null);
   const out = lines.filter((l) => l.lowBecause === 'OUT');
   const shown = (filter === 'ALL' ? lines : filter === 'LOW' ? low : out).slice().sort(worstFirst);
@@ -86,7 +87,7 @@ export default function StockScreen() {
                   </Row>
                 </View>
                 <Text style={{ ...textStyle(typeScale.value), color: color.steel, marginTop: 2 }}>
-                  {[String(l.currentStock), coverLabel(l), l.daysOfCover == null && l.minimumStock != null ? `min ${l.minimumStock}` : null]
+                  {[multiStore ? l.tenantName : null, String(l.currentStock), coverLabel(l), l.daysOfCover == null && l.minimumStock != null ? `min ${l.minimumStock}` : null]
                     .filter(Boolean)
                     .join(' · ')}
                 </Text>

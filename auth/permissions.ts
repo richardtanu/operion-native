@@ -84,3 +84,8 @@ export function canRetireItems(user: User): boolean {
 export function canLinkToCatalog(user: User): boolean {
   return managerPlus(user);
 }
+
+/** HQ's catalog flags, prices and links (BE-21, BE-28): ADMIN role or PRINCIPAL scope, signed in at HQ. */
+export function canManageHqCatalog(user: User, atHq: boolean): boolean {
+  return atHq && (user?.role === 'ADMIN' || user?.scope === 'PRINCIPAL');
+}

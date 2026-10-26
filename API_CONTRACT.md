@@ -10,6 +10,18 @@ Regenerate this by re-reading the backend rather than hand-editing if it drifts 
 
 ---
 
+## Changes since BE-25 (backend `main` 32ba932, 23 Oct 2026)
+
+Read from source on backend `main` (`module/inventory`, `module/burnrate`, `module/part`, `module/procurement`) and the change queue's "What was done" notes for BE-26, BE-27 and BE-28. Where these contradict a section below, these win.
+
+| Change | Status / shape | Mobile handling |
+|---|---|---|
+| Store on every row (BE-26) | `tenantId`, `tenantName` on `PartResponse`, stock-summary / low-stock rows, `BurnRateResponse`, `StockAdjustmentResponse`, `PurchaseRequestAuthorizationResponse`; `catalogPartId` on stock and burn-rate rows. `?tenantId=` on `GET /parts`, `/inventory/stock-summary`, `/inventory/low-stock`, `/burn-rate` (that store's subtree, inside the caller's tree; outside → 400 "Store not found") | Store names on HQ's lists; PROC-01 shows only the picked store's items; PROC-04 only the picked store's limits; INV-03 groups stores under each HQ item |
+| `GET /parts/{id}/movements?limit=` (BE-26) | Newest first, default 50, max 500, tree-scoped (another root → 400). `StockMovementResponse{id, partId, partName, movementType, quantity (signed), beforeStock, afterStock, notes, referenceType, referenceId, actorId, actorName, createdAt}`. Every movement since V14 names who made it (an approval names the approver) | INV-05 history |
+| Dashboard and burn rate (BE-26) | "Used today" counts `MAINTENANCE_USAGE` and `CONSUMABLE_TAKE`. Burn rate uses each item's own store's policy. `GET /inventory/dashboard` still takes no store filter and sums the caller's tree | Tiles unchanged; still hidden for HQ |
+| One "low" rule (BE-27) | Stock-summary and low-stock rows + `lowBecause` (`RUNS_OUT_SOON` | `BELOW_MINIMUM` | null), and `daysOfCover`, `targetDays` when the item has usage data. `status` is OUT_OF_STOCK at ≤ 0, else LOW_STOCK by the rule. With usage data the minimum does **not** also apply. Dashboard `lowStock` and the `LOW_STOCK` alert (once, to the store's MANAGER+ and ADMINs) use the same rule | The phone no longer computes "low": `lib/stockLevel.ts` reads `status` / `lowBecause`; burn rate is only used for suggested amounts |
+| HQ prices (BE-28) | `PATCH /parts/{id}/hq-flags` + `price` (> 0), HQ admins only; selling without a price → 400. `GET /catalog` + `price`, `PartResponse.hqPrice` (a store item shows its HQ item's) — both null unless OWNER+ or an HQ admin. Orders: `PurchaseOrderItemRequest.price` ignored; the server takes HQ's price on create and again on send, then freezes it. No price → 400 "HQ hasn't set a price for {name} yet" | PROC-07 no longer asks for a price; shows HQ's price and a running total to Owner+. INV-09 HQ catalog sets sold / must-buy / price and store links |
+
 ## Changes since BE-23 (backend `main` d51096e, 23 Oct 2026)
 
 Read from source on backend `main` (`module/expense`, `module/stockadjustment`, `module/inventory`, `module/part`, `module/burnrate`) and the change queue's "What was done" notes for BE-19 and BE-25. Where these contradict a section below, these win.
@@ -29,13 +41,13 @@ Read from source on backend `main` (`module/expense`, `module/stockadjustment`, 
 | `PATCH /parts/{id}/catalog-link {catalogPartId}` (BE-25) | HQ admins as before (link, re-link, unlink). Otherwise the store's own MANAGER+ may only **create** a link on their own unlinked item, to an item HQ sells (400 otherwise); re-link or unlink → 403. For everyone: items counted differently → 400 "These two items are counted differently" | INV-06 edit: "Same as HQ's item" picker + Link, gated `MANAGER+`; linked items read-only |
 | Notifications | New type `STOCK_ADJUSTMENT_REQUESTED`, reference type `STOCK_ADJUSTMENT`; `REIMBURSEMENT_PAID` also for expenses (reference type `EXPENSE`) | Labelled "Adjustment to approve" |
 
-**Inventory reads the app now uses (unchanged by BE-25, read from source):**
+**Inventory reads the app uses (as of BE-25; BE-26 and BE-27 added fields — see the section above):**
 - `GET /inventory/stock-summary` and `/inventory/low-stock` → `{partId, partName, currentStock, minimumStock, status: NORMAL|LOW_STOCK|OUT_OF_STOCK}`; status is minimum-stock only (OUT ≤ 0, LOW ≤ minimum).
 - `GET /inventory/dashboard` → `{totalParts, totalStock, lowStock, outOfStock, stockReceivedToday, stockUsedToday}`; "used today" counts `MAINTENANCE_USAGE` only (BE-26 adds consumable takes).
 - `GET /burn-rate`, `/burn-rate/{partId}` → `{partId, partName, currentStock, burnRateSource: COMPUTED|MANUAL_RATE|MANUAL_LEVEL|NONE, burnRate, observationDays, eventCount, daysOfCover, targetDays, suggestedQty, manualReorderPoint, belowLevel}`. `daysOfCover` is null (never 0) without usage data.
-- The app applies the decided "low" rule on the phone (`lib/stockLevel.ts`) from these two lists until BE-27 returns `lowBecause` from the server.
+- Until BE-27 the app applied the "low" rule on the phone; it now reads `lowBecause` from the server.
 
-**Known gaps the app works around (BE-26):** inventory rows carry no store, so an HQ caller sees every store's items mixed together — the Inventory menu tells HQ so, and the dashboard hides the stock tiles for HQ. No per-item stock history endpoint yet; INV-05 says so.
+**Gaps at BE-25, closed by BE-26:** inventory rows carried no store and there was no per-item stock history.
 
 ## Changes since BE-13 (backend `main` e828f9e, 22 Oct 2026)
 
@@ -62,7 +74,7 @@ Read from source (controllers and DTOs on backend `main`) and the change queue's
 | History and activity (BE-22) | `actorKind` (`USER` \| `AUTOMATIC` \| `NOT_RECORDED`), `triggeredByName`, `triggerReference` on `StatusHistoryResponse` and activity entries | `HistoryList`; PROC-09 shows "Automatic · after {name} — {what}" |
 | Notifications | New types `PURCHASE_REQUEST_CANCELLED`, `REIMBURSEMENT_PAID`, `GOODS_SELF_RECEIVED` | Labelled in the inbox |
 
-**Known gaps the app works around (not yet backend tasks):** `PartResponse` and `PurchaseRequestAuthorizationResponse` carry no store, so when HQ files or buys for a store the app can't filter the part or PRA lists to that store — the server refuses a wrong-store pick. HQ's catalog has no price, so the store types the price on an order to HQ.
+**Gaps at BE-23, since closed:** `PartResponse` and `PurchaseRequestAuthorizationResponse` carried no store (BE-26 added it), and HQ's catalog had no price, so the store typed one on an order to HQ (BE-28).
 
 ## Changes since BE-12 (backend `main` 19f5b73, 14 Oct 2026)
 

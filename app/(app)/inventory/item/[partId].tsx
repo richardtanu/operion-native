@@ -5,14 +5,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout, Chip, KV, Row, Section } from '../../../../components';
 import { useAuth } from '../../../../auth/AuthContext';
 import { canCreatePurchaseRequest, canDraftOrder, canEditItems, canRequestStockAdjustment } from '../../../../auth/permissions';
-import { getBurnRate } from '../../../../api/inventory';
-import { listParts } from '../../../../api/parts';
+import { getBurnRate, getStockSummary } from '../../../../api/inventory';
+import { listPartMovements, listParts } from '../../../../api/parts';
 import { getCatalog } from '../../../../api/procurement';
 import { ApiError } from '../../../../api/httpError';
-import type { BurnRateResponse, BurnRateSource, PartResponse } from '../../../../api/types';
+import type { BurnRateResponse, BurnRateSource, PartResponse, StockMovementResponse, StockMovementType, StockSummaryRow } from '../../../../api/types';
 import { useTheme } from '../../../../theme/ThemeContext';
 import { textStyle } from '../../../../theme/typeStyle';
-import { encodeLines, lowBecause } from '../../../../lib/stockLevel';
+import { formatDayLabel, formatTime, parseLocalDateTime } from '../../../../lib/dates';
+import { rp } from '../../../../lib/money';
+import { encodeLines, lowOf } from '../../../../lib/stockLevel';
 
 
 const SOURCE_LABEL: Record<BurnRateSource, string> = {
@@ -22,17 +24,28 @@ const SOURCE_LABEL: Record<BurnRateSource, string> = {
   NONE: 'No usage data',
 };
 
-// INV-05 — Item. One item's stock, how fast it goes, and whether it's the
-// same as an item HQ sells. There's no single-item read on the server, so it
-// comes from the item list. The stock history needs BE-26 (a per-item list of
-// stock changes with who made them); until then the screen says so.
+const MOVE_LABEL: Record<StockMovementType, string> = {
+  INITIAL_STOCK: 'Starting stock',
+  PURCHASE: 'Received',
+  MAINTENANCE_USAGE: 'Used in a repair',
+  ADJUSTMENT: 'Adjusted',
+  RETURN: 'Returned',
+  CONSUMABLE_TAKE: 'Taken',
+};
+
+// INV-05 — Item. One item's stock, how fast it goes, whether it's the same as
+// an item HQ sells, and every stock change with who made it (BE-26). There's
+// no single-item read on the server, so the item comes from the item list
+// and its "low" verdict from its store's stock summary (BE-27).
 export default function ItemDetailScreen() {
   const { color, type: typeScale } = useTheme();
   const router = useRouter();
   const { partId } = useLocalSearchParams<{ partId: string }>();
   const { user, token } = useAuth();
   const [part, setPart] = useState<PartResponse | null>(null);
+  const [row, setRow] = useState<StockSummaryRow | null>(null);
   const [burn, setBurn] = useState<BurnRateResponse | null>(null);
+  const [moves, setMoves] = useState<StockMovementResponse[] | null>(null);
   const [hqName, setHqName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,8 +59,11 @@ export default function ItemDetailScreen() {
         .then((all) => {
           const found = all.find((p) => p.id === partId) ?? null;
           setPart(found);
-          if (!found) setError('This item no longer exists.');
-          if (found?.catalogPartId) {
+          if (!found) return setError('This item no longer exists.');
+          getStockSummary(token, found.tenantId)
+            .then((rows) => setRow(rows.find((r) => r.partId === found.id) ?? null))
+            .catch(() => setRow(null));
+          if (found.catalogPartId) {
             getCatalog(token)
               .then((items) => setHqName(items.find((c) => c.id === found.catalogPartId)?.name ?? null))
               .catch(() => setHqName(null));
@@ -58,6 +74,9 @@ export default function ItemDetailScreen() {
       getBurnRate(partId, token)
         .then(setBurn)
         .catch(() => setBurn(null));
+      listPartMovements(partId, token)
+        .then(setMoves)
+        .catch(() => setMoves(null));
     }, [token, partId]),
   );
 
@@ -73,8 +92,8 @@ export default function ItemDetailScreen() {
     );
   }
 
-  const why = lowBecause(part.currentStock, part.minimumStock, burn ?? undefined);
-  const hasUsage = burn?.burnRateSource === 'COMPUTED' || burn?.burnRateSource === 'MANUAL_RATE';
+  const why = row ? lowOf(row) : null;
+  const hasUsage = row?.daysOfCover != null;
   const mustOrderFromHq = part.mandatoryFromHq && !!part.catalogPartId;
   const suggest = burn?.suggestedQty ?? part.reorderQuantity ?? null;
 
@@ -93,8 +112,14 @@ export default function ItemDetailScreen() {
           {part.mandatoryFromHq ? <Chip label="Must buy from HQ" /> : part.soldByHq ? <Chip label="HQ sells it" /> : null}
           {part.retired ? <Chip label="Retired" tone="danger" /> : null}
         </Row>
+        {why === 'RUNS_OUT_SOON' ? (
+          <Text style={{ ...textStyle(typeScale.helper), color: color.warn }}>{`Runs out before its ${row?.targetDays ?? '—'}-day target`}</Text>
+        ) : why === 'BELOW_MINIMUM' ? (
+          <Text style={{ ...textStyle(typeScale.helper), color: color.warn }}>{`Below minimum ${part.minimumStock ?? 0}`}</Text>
+        ) : null}
 
         <View>
+          <KV k="Store" v={part.tenantName} />
           <KV k="In stock" v={String(part.currentStock)} strong />
           <KV k="Minimum" v={part.minimumStock != null ? String(part.minimumStock) : '—'} />
           <KV k="Reorder quantity" v={part.reorderQuantity != null ? String(part.reorderQuantity) : '—'} />
@@ -105,10 +130,7 @@ export default function ItemDetailScreen() {
         <View>
           <KV k="Worked out from" v={burn ? SOURCE_LABEL[burn.burnRateSource] : 'No usage data'} />
           {hasUsage && burn?.burnRate != null ? <KV k="Uses" v={`~${Math.round(burn.burnRate * 10) / 10} a day`} /> : null}
-          <KV
-            k="Days left"
-            v={hasUsage && burn?.daysOfCover != null ? `~${Math.round(burn.daysOfCover)} · target ${burn.targetDays ?? '—'}` : 'No usage data'}
-          />
+          <KV k="Days left" v={hasUsage ? `~${Math.round(row!.daysOfCover!)} · target ${row!.targetDays ?? '—'}` : 'No usage data'} />
           {suggest != null ? <KV k="Suggest" v={String(suggest)} /> : null}
         </View>
         {!hasUsage ? (
@@ -119,6 +141,7 @@ export default function ItemDetailScreen() {
         {part.catalogPartId ? (
           <>
             <KV k="Same as" v={`${hqName ?? 'An HQ item'} (HQ)`} />
+            {part.hqPrice != null ? <KV k="HQ's price" v={rp(part.hqPrice)} /> : null}
             <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>Only HQ can change or remove this link.</Text>
           </>
         ) : (
@@ -128,7 +151,31 @@ export default function ItemDetailScreen() {
         )}
 
         <Section>History</Section>
-        <Callout>This item's list of stock changes isn't available yet. It's coming with who made each change.</Callout>
+        {moves == null ? (
+          <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>Couldn't load the history.</Text>
+        ) : moves.length === 0 ? (
+          <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>No stock changes yet.</Text>
+        ) : (
+          moves.map((m) => {
+            const at = parseLocalDateTime(m.createdAt);
+            return (
+              <View key={m.id} style={{ paddingBottom: 8, borderBottomWidth: 1, borderColor: color.hair }}>
+                <View className="flex-row justify-between" style={{ gap: 8 }}>
+                  <Text style={{ ...textStyle(typeScale.body), color: color.ink, flex: 1 }}>{MOVE_LABEL[m.movementType] ?? m.movementType}</Text>
+                  <Text style={{ ...textStyle(typeScale.value), color: m.quantity < 0 ? color.danger : color.good }}>
+                    {m.quantity > 0 ? `+${m.quantity}` : String(m.quantity)}
+                  </Text>
+                </View>
+                <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                  {[`${m.beforeStock} → ${m.afterStock}`, m.actorName ?? 'Not recorded', at ? `${formatDayLabel(at)} ${formatTime(at)}` : null]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </Text>
+                {m.notes ? <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>{m.notes}</Text> : null}
+              </View>
+            );
+          })
+        )}
 
         {!part.retired ? (
           <View className="gap-sm">

@@ -44,6 +44,7 @@ export default function ItemsScreen() {
     }, [load]),
   );
 
+  const multiStore = new Set(parts.map((p) => p.tenantId)).size > 1;
   const active = parts.filter((p) => !p.retired).sort((a, b) => a.name.localeCompare(b.name));
   const retired = parts.filter((p) => p.retired);
   const byCategory = new Map<string, PartResponse[]>();
@@ -94,7 +95,7 @@ export default function ItemsScreen() {
                     <Row gap={6}>{p.catalogPartId ? <Chip label="HQ" /> : null}</Row>
                   </View>
                   <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>
-                    {`${p.currentStock} · min ${p.minimumStock ?? '—'}${p.brand ? ` · ${p.brand}` : ''}`}
+                    {`${multiStore ? `${p.tenantName} · ` : ''}${p.currentStock} · min ${p.minimumStock ?? '—'}${p.brand ? ` · ${p.brand}` : ''}`}
                   </Text>
                 </Card>
               </Pressable>
