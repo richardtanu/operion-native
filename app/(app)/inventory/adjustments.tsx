@@ -87,6 +87,7 @@ export default function StockAdjustmentsScreen() {
   };
 
   const signed = (q: number) => (q > 0 ? `+${q}` : String(q));
+  const multiStore = new Set(items.map((a) => a.tenantId)).size > 1;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
@@ -128,7 +129,9 @@ export default function StockAdjustmentsScreen() {
                 <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>{`${current} → ${current + a.quantity}`}</Text>
               ) : null}
               <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-                {[mine ? 'Asked by you' : `Asked by ${a.requestedByName}`, at ? `${formatDayLabel(at)} ${formatTime(at)}` : null].filter(Boolean).join(' · ')}
+                {[multiStore ? a.tenantName : null, mine ? 'Asked by you' : `Asked by ${a.requestedByName}`, at ? `${formatDayLabel(at)} ${formatTime(at)}` : null]
+                  .filter(Boolean)
+                  .join(' · ')}
               </Text>
               <Text style={{ ...textStyle(typeScale.body), color: color.ink, marginTop: 2 }}>{`“${a.reason}”`}</Text>
 

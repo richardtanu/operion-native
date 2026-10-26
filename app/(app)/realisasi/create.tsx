@@ -45,6 +45,7 @@ const rp = (n: number | null | undefined) => (n == null ? '—' : `Rp ${Math.rou
 
 type PraLineOption = {
   praId: string;
+  tenantName: string;
   item: PurchaseRequestAuthorizationItemResponse;
 };
 
@@ -205,7 +206,14 @@ export default function CreateRealisasiScreen() {
     refreshDrafts();
   }, [refreshDrafts]);
 
-  const lineOptions = useMemo(() => pras.flatMap((p) => p.items.map((item) => ({ praId: p.id, item }))), [pras]);
+  // HQ buying for a store sees only that store's limits (BE-26 put the store on each PRA).
+  const lineOptions = useMemo(
+    () =>
+      pras
+        .filter((p) => !picksStore || !storeId || p.tenantId === storeId)
+        .flatMap((p) => p.items.map((item) => ({ praId: p.id, tenantName: p.tenantName, item }))),
+    [pras, picksStore, storeId],
+  );
 
   useEffect(() => {
     if (!pendingLine || !prasLoaded) return;
@@ -607,7 +615,7 @@ export default function CreateRealisasiScreen() {
                     {mandatoryParts.has(opt.item.partId) ? <Chip label="From HQ only" tone="warning" /> : null}
                   </View>
                   <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-                    PRA {opt.praId} · remaining {opt.item.remainingQty}
+                    {picksStore ? `${opt.tenantName} · ` : ''}PRA {opt.praId} · remaining {opt.item.remainingQty}
                   </Text>
                 </Pressable>
               ))

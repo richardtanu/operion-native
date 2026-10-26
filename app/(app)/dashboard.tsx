@@ -16,8 +16,8 @@ import { textStyle } from '../../theme/typeStyle';
 // Mostly scaffolding — module 3 (outlet operator / scan loop) hasn't been
 // through the plan's screen-inventory-and-gates process yet. The stock tiles
 // are INV-08 (module 2): each opens Stock with that filter. HQ doesn't get
-// them — summed across stores they'd mean nothing; HQ's view is stock across
-// stores, which waits for BE-26.
+// them — the endpoint sums every store, which means nothing; HQ's view is
+// Stock across stores (INV-03) in the Inventory menu.
 export default function DashboardScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();

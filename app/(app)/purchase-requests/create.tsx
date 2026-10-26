@@ -26,12 +26,13 @@ function newLine(): Line {
 // PROC-01 — Purchase Request Create. Blocking-error, manual-retry: calls
 // api/procurement.ts directly, never through the outbox. BE-14: only
 // MANAGER+ or ADMIN / PROCUREMENT may file; HQ picks the store (required, no
-// default), a Store Manager's store is fixed. Restock (INV-02) and Stock
-// (INV-01) open it with `lines=partId:qty,…` filled in.
+// default), a Store Manager's store is fixed; HQ only sees the picked
+// store's items (BE-26). Restock (INV-02), Stock (INV-01) and Stock across
+// stores (INV-03) open it with `lines=partId:qty,…` and, from HQ, `storeId`.
 export default function CreatePurchaseRequestScreen() {
   const { color, type: typeScale } = useTheme();
   const router = useRouter();
-  const params = useLocalSearchParams<{ lines?: string }>();
+  const params = useLocalSearchParams<{ lines?: string; storeId?: string }>();
   const { user, token } = useAuth();
   const [lines, setLines] = useState<Line[]>([newLine()]);
   const [submitting, setSubmitting] = useState(false);
@@ -39,12 +40,22 @@ export default function CreatePurchaseRequestScreen() {
   const [created, setCreated] = useState<PurchaseRequestResponse | null>(null);
 
   const [stores, setStores] = useState<TenantResponse[]>([]);
-  const [storeId, setStoreId] = useState<string | null>(null);
+  const [storeId, setStoreId] = useState<string | null>(params.storeId ?? null);
   const mayCreate = canCreatePurchaseRequest(user);
   const picksStore = canFileForAnotherStore(user) && stores.length > 1;
 
-  const [parts, setParts] = useState<PartResponse[]>([]);
+  const [allParts, setParts] = useState<PartResponse[]>([]);
   const [partsLoading, setPartsLoading] = useState(true);
+  // HQ picks the store first and then sees only that store's items; a Store Manager sees their own.
+  const parts = picksStore ? (storeId ? allParts.filter((p) => p.tenantId === storeId) : []) : allParts;
+
+  const pickStore = (id: string) => {
+    setStoreId(id);
+    setLines((prev) => {
+      const kept = prev.filter((l) => !l.partId || allParts.find((p) => p.id === l.partId)?.tenantId === id);
+      return kept.length ? kept : [newLine()];
+    });
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -127,6 +138,17 @@ export default function CreatePurchaseRequestScreen() {
       <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
         <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>New Request</Text>
 
+        {picksStore ? (
+          <SelectField
+            label="Store"
+            value={storeId}
+            placeholder="Pick the store…"
+            items={stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))}
+            onChange={pickStore}
+          />
+        ) : (
+          <Field label="Store" value={stores[0]?.name ?? 'Your store'} variant="derived" />
+        )}
         <Section>Line items</Section>
         {lines.map((line) => (
           <Card key={line.key}>
@@ -135,7 +157,7 @@ export default function CreatePurchaseRequestScreen() {
                 label="Part"
                 value={line.partId || null}
                 loading={partsLoading}
-                placeholder="Select part…"
+                placeholder={picksStore && !storeId ? 'Pick the store first' : 'Select part…'}
                 items={parts.map((p) => ({
                   id: p.id,
                   label: p.name,
@@ -162,24 +184,7 @@ export default function CreatePurchaseRequestScreen() {
         ))}
         <Button label="+ Add line" variant="secondary" onPress={addLine} />
 
-        {picksStore ? (
-          <SelectField
-            label="Store"
-            value={storeId}
-            placeholder="Pick the store…"
-            items={stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))}
-            onChange={setStoreId}
-          />
-        ) : (
-          <Field label="Store" value={stores[0]?.name ?? 'Your store'} variant="derived" />
-        )}
         <Field label="Requested by" value={user?.fullName ?? 'you (current user)'} variant="derived" />
-        {picksStore ? (
-          <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-            The part list shows every store's items. Pick the ones that belong to the store above — the server
-            refuses another store's part.
-          </Text>
-        ) : null}
 
         <View>
           <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute, marginBottom: 3 }}>Starts at</Text>

@@ -9,24 +9,24 @@ import type {
 } from './types';
 
 /**
- * Module 2 — Inventory (INV-01…08). Reads walk the caller's tenant tree, so
- * an HQ caller gets every store's rows with no store on them until BE-26;
- * the store screens are the ones built on this today.
+ * Module 2 — Inventory (INV-01…09). Reads walk the caller's tenant tree;
+ * since BE-26 every row says which store it belongs to, and the lists take
+ * `tenantId` to narrow to one store (outside the caller's tree → 400).
  */
 
-/** INV-08 tiles. For an HQ caller it sums every store, which is why HQ doesn't show it. */
+/** INV-08 tiles. No store filter: for an HQ caller it sums every store, which is why HQ doesn't show it. */
 export function getInventoryDashboard(token: string): Promise<InventoryDashboardResponse> {
   return apiRequest<InventoryDashboardResponse>('/inventory/dashboard', { token });
 }
 
-/** Every item with its below-minimum status. */
-export function getStockSummary(token: string): Promise<StockSummaryRow[]> {
-  return apiRequest<StockSummaryRow[]>('/inventory/stock-summary', { token });
+/** Every item with its status and, since BE-27, why it's low (`lowBecause`) and its days of cover. */
+export function getStockSummary(token: string, tenantId?: string): Promise<StockSummaryRow[]> {
+  return apiRequest<StockSummaryRow[]>(`/inventory/stock-summary${queryString({ tenantId })}`, { token });
 }
 
-/** Usage per item: days of cover, target days and a suggested amount. */
-export function getBurnRates(token: string): Promise<BurnRateResponse[]> {
-  return apiRequest<BurnRateResponse[]>('/burn-rate', { token });
+/** Usage per item, with each store's own settings (BE-26): days of cover, target days, a suggested amount. */
+export function getBurnRates(token: string, tenantId?: string): Promise<BurnRateResponse[]> {
+  return apiRequest<BurnRateResponse[]>(`/burn-rate${queryString({ tenantId })}`, { token });
 }
 
 export function getBurnRate(partId: string, token: string): Promise<BurnRateResponse> {

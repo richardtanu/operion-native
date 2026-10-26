@@ -99,6 +99,41 @@ export interface PartResponse {
   /** BE-21, read from HQ's row: HQ sells it / it must be bought from HQ. */
   soldByHq: boolean;
   mandatoryFromHq: boolean;
+  /** BE-26: the store the item belongs to. */
+  tenantId: string;
+  tenantName: string;
+  /** BE-28: HQ's price for it (a store item shows its HQ item's). Null unless OWNER+ or an HQ admin. */
+  hqPrice: number | null;
+}
+
+/** PATCH /parts/{id}/hq-flags — HQ admins only. Null leaves a value unchanged; selling needs a price (BE-28). */
+export interface UpdateHqFlagsRequest {
+  soldByHq?: boolean;
+  /** Implies soldByHq. */
+  mandatoryFromHq?: boolean;
+  price?: number;
+}
+
+export type StockMovementType = 'INITIAL_STOCK' | 'PURCHASE' | 'MAINTENANCE_USAGE' | 'ADJUSTMENT' | 'RETURN' | 'CONSUMABLE_TAKE';
+export type StockReferenceType = 'MANUAL' | 'WORK_ORDER' | 'PURCHASE' | 'STOCK_ADJUSTMENT' | 'UNIT_INSTALL' | 'PART_INSTANCE';
+
+/** GET /parts/{id}/movements (BE-26): one item's stock changes, newest first, each with who made it. */
+export interface StockMovementResponse {
+  id: string;
+  partId: string;
+  partName: string;
+  movementType: StockMovementType;
+  /** Signed: −2 for two taken. */
+  quantity: number;
+  beforeStock: number;
+  afterStock: number;
+  notes: string | null;
+  referenceType: StockReferenceType | null;
+  referenceId: string | null;
+  /** Null on movements from before BE-26. */
+  actorId: string | null;
+  actorName: string | null;
+  createdAt: string;
 }
 
 /** POST /parts (BE-25: the store's MANAGER+ or ADMIN). Category and type are required by the service. */
@@ -158,6 +193,8 @@ export interface CatalogItemResponse {
   partTypeName: string | null;
   consumable: boolean;
   mandatoryFromHq: boolean;
+  /** BE-28: what HQ charges per unit. Null unless OWNER+ or an HQ admin. */
+  price: number | null;
   storePartId: string | null;
   storeCurrentStock: number | null;
 }
@@ -278,6 +315,9 @@ export interface PurchaseRequestAuthorizationResponse {
   items: PurchaseRequestAuthorizationItemResponse[];
   purchaseRequestIds: string[];
   createdAt: string;
+  /** BE-26: the store the limits are for. */
+  tenantId: string;
+  tenantName: string;
 }
 
 /** `PENDING_APPROVAL/APPROVED/FAILED/SUPERSEDED` — independent of `varianceStatus`. */
@@ -500,11 +540,11 @@ export interface PurchaseOrderResponse {
   createdAt: string;
 }
 
+/** No price: the server takes HQ's price on create and again on send (BE-28). Unpriced → 400. */
 export interface CreatePurchaseOrderItemRequest {
   /** BE-21: an HQ catalog item id, or the store's part linked to one. Anything HQ doesn't sell → 400. */
   partId: string;
   quantity: number;
-  price: number;
 }
 
 /** BE-21: the supplier is always HQ's franchise centre, set by the server — `supplierId` is ignored, so not sent. */
@@ -613,19 +653,35 @@ export interface ExpenseFilters {
 
 // ---------- Inventory (module 2) ----------
 
-/** Computed on read from minimum stock only: OUT at ≤ 0, LOW at ≤ minimumStock. BE-27 replaces it with one rule. */
+/** OUT at ≤ 0; otherwise LOW by the one rule (BE-27). */
 export type InventoryStockStatus = 'NORMAL' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 
-/** One row of GET /inventory/stock-summary (every item) or /inventory/low-stock (below minimum, lowest first). */
+/**
+ * BE-27's one rule: with usage data, low when it runs out before its target
+ * days (RUNS_OUT_SOON); without, at or below minimum stock (BELOW_MINIMUM).
+ * With usage data the minimum doesn't also apply.
+ */
+export type ServerLowBecause = 'RUNS_OUT_SOON' | 'BELOW_MINIMUM';
+
+/** One row of GET /inventory/stock-summary (every item) or /inventory/low-stock (low by the rule, lowest first). */
 export interface StockSummaryRow {
   partId: string;
   partName: string;
   currentStock: number;
   minimumStock: number | null;
   status: InventoryStockStatus;
+  /** BE-26. */
+  tenantId: string;
+  tenantName: string;
+  catalogPartId: string | null;
+  /** BE-27: null when not low. Set alongside OUT_OF_STOCK too. */
+  lowBecause: ServerLowBecause | null;
+  /** BE-27: only when the item has usage data. */
+  daysOfCover: number | null;
+  targetDays: number | null;
 }
 
-/** GET /inventory/dashboard. "Used today" counts repair usage only until BE-26. */
+/** GET /inventory/dashboard. Low counts by BE-27's rule; used today includes consumable takes (BE-26). Sums the whole tree for HQ. */
 export interface InventoryDashboardResponse {
   totalParts: number;
   totalStock: number;
@@ -653,6 +709,10 @@ export interface BurnRateResponse {
   suggestedQty: number | null;
   manualReorderPoint: number | null;
   belowLevel: boolean | null;
+  /** BE-26; computed with the item's own store's settings. */
+  tenantId: string;
+  tenantName: string;
+  catalogPartId: string | null;
 }
 
 export type StockAdjustmentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -680,6 +740,9 @@ export interface StockAdjustmentResponse {
   requestedByName: string;
   selfApproved: boolean;
   createdAt: string;
+  /** BE-26. */
+  tenantId: string;
+  tenantName: string;
 }
 
 // ---------- Uploads (BE-23) ----------

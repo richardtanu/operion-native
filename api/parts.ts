@@ -1,14 +1,33 @@
-import { apiRequest } from './client';
-import type { CreatePartRequest, PartCategoryResponse, PartResponse, PartTypeResponse, UpdatePartRequest } from './types';
+import { apiRequest, queryString } from './client';
+import type {
+  CreatePartRequest,
+  PartCategoryResponse,
+  PartResponse,
+  PartTypeResponse,
+  StockMovementResponse,
+  UpdateHqFlagsRequest,
+  UpdatePartRequest,
+} from './types';
 
 /**
  * Part module (c:\demo, module/part) — the items a store stocks. Every
  * Procurement create screen needs it for a real Part picker, and module 2's
- * Items screen (INV-06) manages it. GET /parts returns everything
- * (including retired parts); callers filter retired ones out.
+ * Items screen (INV-06) manages it. GET /parts returns everything in the
+ * caller's tree (including retired parts; callers filter them out), each
+ * with its store since BE-26; `tenantId` narrows to one store.
  */
-export function listParts(token: string): Promise<PartResponse[]> {
-  return apiRequest<PartResponse[]>('/parts', { token });
+export function listParts(token: string, tenantId?: string): Promise<PartResponse[]> {
+  return apiRequest<PartResponse[]>(`/parts${queryString({ tenantId })}`, { token });
+}
+
+/** BE-26: one item's stock changes, newest first, each with who made it. `limit` defaults to 50, max 500. */
+export function listPartMovements(id: string, token: string, limit?: number): Promise<StockMovementResponse[]> {
+  return apiRequest<StockMovementResponse[]>(`/parts/${id}/movements${queryString({ limit })}`, { token });
+}
+
+/** HQ admins only (403 for a store). Selling needs a price (BE-28, 400 without). */
+export function updateHqFlags(id: string, request: UpdateHqFlagsRequest, token: string): Promise<PartResponse> {
+  return apiRequest<PartResponse>(`/parts/${id}/hq-flags`, { method: 'PATCH', body: request, token });
 }
 
 /** BE-25: the store's MANAGER+ or ADMIN (403 otherwise). */

@@ -14,19 +14,21 @@ import { rp } from '../../../lib/money';
 import { decodeLines } from '../../../lib/stockLevel';
 
 
-type Line = { key: string; catalogId: string; quantity: string; price: string };
+type Line = { key: string; catalogId: string; quantity: string };
 
 let lineKeySeq = 0;
 function newLine(): Line {
   lineKeySeq += 1;
-  return { key: `line-${lineKeySeq}`, catalogId: '', quantity: '', price: '' };
+  return { key: `line-${lineKeySeq}`, catalogId: '', quantity: '' };
 }
 
 // PROC-07 — Order from HQ (BE-20, BE-21). The store orders from HQ's catalog
 // only; HQ is always the supplier, set by the server. The store decides when
 // and how much. Draft: MANAGER+ or PROCUREMENT. Send to HQ commits the store's
 // money: OWNER+. Cancel: a draft by its creator or OWNER+; once sent, OWNER+
-// with a reason. Prices and the total come back null below Owner (BE-11).
+// with a reason. Prices are HQ's (BE-28): taken when the order is created and
+// again when it's sent, never typed by the store. Prices and the total come
+// back null below Owner (BE-11).
 // Restock (INV-02) opens it with `lines=catalogId:qty,…` filled in.
 export default function CreatePurchaseOrderScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
@@ -68,16 +70,21 @@ export default function CreatePurchaseOrderScreen() {
   const updateLine = (key: string, patch: Partial<Line>) => setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch } : l)));
   const addLine = () => setLines((prev) => [...prev, newLine()]);
   const removeLine = (key: string) => setLines((prev) => prev.filter((l) => l.key !== key));
+  // What the lines cost at HQ's current prices; null until every picked line has a price and a quantity.
+  const picked = lines.filter((l) => l.catalogId);
+  const estimate = picked.length && picked.every((l) => catalog.find((c) => c.id === l.catalogId)?.price != null && Number(l.quantity) > 0)
+    ? picked.reduce((sum, l) => sum + catalog.find((c) => c.id === l.catalogId)!.price! * Number(l.quantity), 0)
+    : null;
 
   const handleSubmit = async () => {
     setError(null);
     const items = lines
       .filter((l) => l.catalogId)
-      .map((l) => ({ partId: l.catalogId, quantity: Number(l.quantity), price: Number(l.price) }));
+      .map((l) => ({ partId: l.catalogId, quantity: Number(l.quantity) }));
 
     if (items.length === 0) return setError('Add at least one item from the HQ catalog.');
-    if (items.some((i) => !Number.isFinite(i.quantity) || i.quantity <= 0 || !Number.isFinite(i.price) || i.price <= 0)) {
-      return setError('Every line needs a quantity and price greater than zero.');
+    if (items.some((i) => !Number.isInteger(i.quantity) || i.quantity <= 0)) {
+      return setError('Every line needs a whole quantity greater than zero.');
     }
     if (!token) return setError('Not signed in.');
 
@@ -232,7 +239,11 @@ export default function CreatePurchaseOrderScreen() {
                 items={catalog.map((c) => ({
                   id: c.id,
                   label: c.name,
-                  sublabel: [c.mandatoryFromHq ? 'Mandatory' : null, c.storeCurrentStock != null ? `${c.storeCurrentStock} in stock here` : null]
+                  sublabel: [
+                    c.mandatoryFromHq ? 'Mandatory' : null,
+                    c.price != null ? rp(c.price) : null,
+                    c.storeCurrentStock != null ? `${c.storeCurrentStock} in stock here` : null,
+                  ]
                     .filter(Boolean)
                     .join(' · ') || undefined,
                   group: c.categoryName ?? 'Other',
@@ -247,7 +258,12 @@ export default function CreatePurchaseOrderScreen() {
               <View style={{ marginTop: 9 }}>
                 <Row>
                   <Field label="Qty" value={line.quantity} onChangeText={(v) => updateLine(line.key, { quantity: v })} mono keyboardType="numeric" />
-                  <Field label="Price" value={line.price} onChangeText={(v) => updateLine(line.key, { price: v })} mono keyboardType="numeric" />
+                  <Field
+                    label="HQ's price"
+                    value={item ? (item.price != null ? rp(item.price) : ownerPlus ? 'Not set by HQ yet' : 'Set by HQ') : '—'}
+                    variant="derived"
+                    mono={item?.price != null}
+                  />
                 </Row>
               </View>
               {lines.length > 1 ? (
@@ -262,9 +278,10 @@ export default function CreatePurchaseOrderScreen() {
         {!catalogLoading && catalog.length === 0 ? (
           <Callout tone="warning">HQ's catalog is empty. HQ marks the items it sells before stores can order them.</Callout>
         ) : null}
-        <Callout tone="warning">
-          Total and per-line price only show once created, and only to Owner+ — below that scope the API returns them
-          empty.
+        {ownerPlus && estimate != null ? <KV k="At HQ's prices now" v={rp(estimate)} strong derived /> : null}
+        <Callout>
+          HQ sets the prices. The order takes HQ's price when it's created and again when the Owner sends it; after
+          that it doesn't change. Prices show to the Owner and above only.
         </Callout>
 
         {!mayDraft ? (
