@@ -16,6 +16,14 @@ export function setUnauthorizedHandler(handler: (() => void) | null): void {
   unauthorizedHandler = handler;
 }
 
+/** `?a=1&b=2` from an object of optional filters; empty values are left out. */
+export function queryString(params: object): string {
+  const pairs = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
+  return pairs.length ? `?${pairs.join('&')}` : '';
+}
+
 /**
  * Thin fetch wrapper: base URL, bearer header, JSON parse, error
  * normalization. No axios/ky — a handful of hand-written endpoints against

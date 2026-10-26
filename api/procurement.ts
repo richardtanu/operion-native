@@ -1,4 +1,4 @@
-import { apiRequest } from './client';
+import { apiRequest, queryString } from './client';
 import type {
   CancelPurchaseOrderRequest,
   CatalogItemResponse,
@@ -32,13 +32,6 @@ import type {
  * actions must not be queued — a queued PR approval or Realisasi creation
  * that fails silently later is worse than a refusal now.
  */
-
-function queryString(params: object): string {
-  const pairs = Object.entries(params)
-    .filter(([, v]) => v !== undefined && v !== null && v !== '')
-    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`);
-  return pairs.length ? `?${pairs.join('&')}` : '';
-}
 
 // ---------- PROC-01/02 — Purchase Request ----------
 

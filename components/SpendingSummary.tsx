@@ -18,7 +18,9 @@ type SpendingSummaryProps = { token: string };
 // BE-16, OWNER+ only (callers check canReadSpending first). One card per
 // store in the caller's tree: a store Owner sees their own store, HQ sees
 // every store. "Spent" and "committed" mean exactly what BE-16's
-// Definitions say; over budget is a warning colour, never a block.
+// Definitions say; other expenses (BE-19) show as one line with the HQ /
+// Branch specific split beside it. Over budget is a warning colour, never a
+// block.
 export function SpendingSummary({ token }: SpendingSummaryProps) {
   const { color, type: typeScale } = useTheme();
   const [rows, setRows] = useState<StoreSpendingResponse[] | null>(null);
@@ -87,11 +89,17 @@ export function SpendingSummary({ token }: SpendingSummaryProps) {
           <KV k="· from HQ" v={rp(r.spentFromCentre)} />
           <KV k="· outside" v={rp(r.spentOutside)} />
           <KV k="Committed, not yet spent" v={rp(r.committed)} />
+          <KV k="Other expenses" v={rp(r.otherExpenses)} />
+          {r.otherExpenses > 0 ? (
+            <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+              {`HQ ${rp(r.otherExpensesHq)} · Branch specific ${rp(r.otherExpensesBranch)}`}
+            </Text>
+          ) : null}
           {r.budget != null ? (
             <Text style={{ ...textStyle(typeScale.helper), color: r.overBudget ? color.warn : color.steel, marginTop: 4 }}>
               {r.overBudget
-                ? `Spent + committed is over this month's budget of ${rp(r.budget)}.`
-                : `Budget ${rp(r.budget)} · ${rp(r.budget - r.spent - r.committed)} left after committed.`}
+                ? `Spent + committed + other expenses is over this month's budget of ${rp(r.budget)}.`
+                : `Budget ${rp(r.budget)} · ${rp(r.budget - r.spent - r.committed - r.otherExpenses)} left after committed and other expenses.`}
             </Text>
           ) : null}
           {i === 0 && !editing ? (

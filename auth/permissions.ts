@@ -50,3 +50,37 @@ export function canDraftOrder(user: User): boolean {
 export function canReadSpending(user: User): boolean {
   return ownerPlus(user);
 }
+
+/** Recording an expense (BE-19): the store's MANAGER+. "Paid by the store" needs OWNER+. */
+export function canRecordExpense(user: User): boolean {
+  return managerPlus(user);
+}
+
+export function canRecordStorePaidExpense(user: User): boolean {
+  return ownerPlus(user);
+}
+
+/** Asking for a stock adjustment (BE-25): the store's MANAGER+. */
+export function canRequestStockAdjustment(user: User): boolean {
+  return managerPlus(user);
+}
+
+/** Approving or rejecting one (BE-25): the store's own OWNER+; HQ is refused by the server. */
+export function canDecideStockAdjustment(user: User): boolean {
+  return ownerPlus(user);
+}
+
+/** Adding or editing items (BE-25): MANAGER+ or ADMIN. */
+export function canEditItems(user: User): boolean {
+  return managerPlus(user) || user?.role === 'ADMIN';
+}
+
+/** Retiring or restoring items (BE-25): OWNER+ or ADMIN. */
+export function canRetireItems(user: User): boolean {
+  return ownerPlus(user) || user?.role === 'ADMIN';
+}
+
+/** Linking a store item to HQ's (BE-25): the store's MANAGER+ may create a link; changing one is HQ's. */
+export function canLinkToCatalog(user: User): boolean {
+  return managerPlus(user);
+}

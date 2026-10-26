@@ -25,6 +25,7 @@ const TYPE_LABEL: Record<string, string> = {
   PURCHASE_REQUEST_CANCELLED: 'Request cancelled',
   REIMBURSEMENT_PAID: 'Paid back',
   GOODS_SELF_RECEIVED: 'Self-received',
+  STOCK_ADJUSTMENT_REQUESTED: 'Adjustment to approve',
 };
 
 // Notifications — the signed-in user's own inbox. Tapping one marks it
