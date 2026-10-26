@@ -33,7 +33,15 @@
       "expo-secure-store",
       "expo-sqlite",
       "expo-font",
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Operion uses the camera to photograph goods when you receive them.",
+          "photosPermission": "Operion uses your photos so you can attach a picture of received goods.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "extra": {
       "router": {},

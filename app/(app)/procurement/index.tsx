@@ -11,11 +11,11 @@ import { textStyle } from '../../../theme/typeStyle';
 const SCREENS: { code: string; label: string; href: Href }[] = [
   { code: 'PROC-01', label: 'New purchase request', href: '/(app)/purchase-requests/create' },
   { code: 'PROC-02', label: 'Requests', href: '/(app)/purchase-requests' },
-  { code: 'PROC-03', label: 'New authorization', href: '/(app)/purchase-authorizations/create' },
-  { code: 'PROC-04', label: 'New realisasi', href: '/(app)/realisasi/create' },
+  { code: 'PROC-03', label: 'Spending limits', href: '/(app)/purchase-authorizations/create' },
+  { code: 'PROC-04', label: 'Buy elsewhere', href: '/(app)/realisasi/create' },
   { code: 'PROC-05', label: 'Goods receipts', href: '/(app)/goods-receipts' },
   { code: 'PROC-06', label: 'Suppliers', href: '/(app)/suppliers' },
-  { code: 'PROC-07', label: 'New purchase order', href: '/(app)/purchase-orders/create' },
+  { code: 'PROC-07', label: 'Order from HQ', href: '/(app)/purchase-orders/create' },
   { code: 'PROC-08', label: 'Reimbursements', href: '/(app)/reimbursements' },
 ];
 

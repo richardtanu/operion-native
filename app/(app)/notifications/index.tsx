@@ -22,6 +22,9 @@ const TYPE_LABEL: Record<string, string> = {
   REALISASI_ESCALATED: 'Needs approval',
   LOW_STOCK: 'Low stock',
   PART_END_OF_LIFE: 'Part end of life',
+  PURCHASE_REQUEST_CANCELLED: 'Request cancelled',
+  REIMBURSEMENT_PAID: 'Paid back',
+  GOODS_SELF_RECEIVED: 'Self-received',
 };
 
 // Notifications — the signed-in user's own inbox. Tapping one marks it

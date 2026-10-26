@@ -6950,6 +6950,21 @@
                           }
                         },
                         {
+                          "id": "O9uLo",
+                          "type": "ref",
+                          "ref": "UY6v6",
+                          "name": "Field — Store",
+                          "width": "fill_container",
+                          "descendants": {
+                            "M8pZI": {
+                              "content": "STORE"
+                            },
+                            "AhyRh": {
+                              "content": "Outlet Bandung"
+                            }
+                          }
+                        },
+                        {
                           "id": "Vm4pY",
                           "type": "ref",
                           "ref": "UY6v6",
@@ -7012,25 +7027,6 @@
                             "z13SH": {
                               "content": "No cost fields on this screen — quantity only. Pricing enters at Realisasi, not here.",
                               "fill": "$steel",
-                              "lineHeight": 1.45
-                            }
-                          }
-                        },
-                        {
-                          "id": "YasqS",
-                          "type": "ref",
-                          "ref": "QfPQH",
-                          "name": "Callout — warning",
-                          "width": "fill_container",
-                          "stroke": "$warn",
-                          "descendants": {
-                            "knoLi": {
-                              "fill": "$warn",
-                              "icon": "triangle-alert"
-                            },
-                            "z13SH": {
-                              "content": "No role or scope gate: anyone signed in can submit.",
-                              "fill": "$warn",
                               "lineHeight": 1.45
                             }
                           }
@@ -7109,20 +7105,101 @@
                       "padding": 13,
                       "children": [
                         {
-                          "id": "OMbjO",
+                          "id": "ITl6J",
                           "type": "ref",
-                          "ref": "okhbu",
+                          "ref": "jzGo4",
                           "name": "Button — Create request",
                           "width": "fill_container",
                           "descendants": {
-                            "jPcGi": {
-                              "content": "CREATE REQUEST"
+                            "cYldT": {
+                              "content": "CREATE REQUEST",
+                              "fontSize": 15
+                            },
+                            "gK2Gs": {
+                              "content": "MANAGER+·ADMIN·PROC"
                             }
                           }
                         }
                       ]
                     }
                   }
+                },
+                {
+                  "type": "frame",
+                  "id": "qM4RE",
+                  "name": "State — HQ filing for a store",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$line",
+                  "strokeWidth": 1.5,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 13,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "asHR3",
+                      "name": "State Label",
+                      "fill": "$steel",
+                      "content": "STATE · HQ ADMIN OR PROCUREMENT",
+                      "fontFamily": "$font-display",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.3
+                    },
+                    {
+                      "id": "BEGr3",
+                      "type": "ref",
+                      "ref": "mAqnO",
+                      "name": "Field — Store",
+                      "width": "fill_container",
+                      "descendants": {
+                        "zwy7z": {
+                          "content": "STORE"
+                        },
+                        "QNIgX": {
+                          "content": "Pick the store…",
+                          "fill": "$mute"
+                        },
+                        "YFZjG": {
+                          "enabled": true,
+                          "content": "Required, no default. Requests a store Manager files are locked to their own store.",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container"
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "hmiCO",
+                      "name": "Helper",
+                      "fill": "$mute",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "The part list shows every store's items; the server refuses another store's part.",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "id": "p4PIDy",
+                      "type": "ref",
+                      "ref": "jzGo4",
+                      "name": "Button — Create request",
+                      "width": "fill_container",
+                      "descendants": {
+                        "cYldT": {
+                          "content": "CREATE REQUEST",
+                          "fontSize": 15
+                        },
+                        "gK2Gs": {
+                          "content": "MANAGER+·ADMIN·PROC"
+                        }
+                      }
+                    }
+                  ]
                 },
                 {
                   "type": "frame",
@@ -7137,7 +7214,7 @@
                       "id": "craqu",
                       "name": "Note — Open question",
                       "width": "fill_container",
-                      "stroke": "$warn",
+                      "stroke": "$good",
                       "strokeWidth": {
                         "left": 3
                       },
@@ -7154,8 +7231,8 @@
                           "type": "text",
                           "id": "m987J",
                           "name": "Head",
-                          "fill": "$warn",
-                          "content": "OPEN QUESTION",
+                          "fill": "$good",
+                          "content": "DECIDED (BE-14)",
                           "fontFamily": "$font-display",
                           "fontSize": 12,
                           "fontWeight": "700",
@@ -7168,7 +7245,7 @@
                           "fill": "$steel",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Nothing gates who can submit. If only Procurement or Admin should, this screen is the only guard today.",
+                          "content": "Only the Store Manager (Manager+), HQ Admin and HQ Procurement file requests. Accounting views only. HQ picks the store; the record reads \"Requested by {name} for {store}\".",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
@@ -7341,6 +7418,115 @@
                       "gap": 14,
                       "padding": 14,
                       "children": [
+                        {
+                          "id": "rdWHC",
+                          "type": "ref",
+                          "ref": "fkVML",
+                          "name": "Spending this month (Owner+)",
+                          "width": "fill_container",
+                          "descendants": {
+                            "zvMaG": {
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "rPKWF",
+                                  "name": "Field Label",
+                                  "fill": "$mute",
+                                  "content": "THIS MONTH · OUTLET BANDUNG",
+                                  "fontFamily": "$font-display",
+                                  "fontSize": 10,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 1.4
+                                },
+                                {
+                                  "id": "TXJP9",
+                                  "type": "ref",
+                                  "ref": "aBX5X",
+                                  "name": "KV — Spent",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "wtBa4": {
+                                      "content": "Spent"
+                                    },
+                                    "ObVfa": {
+                                      "content": "Rp 4,200,000",
+                                      "fontSize": 15,
+                                      "fontWeight": "600"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "Ehtz9",
+                                  "type": "ref",
+                                  "ref": "aBX5X",
+                                  "name": "KV — · from HQ",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "wtBa4": {
+                                      "content": "· from HQ"
+                                    },
+                                    "ObVfa": {
+                                      "content": "Rp 2,900,000"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "jOpnR",
+                                  "type": "ref",
+                                  "ref": "aBX5X",
+                                  "name": "KV — · outside",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "wtBa4": {
+                                      "content": "· outside"
+                                    },
+                                    "ObVfa": {
+                                      "content": "Rp 1,300,000"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "OpSs6",
+                                  "type": "ref",
+                                  "ref": "aBX5X",
+                                  "name": "KV — Committed, not yet spent",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "wtBa4": {
+                                      "content": "Committed, not yet spent"
+                                    },
+                                    "ObVfa": {
+                                      "content": "Rp 1,100,000"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "HyTI6",
+                                  "name": "Helper",
+                                  "fill": "$steel",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Budget Rp 8,000,000 · Rp 2,700,000 left after committed.",
+                                  "lineHeight": 1.4,
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "vXLkP",
+                                  "name": "Link",
+                                  "fill": "$info",
+                                  "content": "Change monthly budget",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          }
+                        },
                         {
                           "type": "frame",
                           "id": "WMIR9",
@@ -7529,7 +7715,7 @@
                                               "id": "DbRbp",
                                               "name": "Requester",
                                               "fill": "$steel",
-                                              "content": "requested by Field PIC",
+                                              "content": "requested by Field PIC · for Outlet Bandung",
                                               "fontFamily": "$font-body",
                                               "fontSize": 12,
                                               "fontWeight": "normal"
@@ -7616,7 +7802,7 @@
                                               "id": "oLrOY",
                                               "name": "Requester",
                                               "fill": "$steel",
-                                              "content": "requested by Warehouse Receiver",
+                                              "content": "requested by Warehouse Receiver · for Outlet Bandung",
                                               "fontFamily": "$font-body",
                                               "fontSize": 12,
                                               "fontWeight": "normal"
@@ -7672,27 +7858,38 @@
                           "ref": "fkVML",
                           "name": "Card",
                           "width": "fill_container",
-                          "descendants": {
-                            "zvMaG": {
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Z7l3j",
+                              "name": "History",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 2,
                               "children": [
                                 {
-                                  "id": "jsfj1",
-                                  "type": "ref",
-                                  "ref": "aBX5X",
-                                  "name": "KV — Created",
-                                  "width": "fill_container",
-                                  "descendants": {
-                                    "wtBa4": {
-                                      "content": "Created"
-                                    },
-                                    "ObVfa": {
-                                      "content": "10 Aug 2026 · Field PIC"
-                                    }
-                                  }
+                                  "type": "text",
+                                  "id": "rpTlg",
+                                  "name": "Change",
+                                  "fill": "$ink",
+                                  "content": "Created as PENDING",
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 13,
+                                  "fontWeight": "normal"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "AkcCJ",
+                                  "name": "Who",
+                                  "fill": "$steel",
+                                  "content": "Field PIC · Today 09:12",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
                                 }
                               ]
                             }
-                          }
+                          ]
                         },
                         {
                           "id": "hDnVN",
@@ -7720,10 +7917,10 @@
                           "width": "fill_container",
                           "descendants": {
                             "yByEc": {
-                              "content": "REASON (REQUIRED FOR REJECT)"
+                              "content": "REASON (REQUIRED TO REJECT OR CANCEL)"
                             },
                             "Ss3L7": {
-                              "content": "Why is this rejected?",
+                              "content": "e.g. bought locally already",
                               "fill": "$mute"
                             }
                           }
@@ -7784,37 +7981,35 @@
                               ]
                             },
                             {
-                              "id": "fNGcc",
+                              "id": "uwFoR",
                               "type": "ref",
-                              "ref": "WyJCa",
-                              "name": "Button — Cancel",
+                              "ref": "jzGo4",
+                              "name": "Button — Cancel request",
                               "width": "fill_container",
                               "descendants": {
-                                "zwEB2": {
-                                  "content": "CANCEL"
+                                "cYldT": {
+                                  "content": "CANCEL REQUEST",
+                                  "fontSize": 15
+                                },
+                                "gK2Gs": {
+                                  "content": "REQUESTER·OWNER+"
                                 }
                               }
                             }
                           ]
                         },
                         {
-                          "id": "xKthA",
-                          "type": "ref",
-                          "ref": "QfPQH",
-                          "name": "Callout — warning",
+                          "type": "text",
+                          "id": "B2bNJx",
+                          "name": "Helper",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "stroke": "$warn",
-                          "descendants": {
-                            "knoLi": {
-                              "fill": "$warn",
-                              "icon": "triangle-alert"
-                            },
-                            "z13SH": {
-                              "content": "The asymmetry is real: approve and reject need Owner+, cancel needs nothing. The yellow border carries that at a glance.",
-                              "fill": "$warn",
-                              "lineHeight": 1.45
-                            }
-                          }
+                          "content": "Approve, reject and cancel are the store Owner's calls; a pending request can also be withdrawn by the person who filed it.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "$font-body",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -7854,7 +8049,7 @@
                           "id": "AJqOi",
                           "name": "Head",
                           "fill": "$steel",
-                          "content": "ASYMMETRY, DRAWN DELIBERATELY",
+                          "content": "REV 3 — CANCEL IS GATED NOW (BE-15)",
                           "fontFamily": "$font-display",
                           "fontSize": 12,
                           "fontWeight": "700",
@@ -7867,7 +8062,7 @@
                           "fill": "$steel",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Approve and reject need Owner+; cancel needs nothing. The accent border carries that, plain border doesn't.",
+                          "content": "Pending: the requester or the store's Owner+ can cancel; approved: the Owner+ only. A reason is required and the requester is told. Owners see this month's spending (BE-16).",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
@@ -8587,7 +8782,7 @@
                               "content": "CREATE (= AUTHORIZE)"
                             },
                             "gK2Gs": {
-                              "content": "MANAGER+"
+                              "content": "OWNER+"
                             }
                           }
                         }
@@ -8613,7 +8808,7 @@
                       "id": "e1v1Nb",
                       "name": "State Label",
                       "fill": "$steel",
-                      "content": "STATE · VIEWER BELOW MANAGER SCOPE",
+                      "content": "STATE · VIEWER BELOW OWNER SCOPE",
                       "fontFamily": "$font-display",
                       "fontSize": 12,
                       "fontWeight": "700",
@@ -8632,7 +8827,7 @@
                           "icon": "triangle-alert"
                         },
                         "z13SH": {
-                          "content": "Your scope can't create authorizations — it needs Manager or above.",
+                          "content": "Your scope can't set spending limits — the store Owner does. Ask them to create this.",
                           "fill": "$warn",
                           "lineHeight": 1.45
                         }
@@ -8651,7 +8846,7 @@
                           "fill": "$panel"
                         },
                         "gK2Gs": {
-                          "content": "MANAGER+",
+                          "content": "OWNER+",
                           "fill": "$panel"
                         }
                       }
@@ -8867,7 +9062,7 @@
                           "fill": "$steel",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Create is now scope-checked (Manager+, 403 otherwise) so it carries the gate border; creation notifies purchasing and the requester. Both old 'nothing gates / nobody is told' findings are retired.",
+                          "content": "Setting limits is Owner+ since BE-17 (was Manager+): the Owner sets them, the Store Manager buys against them, so nobody controls both. Creation notifies purchasing and the requester (BE-07).",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
@@ -9043,8 +9238,8 @@
                                       "content": "PRA / LINE"
                                     },
                                     "QNIgX": {
-                                      "content": "select…",
-                                      "fill": "$mute"
+                                      "content": "6mm BBs 0.25g · PRA 8ca7fca9",
+                                      "fill": "$ink"
                                     }
                                   }
                                 },
@@ -9069,20 +9264,82 @@
                                           "content": "Marketplace"
                                         }
                                       }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "bX1GC",
+                                  "name": "Bought From",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 6,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "c2v00u",
+                                      "name": "Field Label",
+                                      "fill": "$mute",
+                                      "content": "BOUGHT FROM",
+                                      "fontFamily": "$font-display",
+                                      "fontSize": 10,
+                                      "fontWeight": "600",
+                                      "letterSpacing": 1.4
                                     },
                                     {
-                                      "id": "n30V4B",
+                                      "type": "frame",
+                                      "id": "oyoOs",
+                                      "name": "Toggle",
+                                      "width": "fill_container",
+                                      "children": [
+                                        {
+                                          "id": "arVid",
+                                          "type": "ref",
+                                          "ref": "okhbu",
+                                          "name": "Button — Elsewhere",
+                                          "width": "fill_container",
+                                          "padding": [
+                                            8,
+                                            0
+                                          ],
+                                          "descendants": {
+                                            "jPcGi": {
+                                              "content": "ELSEWHERE",
+                                              "fontSize": 14
+                                            }
+                                          }
+                                        },
+                                        {
+                                          "id": "d65KB",
+                                          "type": "ref",
+                                          "ref": "WyJCa",
+                                          "name": "Button — At HQ",
+                                          "width": "fill_container",
+                                          "padding": [
+                                            8,
+                                            0
+                                          ],
+                                          "descendants": {
+                                            "zwEB2": {
+                                              "content": "AT HQ",
+                                              "fontSize": 14
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "id": "HkOxo",
                                       "type": "ref",
-                                      "ref": "mAqnO",
-                                      "name": "Field — Supplier",
+                                      "ref": "FMohd",
+                                      "name": "Field — Seller",
                                       "width": "fill_container",
                                       "descendants": {
-                                        "zwy7z": {
-                                          "content": "SUPPLIER"
+                                        "yByEc": {
+                                          "content": "SELLER"
                                         },
-                                        "QNIgX": {
-                                          "content": "select…",
-                                          "fill": "$mute"
+                                        "Ss3L7": {
+                                          "content": "Shopee · Toko Airsoft Jaya"
                                         }
                                       }
                                     }
@@ -9211,8 +9468,24 @@
                                   "id": "dNvge",
                                   "name": "Actions",
                                   "width": "fill_container",
+                                  "layout": "vertical",
                                   "gap": 8,
                                   "children": [
+                                    {
+                                      "id": "VneW5",
+                                      "type": "ref",
+                                      "ref": "jzGo4",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "cYldT": {
+                                          "content": "CREATE"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "MANAGER+·PROC"
+                                        }
+                                      }
+                                    },
                                     {
                                       "id": "CKWlf",
                                       "type": "ref",
@@ -9224,24 +9497,165 @@
                                           "content": "SAVE DRAFT"
                                         }
                                       }
-                                    },
-                                    {
-                                      "id": "lHWJp",
-                                      "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — Create",
-                                      "width": "fill_container",
-                                      "descendants": {
-                                        "jPcGi": {
-                                          "content": "CREATE"
-                                        }
-                                      }
                                     }
                                   ]
                                 }
                               ]
                             }
                           }
+                        },
+                        {
+                          "type": "frame",
+                          "id": "iIy9h",
+                          "name": "State — mandatory item bought elsewhere",
+                          "width": "fill_container",
+                          "fill": "$surface",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$line",
+                          "strokeWidth": 1.5,
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": 13,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bKzXG",
+                              "name": "State Label",
+                              "fill": "$steel",
+                              "content": "STATE · A MANDATORY ITEM, BOUGHT ELSEWHERE",
+                              "fontFamily": "$font-display",
+                              "fontSize": 12,
+                              "fontWeight": "700",
+                              "letterSpacing": 1.3
+                            },
+                            {
+                              "type": "frame",
+                              "id": "cCEze",
+                              "name": "PRA line",
+                              "width": "fill_container",
+                              "fill": "$panel",
+                              "cornerRadius": "$radius-sm",
+                              "stroke": "$danger",
+                              "strokeWidth": 1.5,
+                              "layout": "vertical",
+                              "gap": 4,
+                              "padding": 10,
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "kptlt",
+                                  "name": "Row",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "justifyContent": "space_between",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "I6tUq",
+                                      "name": "Text",
+                                      "fill": "$ink",
+                                      "content": "6mm BBs 0.25g",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 14,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "id": "E3NJK",
+                                      "type": "ref",
+                                      "ref": "Ayr7m",
+                                      "name": "Chip — From HQ only",
+                                      "stroke": "$warn",
+                                      "descendants": {
+                                        "yKzvx": {
+                                          "content": "FROM HQ ONLY",
+                                          "fill": "$warn"
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "c9B1l",
+                                  "name": "Text",
+                                  "fill": "$steel",
+                                  "content": "PRA 8ca7fca9 · remaining 12",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "PlZOa",
+                              "name": "Helper",
+                              "fill": "$danger",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "This item must be bought from HQ. Choose “At HQ” below, or order it from HQ.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "TwOal",
+                              "name": "Toggle",
+                              "width": "fill_container",
+                              "children": [
+                                {
+                                  "id": "R6pW0u",
+                                  "type": "ref",
+                                  "ref": "WyJCa",
+                                  "name": "Button — Elsewhere",
+                                  "width": "fill_container",
+                                  "padding": [
+                                    8,
+                                    0
+                                  ],
+                                  "descendants": {
+                                    "zwEB2": {
+                                      "content": "ELSEWHERE",
+                                      "fontSize": 14
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "x5pOZ",
+                                  "type": "ref",
+                                  "ref": "okhbu",
+                                  "name": "Button — At HQ",
+                                  "width": "fill_container",
+                                  "padding": [
+                                    8,
+                                    0
+                                  ],
+                                  "descendants": {
+                                    "jPcGi": {
+                                      "content": "AT HQ",
+                                      "fontSize": 14
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "HyHNF",
+                              "name": "Helper",
+                              "fill": "$steel",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "An urgent buy at HQ BANDUNG, paid on the spot. Planned restocks from HQ go through “Order from HQ”.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
                         }
                       ]
                     },
@@ -9572,8 +9986,24 @@
                                   "id": "ZTJi6",
                                   "name": "Actions",
                                   "width": "fill_container",
+                                  "layout": "vertical",
                                   "gap": 8,
                                   "children": [
+                                    {
+                                      "id": "f9RfB",
+                                      "type": "ref",
+                                      "ref": "jzGo4",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "cYldT": {
+                                          "content": "CREATE"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "MANAGER+·PROC"
+                                        }
+                                      }
+                                    },
                                     {
                                       "id": "C5bztO",
                                       "type": "ref",
@@ -9583,18 +10013,6 @@
                                       "descendants": {
                                         "zwEB2": {
                                           "content": "SAVE DRAFT"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "id": "KgsWZ",
-                                      "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — Create",
-                                      "width": "fill_container",
-                                      "descendants": {
-                                        "jPcGi": {
-                                          "content": "CREATE"
                                         }
                                       }
                                     }
@@ -9882,8 +10300,24 @@
                                   "id": "Jsb7V",
                                   "name": "Actions",
                                   "width": "fill_container",
+                                  "layout": "vertical",
                                   "gap": 8,
                                   "children": [
+                                    {
+                                      "id": "q5e6H",
+                                      "type": "ref",
+                                      "ref": "jzGo4",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "cYldT": {
+                                          "content": "CREATE"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "MANAGER+·PROC"
+                                        }
+                                      }
+                                    },
                                     {
                                       "id": "h6d7y",
                                       "type": "ref",
@@ -9893,18 +10327,6 @@
                                       "descendants": {
                                         "zwEB2": {
                                           "content": "SAVE DRAFT"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "id": "wbblQ",
-                                      "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — Create",
-                                      "width": "fill_container",
-                                      "descendants": {
-                                        "jPcGi": {
-                                          "content": "CREATE"
                                         }
                                       }
                                     }
@@ -10201,7 +10623,7 @@
                                       "fill": "$mute",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "Nothing tappable beside it — no mark-reimbursed endpoint exists.",
+                                      "content": "Paid with personal money: the store Owner pays it back from Reimbursements (PROC-08).",
                                       "lineHeight": 1.4,
                                       "fontFamily": "$font-body",
                                       "fontSize": 11,
@@ -10210,15 +10632,17 @@
                                   ]
                                 },
                                 {
-                                  "id": "cRrzD",
+                                  "id": "Btkwh",
                                   "type": "ref",
-                                  "ref": "WyJCa",
-                                  "name": "Button — Supersede (correct this record)",
+                                  "ref": "jzGo4",
+                                  "name": "Button — Supersede",
                                   "width": "fill_container",
                                   "descendants": {
-                                    "zwEB2": {
-                                      "content": "SUPERSEDE (CORRECT THIS RECORD)",
-                                      "fontSize": 15
+                                    "cYldT": {
+                                      "content": "SUPERSEDE"
+                                    },
+                                    "gK2Gs": {
+                                      "content": "CREATOR·OWNER+"
                                     }
                                   }
                                 }
@@ -10495,6 +10919,22 @@
                                   }
                                 },
                                 {
+                                  "id": "LpcXS",
+                                  "type": "ref",
+                                  "ref": "FMohd",
+                                  "name": "Field — Reason (required to reject)",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "yByEc": {
+                                      "content": "REASON (REQUIRED TO REJECT)"
+                                    },
+                                    "Ss3L7": {
+                                      "content": "e.g. over the limit without asking first",
+                                      "fill": "$mute"
+                                    }
+                                  }
+                                },
+                                {
                                   "type": "frame",
                                   "id": "jNgh8",
                                   "name": "Actions",
@@ -10521,14 +10961,21 @@
                                       }
                                     },
                                     {
-                                      "id": "G4oeqk",
+                                      "id": "hci2M",
                                       "type": "ref",
-                                      "ref": "WyJCa",
+                                      "ref": "jzGo4",
                                       "name": "Button — Reject",
                                       "width": "fill_container",
+                                      "padding": [
+                                        12,
+                                        10
+                                      ],
                                       "descendants": {
-                                        "zwEB2": {
+                                        "cYldT": {
                                           "content": "REJECT"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "OWNER+"
                                         }
                                       }
                                     }
@@ -10554,15 +11001,17 @@
                                   }
                                 },
                                 {
-                                  "id": "O9gT8K",
+                                  "id": "kXLAE",
                                   "type": "ref",
-                                  "ref": "WyJCa",
-                                  "name": "Button — Supersede (correct this record)",
+                                  "ref": "jzGo4",
+                                  "name": "Button — Supersede",
                                   "width": "fill_container",
                                   "descendants": {
-                                    "zwEB2": {
-                                      "content": "SUPERSEDE (CORRECT THIS RECORD)",
-                                      "fontSize": 15
+                                    "cYldT": {
+                                      "content": "SUPERSEDE"
+                                    },
+                                    "gK2Gs": {
+                                      "content": "CREATOR·OWNER+"
                                     }
                                   }
                                 },
@@ -11511,8 +11960,24 @@
                                   "id": "bbLOX",
                                   "name": "Actions",
                                   "width": "fill_container",
+                                  "layout": "vertical",
                                   "gap": 8,
                                   "children": [
+                                    {
+                                      "id": "I56RV",
+                                      "type": "ref",
+                                      "ref": "jzGo4",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "cYldT": {
+                                          "content": "CREATE"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "MANAGER+·PROC"
+                                        }
+                                      }
+                                    },
                                     {
                                       "id": "fJHTs",
                                       "type": "ref",
@@ -11522,18 +11987,6 @@
                                       "descendants": {
                                         "zwEB2": {
                                           "content": "SAVE DRAFT"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "id": "ju3MD",
-                                      "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — Create",
-                                      "width": "fill_container",
-                                      "descendants": {
-                                        "jPcGi": {
-                                          "content": "CREATE"
                                         }
                                       }
                                     }
@@ -11736,8 +12189,24 @@
                                   "id": "r4VHc",
                                   "name": "Actions",
                                   "width": "fill_container",
+                                  "layout": "vertical",
                                   "gap": 8,
                                   "children": [
+                                    {
+                                      "id": "BgkrI",
+                                      "type": "ref",
+                                      "ref": "jzGo4",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "cYldT": {
+                                          "content": "CREATE"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "MANAGER+·PROC"
+                                        }
+                                      }
+                                    },
                                     {
                                       "id": "IhhXx",
                                       "type": "ref",
@@ -11747,18 +12216,6 @@
                                       "descendants": {
                                         "zwEB2": {
                                           "content": "SAVE DRAFT"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "id": "Y62V5t",
-                                      "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — Create",
-                                      "width": "fill_container",
-                                      "descendants": {
-                                        "jPcGi": {
-                                          "content": "CREATE"
                                         }
                                       }
                                     }
@@ -12155,8 +12612,24 @@
                                   "id": "zG9Bg",
                                   "name": "Actions",
                                   "width": "fill_container",
+                                  "layout": "vertical",
                                   "gap": 8,
                                   "children": [
+                                    {
+                                      "id": "hy2Ba",
+                                      "type": "ref",
+                                      "ref": "jzGo4",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "cYldT": {
+                                          "content": "CREATE"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "MANAGER+·PROC"
+                                        }
+                                      }
+                                    },
                                     {
                                       "id": "Y9SBJ",
                                       "type": "ref",
@@ -12166,18 +12639,6 @@
                                       "descendants": {
                                         "zwEB2": {
                                           "content": "SAVE DRAFT"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "id": "g5USS",
-                                      "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — Create",
-                                      "width": "fill_container",
-                                      "descendants": {
-                                        "jPcGi": {
-                                          "content": "CREATE"
                                         }
                                       }
                                     }
@@ -12500,8 +12961,24 @@
                                   "id": "peFTo",
                                   "name": "Actions",
                                   "width": "fill_container",
+                                  "layout": "vertical",
                                   "gap": 8,
                                   "children": [
+                                    {
+                                      "id": "XGXym",
+                                      "type": "ref",
+                                      "ref": "jzGo4",
+                                      "name": "Button — Create",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "cYldT": {
+                                          "content": "CREATE"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "MANAGER+·PROC"
+                                        }
+                                      }
+                                    },
                                     {
                                       "id": "xi0B6",
                                       "type": "ref",
@@ -12511,18 +12988,6 @@
                                       "descendants": {
                                         "zwEB2": {
                                           "content": "SAVE DRAFT"
-                                        }
-                                      }
-                                    },
-                                    {
-                                      "id": "xvo2q",
-                                      "type": "ref",
-                                      "ref": "okhbu",
-                                      "name": "Button — Create",
-                                      "width": "fill_container",
-                                      "descendants": {
-                                        "jPcGi": {
-                                          "content": "CREATE"
                                         }
                                       }
                                     }
@@ -12862,6 +13327,50 @@
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "Free tabs that report their own state; Create jumps to the first step with a problem; corrections open prefilled with changes marked in blue; drafts on the phone with a 3-day dashboard reminder.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 12.5,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SwvoL",
+                      "name": "Note — Rev 3 (BE-17, BE-21)",
+                      "width": "fill_container",
+                      "stroke": "$info",
+                      "strokeWidth": {
+                        "left": 3
+                      },
+                      "layout": "vertical",
+                      "gap": 2,
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        11
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZnSID",
+                          "name": "Head",
+                          "fill": "$info",
+                          "content": "REV 3 — WHO BUYS, AND FROM WHERE",
+                          "fontFamily": "$font-display",
+                          "fontSize": 12,
+                          "fontWeight": "700",
+                          "letterSpacing": 1.3
+                        },
+                        {
+                          "type": "text",
+                          "id": "YeV81",
+                          "name": "Text",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Logging a purchase: Manager+ or Procurement; HQ Procurement picks the store. Bought from Elsewhere (seller as free text) or At HQ (urgent, paid on the spot). Mandatory items only at HQ. Reject: Owner+, with a reason. Supersede: the buyer or Owner+.",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
@@ -13261,39 +13770,88 @@
                           }
                         },
                         {
-                          "id": "HIWs6",
-                          "type": "ref",
-                          "ref": "QfPQH",
-                          "name": "Callout — danger",
+                          "type": "frame",
+                          "id": "gXA8B",
+                          "name": "Goods Photos",
                           "width": "fill_container",
-                          "stroke": "$danger",
-                          "descendants": {
-                            "knoLi": {
-                              "fill": "$danger",
-                              "icon": "user-x"
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "AiBNE",
+                              "name": "Field Label",
+                              "fill": "$mute",
+                              "content": "PHOTO OF THE GOODS (OPTIONAL)",
+                              "fontFamily": "$font-display",
+                              "fontSize": 10,
+                              "fontWeight": "600",
+                              "letterSpacing": 1.4
                             },
-                            "z13SH": {
-                              "content": "Receiver must differ from the Realisasi's creator, with no Owner exemption — unlike the PRA rule, which has one. Two rules, two behaviours; don't merge them.",
-                              "fill": "$danger",
-                              "lineHeight": 1.45
+                            {
+                              "type": "frame",
+                              "id": "FdFIg",
+                              "name": "Buttons",
+                              "width": "fill_container",
+                              "gap": 8,
+                              "children": [
+                                {
+                                  "id": "kU8Ii",
+                                  "type": "ref",
+                                  "ref": "WyJCa",
+                                  "name": "Button — Take photo",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "zwEB2": {
+                                      "content": "TAKE PHOTO",
+                                      "fontSize": 15
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "yEt00",
+                                  "type": "ref",
+                                  "ref": "WyJCa",
+                                  "name": "Button — Choose photo",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "zwEB2": {
+                                      "content": "CHOOSE PHOTO",
+                                      "fontSize": 15
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "zeiMK",
+                              "name": "Helper",
+                              "fill": "$mute",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Take it when you open the package.",
+                              "lineHeight": 1.4,
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
-                          }
+                          ]
                         },
                         {
-                          "id": "Si2w2",
+                          "id": "Y0KwY7",
                           "type": "ref",
                           "ref": "QfPQH",
-                          "name": "Callout — danger",
+                          "name": "Callout — neutral",
                           "width": "fill_container",
-                          "stroke": "$danger",
+                          "stroke": "$steel",
                           "descendants": {
                             "knoLi": {
-                              "fill": "$danger",
-                              "icon": "octagon-alert"
+                              "fill": "$steel"
                             },
                             "z13SH": {
-                              "content": "Nothing is notified on receipt, unlike every screen upstream of it. The flow ends silently.",
-                              "fill": "$danger",
+                              "content": "Stock is updated on receipt. Nobody is notified unless the buyer received it themself.",
+                              "fill": "$steel",
                               "lineHeight": 1.45
                             }
                           }
@@ -13467,7 +14025,7 @@
                           "icon": "user"
                         },
                         "z13SH": {
-                          "content": "PO path has no attachment requirement and no receiver check — there is no creator concept on that path. No separation rule at all.",
+                          "content": "Orders from HQ need no receipt attachment and no receiver check: the Owner sent the order and HQ knows what it shipped.",
                           "fill": "$steel",
                           "lineHeight": 1.45
                         }
@@ -13484,6 +14042,243 @@
                           "content": "RECEIVE"
                         }
                       }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "iMAmL",
+                  "name": "State — you bought it yourself",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$line",
+                  "strokeWidth": 1.5,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 13,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tyGT5",
+                      "name": "State Label",
+                      "fill": "$steel",
+                      "content": "STATE · YOU BOUGHT THIS YOURSELF",
+                      "fontFamily": "$font-display",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.3
+                    },
+                    {
+                      "id": "rp5XH",
+                      "type": "ref",
+                      "ref": "UY6v6",
+                      "name": "Field — Received by",
+                      "width": "fill_container",
+                      "descendants": {
+                        "M8pZI": {
+                          "content": "RECEIVED BY"
+                        },
+                        "AhyRh": {
+                          "content": "you (current user) · also the buyer"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WzwKK",
+                      "name": "Goods Photos",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "qp5m5",
+                          "name": "Field Label",
+                          "fill": "$mute",
+                          "content": "PHOTO OF THE GOODS (REQUIRED)",
+                          "fontFamily": "$font-display",
+                          "fontSize": 10,
+                          "fontWeight": "600",
+                          "letterSpacing": 1.4
+                        },
+                        {
+                          "type": "frame",
+                          "id": "c24thL",
+                          "name": "Thumbnails",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "U6ysTK",
+                              "name": "Photo",
+                              "width": 72,
+                              "height": 72,
+                              "fill": "$derived",
+                              "cornerRadius": "$radius-sm",
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "P9B3ji",
+                                  "name": "Image",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "image",
+                                  "library": "lucide",
+                                  "fill": "$mute"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "X5xfIR",
+                              "name": "Photo",
+                              "width": 72,
+                              "height": 72,
+                              "fill": "$derived",
+                              "cornerRadius": "$radius-sm",
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "zVT5c",
+                                  "name": "Image",
+                                  "width": 22,
+                                  "height": 22,
+                                  "icon": "image",
+                                  "library": "lucide",
+                                  "fill": "$mute"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "e72Py",
+                          "name": "Buttons",
+                          "width": "fill_container",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "id": "bGxl4",
+                              "type": "ref",
+                              "ref": "WyJCa",
+                              "name": "Button — Take photo",
+                              "width": "fill_container",
+                              "descendants": {
+                                "zwEB2": {
+                                  "content": "TAKE PHOTO",
+                                  "fontSize": 15
+                                }
+                              }
+                            },
+                            {
+                              "id": "fnHXo",
+                              "type": "ref",
+                              "ref": "WyJCa",
+                              "name": "Button — Choose photo",
+                              "width": "fill_container",
+                              "descendants": {
+                                "zwEB2": {
+                                  "content": "CHOOSE PHOTO",
+                                  "fontSize": 15
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "mCeZn",
+                          "name": "Helper",
+                          "fill": "$mute",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "You bought this yourself, so a photo is required. The receipt is marked self-received and the Owner is told.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "WBW7C",
+                      "type": "ref",
+                      "ref": "okhbu",
+                      "name": "Button — Receive",
+                      "width": "fill_container",
+                      "descendants": {
+                        "jPcGi": {
+                          "content": "RECEIVE"
+                        }
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Pj11n",
+                      "name": "After receive",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "CU3Xf",
+                          "name": "Row",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "fh741",
+                              "name": "Text",
+                              "fill": "$ink",
+                              "content": "Receipt recorded",
+                              "fontFamily": "$font-display",
+                              "fontSize": 20,
+                              "fontWeight": "700"
+                            },
+                            {
+                              "id": "p6MKQK",
+                              "type": "ref",
+                              "ref": "Ayr7m",
+                              "name": "Chip — Self-received",
+                              "stroke": "$warn",
+                              "descendants": {
+                                "yKzvx": {
+                                  "content": "SELF-RECEIVED",
+                                  "fill": "$warn"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "wdu8Q",
+                          "type": "ref",
+                          "ref": "QfPQH",
+                          "name": "Callout — warning",
+                          "width": "fill_container",
+                          "stroke": "$warn",
+                          "descendants": {
+                            "knoLi": {
+                              "fill": "$warn",
+                              "icon": "triangle-alert"
+                            },
+                            "z13SH": {
+                              "content": "You received your own purchase, so the store Owner has been told, with your photo.",
+                              "fill": "$warn",
+                              "lineHeight": 1.45
+                            }
+                          }
+                        }
+                      ]
                     }
                   ]
                 },
@@ -13606,7 +14401,7 @@
                           "id": "trVQq",
                           "name": "Head",
                           "fill": "$steel",
-                          "content": "REV 2 — RECEIVER IS SENT",
+                          "content": "REV 3 — RECEIVER FROM THE TOKEN, PHOTOS (BE-20)",
                           "fontFamily": "$font-display",
                           "fontSize": 12,
                           "fontWeight": "700",
@@ -13619,7 +14414,7 @@
                           "fill": "$steel",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "The API requires a receiver; the app sends the signed-in user, so Received by is a derived field.",
+                          "content": "The receiver is whoever is signed in. Receiving a purchase you bought yourself is allowed with a photo of the goods: flagged self-received, Owner notified. Photos upload straight to storage (BE-23).",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
@@ -13749,24 +14544,6 @@
                       "padding": 14,
                       "children": [
                         {
-                          "id": "T7f5aL",
-                          "type": "ref",
-                          "ref": "QfPQH",
-                          "name": "Callout — neutral",
-                          "width": "fill_container",
-                          "stroke": "$steel",
-                          "descendants": {
-                            "knoLi": {
-                              "fill": "$steel"
-                            },
-                            "z13SH": {
-                              "content": "The list always shows the root tenant's suppliers, whoever is looking. An outlet user sees head office's list with no indication that's what it is.",
-                              "fill": "$steel",
-                              "lineHeight": 1.45
-                            }
-                          }
-                        },
-                        {
                           "type": "frame",
                           "id": "xNFQ3",
                           "name": "List",
@@ -13782,7 +14559,74 @@
                               "width": "fill_container",
                               "descendants": {
                                 "I6N8Vt": {
-                                  "content": "SUPPLIERS"
+                                  "content": "SUPPLIERS · MANAGED BY HQ"
+                                }
+                              }
+                            },
+                            {
+                              "id": "jLa5p",
+                              "type": "ref",
+                              "ref": "fkVML",
+                              "name": "Row — HQ BANDUNG",
+                              "width": "fill_container",
+                              "descendants": {
+                                "zvMaG": {
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "Y8oNf",
+                                      "name": "Row",
+                                      "width": "fill_container",
+                                      "gap": 8,
+                                      "justifyContent": "space_between",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "frame",
+                                          "id": "AhuS5",
+                                          "name": "Text",
+                                          "layout": "vertical",
+                                          "gap": 1,
+                                          "children": [
+                                            {
+                                              "type": "text",
+                                              "id": "BpvaU",
+                                              "name": "Text",
+                                              "fill": "$ink",
+                                              "content": "HQ BANDUNG",
+                                              "lineHeight": 1.1,
+                                              "fontFamily": "$font-display",
+                                              "fontSize": 21,
+                                              "fontWeight": "700"
+                                            },
+                                            {
+                                              "type": "text",
+                                              "id": "W8E59G",
+                                              "name": "Text",
+                                              "fill": "$steel",
+                                              "content": "franchise centre",
+                                              "fontFamily": "$font-mono",
+                                              "fontSize": 12,
+                                              "fontWeight": "normal"
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "id": "kIQPh",
+                                          "type": "ref",
+                                          "ref": "Ayr7m",
+                                          "name": "Chip — HQ · sells to stores",
+                                          "stroke": "$info",
+                                          "descendants": {
+                                            "yKzvx": {
+                                              "content": "HQ · SELLER",
+                                              "fill": "$info"
+                                            }
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -13928,138 +14772,54 @@
                               "fill": "$steel"
                             },
                             "z13SH": {
-                              "content": "No edit, no delete — neither exists on the backend. Tapping a row can only ever show read-only detail.",
+                              "content": "Read-only: suppliers can't be edited or deleted. Buying somewhere else? Name the seller on the purchase itself.",
                               "fill": "$steel",
                               "lineHeight": 1.45
                             }
                           }
                         },
                         {
-                          "type": "frame",
-                          "id": "Y9Anl5",
-                          "name": "New Supplier",
+                          "id": "x1hTaG",
+                          "type": "ref",
+                          "ref": "fkVML",
+                          "name": "Card — Only HQ adds suppliers",
                           "width": "fill_container",
-                          "layout": "vertical",
-                          "gap": 8,
-                          "children": [
-                            {
-                              "id": "D8Lx9",
-                              "type": "ref",
-                              "ref": "WK3br",
-                              "name": "Section — New supplier",
-                              "width": "fill_container",
-                              "descendants": {
-                                "I6N8Vt": {
-                                  "content": "NEW SUPPLIER"
-                                }
-                              }
-                            },
-                            {
-                              "type": "frame",
-                              "id": "Za5GE",
-                              "name": "Row",
-                              "opacity": 0.5,
-                              "width": "fill_container",
-                              "gap": 10,
+                          "descendants": {
+                            "zvMaG": {
                               "children": [
                                 {
-                                  "id": "XAnem",
-                                  "type": "ref",
-                                  "ref": "FMohd",
-                                  "name": "Field — Name",
+                                  "type": "frame",
+                                  "id": "uV3kg",
+                                  "name": "Row",
                                   "width": "fill_container",
-                                  "descendants": {
-                                    "yByEc": {
-                                      "content": "NAME"
-                                    },
-                                    "Ss3L7": {
-                                      "content": "—",
-                                      "fill": "$mute"
-                                    }
-                                  }
-                                },
-                                {
-                                  "id": "CWkPD",
-                                  "type": "ref",
-                                  "ref": "FMohd",
-                                  "name": "Field — Contact",
-                                  "width": "fill_container",
-                                  "descendants": {
-                                    "yByEc": {
-                                      "content": "CONTACT"
-                                    },
-                                    "Ss3L7": {
-                                      "content": "—",
-                                      "fill": "$mute"
-                                    }
-                                  }
-                                }
-                              ]
-                            },
-                            {
-                              "id": "VSRF7",
-                              "type": "ref",
-                              "ref": "fkVML",
-                              "name": "Card — Root tenant only",
-                              "width": "fill_container",
-                              "stroke": "$warn",
-                              "descendants": {
-                                "zvMaG": {
+                                  "gap": 8,
                                   "children": [
                                     {
-                                      "type": "frame",
-                                      "id": "FZTwN",
-                                      "name": "Locked",
+                                      "type": "icon",
+                                      "id": "B1Xua",
+                                      "name": "Lock",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "lock",
+                                      "library": "lucide",
+                                      "fill": "$steel"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "E45ZXE",
+                                      "name": "Text",
+                                      "fill": "$steel",
+                                      "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "gap": 8,
-                                      "children": [
-                                        {
-                                          "type": "icon",
-                                          "id": "BGhcm",
-                                          "name": "Lock",
-                                          "width": 16,
-                                          "height": 16,
-                                          "icon": "lock",
-                                          "library": "lucide",
-                                          "fill": "$warn"
-                                        },
-                                        {
-                                          "type": "text",
-                                          "id": "Im660",
-                                          "name": "Body",
-                                          "fill": "$steel",
-                                          "textGrowth": "fixed-width",
-                                          "width": "fill_container",
-                                          "content": "Suppliers are managed centrally. You're signed in to an outlet tenant, so creation is refused server-side — the form is disabled rather than failing after you fill it in.",
-                                          "lineHeight": 1.4,
-                                          "fontFamily": "$font-body",
-                                          "fontSize": 12,
-                                          "fontWeight": "normal"
-                                        }
-                                      ]
+                                      "content": "Only HQ adds suppliers. For a purchase from somewhere else, write the seller's name on the purchase.",
+                                      "lineHeight": 1.4,
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
                                     }
                                   ]
                                 }
-                              }
-                            }
-                          ]
-                        },
-                        {
-                          "id": "HYQNg",
-                          "type": "ref",
-                          "ref": "QfPQH",
-                          "name": "Callout — warning",
-                          "width": "fill_container",
-                          "stroke": "$warn",
-                          "descendants": {
-                            "knoLi": {
-                              "fill": "$warn",
-                              "icon": "triangle-alert"
-                            },
-                            "z13SH": {
-                              "content": "The source wireframe showed this form live for everyone. Creation throws unless you're on the root tenant, so it's gated before the tap, not after.",
-                              "fill": "$warn",
-                              "lineHeight": 1.45
+                              ]
                             }
                           }
                         }
@@ -14068,8 +14828,11 @@
                     "UJgnT": {
                       "type": "frame",
                       "id": "edCXp",
+                      "x": 0,
+                      "y": 496,
                       "name": "Bottom Bar",
-                      "width": "fill_container",
+                      "enabled": false,
+                      "width": "fill_container(300)",
                       "fill": "$surface",
                       "stroke": "$line",
                       "strokeWidth": {
@@ -14128,7 +14891,7 @@
                           "id": "GxBNd",
                           "name": "Head",
                           "fill": "$danger",
-                          "content": "CORRECTION TO THE SOURCE WIREFRAME",
+                          "content": "REV 3 — SUPPLIERS ARE HQ'S (DECISION #7, BE-21)",
                           "fontFamily": "$font-display",
                           "fontSize": 12,
                           "fontWeight": "700",
@@ -14141,7 +14904,7 @@
                           "fill": "$steel",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "It drew the create form live for everyone. Creation throws unless the caller is on the root tenant, so the form is disabled with a lock before the tap. Plain disabled, not the gate border — this is a tenancy rule, not a scope check.",
+                          "content": "Every store sees HQ's list on purpose, labelled \"Managed by HQ\". HQ's own selling supplier is marked. Only HQ adds suppliers; outside sellers are named as free text on the purchase.",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
@@ -14325,7 +15088,7 @@
                           "name": "Device",
                           "descendants": {
                             "HEElt": {
-                              "content": "New Purchase Order"
+                              "content": "Order from HQ"
                             },
                             "w3M5g9": {
                               "content": "PROC-07"
@@ -14352,41 +15115,7 @@
                                       "fill": "$steel"
                                     },
                                     "z13SH": {
-                                      "content": "Outlet-to-centre restock — the franchise leg, running parallel to PRA/Realisasi. Not a marketplace purchase.",
-                                      "fill": "$steel",
-                                      "lineHeight": 1.45
-                                    }
-                                  }
-                                },
-                                {
-                                  "id": "N9bjF2",
-                                  "type": "ref",
-                                  "ref": "mAqnO",
-                                  "name": "Field — Supplier (legacy, optional)",
-                                  "width": "fill_container",
-                                  "descendants": {
-                                    "zwy7z": {
-                                      "content": "SUPPLIER (LEGACY, OPTIONAL)"
-                                    },
-                                    "QNIgX": {
-                                      "content": "select…",
-                                      "fill": "$mute"
-                                    }
-                                  }
-                                },
-                                {
-                                  "id": "WTWmy",
-                                  "type": "ref",
-                                  "ref": "QfPQH",
-                                  "name": "Callout — neutral",
-                                  "width": "fill_container",
-                                  "stroke": "$steel",
-                                  "descendants": {
-                                    "knoLi": {
-                                      "fill": "$steel"
-                                    },
-                                    "z13SH": {
-                                      "content": "Supplier on this path predates the split. New code shouldn't rely on a PO carrying a real external supplier — that role moved to Realisasi.",
+                                      "content": "Restock from HQ, on your store's own timing. Mandatory items (BB, gas, targets, gel balls) can only come from here; anything else HQ sells can come from here too.",
                                       "fill": "$steel",
                                       "lineHeight": 1.45
                                     }
@@ -14488,10 +15217,23 @@
                                               "width": "fill_container",
                                               "descendants": {
                                                 "zwy7z": {
-                                                  "content": "PART"
+                                                  "content": "ITEM FROM HQ"
                                                 },
                                                 "QNIgX": {
                                                   "content": "6mm BBs 0.25g"
+                                                }
+                                              }
+                                            },
+                                            {
+                                              "id": "R1r1f",
+                                              "type": "ref",
+                                              "ref": "Ayr7m",
+                                              "name": "Chip — Mandatory from HQ",
+                                              "stroke": "$warn",
+                                              "descendants": {
+                                                "yKzvx": {
+                                                  "content": "MANDATORY FROM HQ",
+                                                  "fill": "$warn"
                                                 }
                                               }
                                             },
@@ -14608,14 +15350,18 @@
                               "padding": 13,
                               "children": [
                                 {
-                                  "id": "Xrt7E",
+                                  "id": "TqPJe",
                                   "type": "ref",
-                                  "ref": "okhbu",
+                                  "ref": "jzGo4",
                                   "name": "Button — Create (draft)",
                                   "width": "fill_container",
                                   "descendants": {
-                                    "jPcGi": {
-                                      "content": "CREATE (DRAFT)"
+                                    "cYldT": {
+                                      "content": "CREATE (DRAFT)",
+                                      "fontSize": 15
+                                    },
+                                    "gK2Gs": {
+                                      "content": "MANAGER+·PROC"
                                     }
                                   }
                                 }
@@ -14651,7 +15397,7 @@
                           "name": "Device",
                           "descendants": {
                             "HEElt": {
-                              "content": "Purchase Order"
+                              "content": "Order from HQ"
                             },
                             "w3M5g9": {
                               "content": "PROC-07"
@@ -14725,6 +15471,23 @@
                                     },
                                     "ObVfa": {
                                       "content": "2026-08-10",
+                                      "fontStyle": "italic",
+                                      "fill": "$steel"
+                                    }
+                                  }
+                                },
+                                {
+                                  "id": "wPKvM",
+                                  "type": "ref",
+                                  "ref": "aBX5X",
+                                  "name": "KV — Drafted by",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "wtBa4": {
+                                      "content": "Drafted by"
+                                    },
+                                    "ObVfa": {
+                                      "content": "Field PIC",
                                       "fontStyle": "italic",
                                       "fill": "$steel"
                                     }
@@ -14891,65 +15654,56 @@
                                 },
                                 {
                                   "type": "frame",
-                                  "id": "nmav4",
+                                  "id": "j0Svl",
                                   "name": "Actions",
                                   "width": "fill_container",
+                                  "layout": "vertical",
                                   "gap": 8,
                                   "children": [
                                     {
-                                      "id": "dke4I",
+                                      "id": "x3p1d",
                                       "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — Send to supplier",
+                                      "ref": "jzGo4",
+                                      "name": "Button — Send to HQ",
                                       "width": "fill_container",
-                                      "padding": [
-                                        12,
-                                        8
-                                      ],
                                       "descendants": {
-                                        "zwEB2": {
-                                          "content": "SEND TO SUPPLIER",
-                                          "fontSize": 14
+                                        "cYldT": {
+                                          "content": "SEND TO HQ"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "OWNER+"
                                         }
                                       }
                                     },
                                     {
-                                      "id": "AbMD0",
-                                      "type": "ref",
-                                      "ref": "WyJCa",
-                                      "name": "Button — Cancel",
+                                      "type": "text",
+                                      "id": "NpJwL",
+                                      "name": "Helper",
+                                      "fill": "$steel",
+                                      "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "padding": [
-                                        12,
-                                        8
-                                      ],
+                                      "content": "Sending commits the store's money, so the store Owner sends it.",
+                                      "lineHeight": 1.4,
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11,
+                                      "fontWeight": "normal"
+                                    },
+                                    {
+                                      "id": "Lsqn5",
+                                      "type": "ref",
+                                      "ref": "jzGo4",
+                                      "name": "Button — Cancel order",
+                                      "width": "fill_container",
                                       "descendants": {
-                                        "zwEB2": {
-                                          "content": "CANCEL",
-                                          "fontSize": 14
+                                        "cYldT": {
+                                          "content": "CANCEL ORDER"
+                                        },
+                                        "gK2Gs": {
+                                          "content": "CREATOR·OWNER+"
                                         }
                                       }
                                     }
                                   ]
-                                },
-                                {
-                                  "id": "gVN8C",
-                                  "type": "ref",
-                                  "ref": "QfPQH",
-                                  "name": "Callout — warning",
-                                  "width": "fill_container",
-                                  "stroke": "$warn",
-                                  "descendants": {
-                                    "knoLi": {
-                                      "fill": "$warn",
-                                      "icon": "triangle-alert"
-                                    },
-                                    "z13SH": {
-                                      "content": "Neither action has a scope check today, so both stay plain — including \"send to supplier,\" arguably as consequential as a PRA authorization.",
-                                      "fill": "$warn",
-                                      "lineHeight": 1.45
-                                    }
-                                  }
                                 }
                               ]
                             },
@@ -15087,6 +15841,50 @@
                   "children": [
                     {
                       "type": "frame",
+                      "id": "hYDNa",
+                      "name": "Note — Rev 3",
+                      "width": "fill_container",
+                      "stroke": "$info",
+                      "strokeWidth": {
+                        "left": 3
+                      },
+                      "layout": "vertical",
+                      "gap": 2,
+                      "padding": [
+                        0,
+                        0,
+                        0,
+                        11
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Khah5",
+                          "name": "Head",
+                          "fill": "$info",
+                          "content": "REV 3 — ORDER FROM HQ (BE-20, BE-21)",
+                          "fontFamily": "$font-display",
+                          "fontSize": 12,
+                          "fontWeight": "700",
+                          "letterSpacing": 1.3
+                        },
+                        {
+                          "type": "text",
+                          "id": "i1XQr",
+                          "name": "Text",
+                          "fill": "$steel",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Items only from HQ's catalog; HQ is always the supplier. Draft: Manager+ or Procurement, recorded. Send: Owner+. Cancel: a draft by its drafter or Owner+, a sent order by Owner+ with a reason.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 12.5,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
                       "id": "geArV",
                       "name": "Note — Rev 2 — BE-11 shipped",
                       "width": "fill_container",
@@ -15166,50 +15964,6 @@
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
                           "content": "The server sets the order date to today on create and the request has no field for it. It shows as a derived Order date on the created PO.",
-                          "lineHeight": 1.45,
-                          "fontFamily": "$font-body",
-                          "fontSize": 12.5,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "A6OVq",
-                      "name": "Note — Visual inconsistency, and it's real",
-                      "width": "fill_container",
-                      "stroke": "$warn",
-                      "strokeWidth": {
-                        "left": 3
-                      },
-                      "layout": "vertical",
-                      "gap": 2,
-                      "padding": [
-                        0,
-                        0,
-                        0,
-                        11
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "W6z480",
-                          "name": "Head",
-                          "fill": "$warn",
-                          "content": "VISUAL INCONSISTENCY, AND IT'S REAL",
-                          "fontFamily": "$font-display",
-                          "fontSize": 12,
-                          "fontWeight": "700",
-                          "letterSpacing": 1.3
-                        },
-                        {
-                          "type": "text",
-                          "id": "Q7thn",
-                          "name": "Text",
-                          "fill": "$steel",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Send and cancel sit plain because neither is gated — including 'send to supplier', arguably as consequential as a PRA.",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
@@ -15339,23 +16093,46 @@
                       "padding": 14,
                       "children": [
                         {
-                          "id": "u7by9",
-                          "type": "ref",
-                          "ref": "QfPQH",
-                          "name": "Callout — warning",
+                          "type": "frame",
+                          "id": "hmkTZ",
+                          "name": "Tabs",
                           "width": "fill_container",
-                          "stroke": "$warn",
-                          "descendants": {
-                            "knoLi": {
-                              "fill": "$warn",
-                              "icon": "triangle-alert"
+                          "children": [
+                            {
+                              "id": "oQUUG",
+                              "type": "ref",
+                              "ref": "okhbu",
+                              "name": "Button — Owed",
+                              "width": "fill_container",
+                              "padding": [
+                                8,
+                                0
+                              ],
+                              "descendants": {
+                                "jPcGi": {
+                                  "content": "OWED",
+                                  "fontSize": 14
+                                }
+                              }
                             },
-                            "z13SH": {
-                              "content": "Filter is personal-reimbursable + pending, applied on the device. The API has no filter for it, so this can't paginate correctly once the list grows.",
-                              "fill": "$warn",
-                              "lineHeight": 1.45
+                            {
+                              "id": "V17fa",
+                              "type": "ref",
+                              "ref": "WyJCa",
+                              "name": "Button — Paid back",
+                              "width": "fill_container",
+                              "padding": [
+                                8,
+                                0
+                              ],
+                              "descendants": {
+                                "zwEB2": {
+                                  "content": "PAID BACK",
+                                  "fontSize": 14
+                                }
+                              }
                             }
-                          }
+                          ]
                         },
                         {
                           "id": "F0bMO",
@@ -15363,9 +16140,53 @@
                           "ref": "fkVML",
                           "name": "Owed — Field PIC",
                           "width": "fill_container",
+                          "stroke": "$good",
                           "descendants": {
                             "zvMaG": {
                               "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "WfTuU",
+                                  "name": "Selected",
+                                  "width": "fill_container",
+                                  "gap": 8,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "frame",
+                                      "id": "a05vX",
+                                      "name": "Checkbox",
+                                      "width": 22,
+                                      "height": 22,
+                                      "fill": "$ink",
+                                      "cornerRadius": "$radius-sm",
+                                      "justifyContent": "center",
+                                      "alignItems": "center",
+                                      "children": [
+                                        {
+                                          "type": "icon",
+                                          "id": "tWVNm",
+                                          "name": "Check",
+                                          "width": 14,
+                                          "height": 14,
+                                          "icon": "check",
+                                          "library": "lucide",
+                                          "fill": "$panel"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "u9reVe",
+                                      "name": "Text",
+                                      "fill": "$steel",
+                                      "content": "Selected",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 12,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                },
                                 {
                                   "type": "frame",
                                   "id": "w9kX3f",
@@ -15512,66 +16333,123 @@
                           }
                         },
                         {
-                          "id": "oGa5y",
+                          "id": "RF1xY",
                           "type": "ref",
                           "ref": "fkVML",
-                          "name": "Card — View only",
+                          "name": "Mark paid back",
                           "width": "fill_container",
                           "descendants": {
                             "zvMaG": {
                               "children": [
                                 {
+                                  "type": "text",
+                                  "id": "bidAi",
+                                  "name": "Field Label",
+                                  "fill": "$mute",
+                                  "content": "1 SELECTED · RP 1,190,000",
+                                  "fontFamily": "$font-display",
+                                  "fontSize": 10,
+                                  "fontWeight": "600",
+                                  "letterSpacing": 1.4
+                                },
+                                {
                                   "type": "frame",
-                                  "id": "JF5iN",
+                                  "id": "I6uvb3",
                                   "name": "Row",
                                   "width": "fill_container",
-                                  "gap": 8,
+                                  "gap": 10,
                                   "children": [
                                     {
-                                      "type": "icon",
-                                      "id": "Nm0it",
-                                      "name": "Info",
-                                      "width": 16,
-                                      "height": 16,
-                                      "icon": "info",
-                                      "library": "lucide",
-                                      "fill": "$steel"
+                                      "id": "kjKvl",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — Paid on",
+                                      "width": "fill_container",
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "PAID ON"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "2026-10-22",
+                                          "fontFamily": "$font-mono"
+                                        }
+                                      }
                                     },
                                     {
-                                      "type": "text",
-                                      "id": "ri57p",
-                                      "name": "Body",
-                                      "fill": "$steel",
-                                      "textGrowth": "fixed-width",
+                                      "id": "Kh9VX",
+                                      "type": "ref",
+                                      "ref": "FMohd",
+                                      "name": "Field — Reference",
                                       "width": "fill_container",
-                                      "content": "View only. There is no mark-reimbursed endpoint, so this screen can show the debt but never clear it. Settlement happens outside Operion and the record stays PENDING.",
-                                      "lineHeight": 1.4,
-                                      "fontFamily": "$font-body",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal"
+                                      "descendants": {
+                                        "yByEc": {
+                                          "content": "REFERENCE"
+                                        },
+                                        "Ss3L7": {
+                                          "content": "BCA 0123"
+                                        }
+                                      }
                                     }
                                   ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "DZvRL",
+                                  "name": "Row",
+                                  "width": "fill_container",
+                                  "children": [
+                                    {
+                                      "id": "t5X680",
+                                      "type": "ref",
+                                      "ref": "okhbu",
+                                      "name": "Button — Transfer",
+                                      "width": "fill_container",
+                                      "padding": [
+                                        8,
+                                        0
+                                      ],
+                                      "descendants": {
+                                        "jPcGi": {
+                                          "content": "TRANSFER",
+                                          "fontSize": 14
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "id": "QR4Qz",
+                                      "type": "ref",
+                                      "ref": "WyJCa",
+                                      "name": "Button — Cash",
+                                      "width": "fill_container",
+                                      "padding": [
+                                        8,
+                                        0
+                                      ],
+                                      "descendants": {
+                                        "zwEB2": {
+                                          "content": "CASH",
+                                          "fontSize": 14
+                                        }
+                                      }
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "RGpaA",
+                                  "type": "ref",
+                                  "ref": "jzGo4",
+                                  "name": "Button — Mark paid back",
+                                  "width": "fill_container",
+                                  "descendants": {
+                                    "cYldT": {
+                                      "content": "MARK PAID BACK"
+                                    },
+                                    "gK2Gs": {
+                                      "content": "STORE OWNER"
+                                    }
+                                  }
                                 }
                               ]
-                            }
-                          }
-                        },
-                        {
-                          "id": "YgNGs",
-                          "type": "ref",
-                          "ref": "QfPQH",
-                          "name": "Callout — danger",
-                          "width": "fill_container",
-                          "stroke": "$danger",
-                          "descendants": {
-                            "knoLi": {
-                              "fill": "$danger",
-                              "icon": "octagon-alert"
-                            },
-                            "z13SH": {
-                              "content": "The entity stores reimbursedTo and reimbursedAt, but neither is on the response — so even after paying, the app couldn't display when or by whom.",
-                              "fill": "$danger",
-                              "lineHeight": 1.45
                             }
                           }
                         },
@@ -15587,7 +16465,7 @@
                               "fill": "$steel"
                             },
                             "z13SH": {
-                              "content": "Every figure here inherits Realisasi's cost redaction. Below Owner scope, this screen is a list of names with no amounts.",
+                              "content": "The store Owner pays the Store Manager back, whenever suits the branch. Nobody marks money owed to themself; HQ can see this list but not mark it.",
                               "fill": "$steel",
                               "lineHeight": 1.45
                             }
@@ -15618,7 +16496,7 @@
                       "id": "qy4ZW",
                       "name": "State Label",
                       "fill": "$steel",
-                      "content": "STATE · VIEWER BELOW OWNER",
+                      "content": "STATE · THE STORE MANAGER, OWED MONEY",
                       "fontFamily": "$font-display",
                       "fontSize": 12,
                       "fontWeight": "700",
@@ -15645,7 +16523,7 @@
                                   "id": "jMpQp",
                                   "name": "Title",
                                   "fill": "$ink",
-                                  "content": "Owed to Field PIC",
+                                  "content": "Owed to you",
                                   "lineHeight": 1.1,
                                   "fontFamily": "$font-display",
                                   "fontSize": 21,
@@ -15673,34 +16551,14 @@
                               "alignItems": "center",
                               "children": [
                                 {
-                                  "type": "frame",
-                                  "id": "xbSm9",
-                                  "name": "Redacted Value",
-                                  "gap": 4,
-                                  "alignItems": "center",
-                                  "children": [
-                                    {
-                                      "type": "icon",
-                                      "id": "ly4p0",
-                                      "name": "Lock",
-                                      "width": 12,
-                                      "height": 12,
-                                      "icon": "lock",
-                                      "library": "lucide",
-                                      "fill": "$mute"
-                                    },
-                                    {
-                                      "type": "text",
-                                      "id": "r3SDDB",
-                                      "name": "Value",
-                                      "fill": "$mute",
-                                      "content": "Restricted",
-                                      "fontFamily": "$font-body",
-                                      "fontSize": 12,
-                                      "fontWeight": "normal",
-                                      "fontStyle": "italic"
-                                    }
-                                  ]
+                                  "type": "text",
+                                  "id": "vXyTP",
+                                  "name": "Amount",
+                                  "fill": "$ink",
+                                  "content": "Rp 1,190,000",
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 17,
+                                  "fontWeight": "600"
                                 },
                                 {
                                   "id": "dsmTJ",
@@ -15720,6 +16578,149 @@
                           ]
                         }
                       }
+                    },
+                    {
+                      "type": "text",
+                      "id": "Rq3k0",
+                      "name": "Helper",
+                      "fill": "$steel",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "The person owed always sees their own amount; everyone else's stays hidden below Owner.",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KuYTD",
+                  "name": "State — Paid back tab",
+                  "width": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": "$radius-md",
+                  "stroke": "$line",
+                  "strokeWidth": 1.5,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 13,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vLOJ4",
+                      "name": "State Label",
+                      "fill": "$steel",
+                      "content": "STATE · PAID BACK TAB, STORE OWNER",
+                      "fontFamily": "$font-display",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.3
+                    },
+                    {
+                      "id": "xo78n",
+                      "type": "ref",
+                      "ref": "fkVML",
+                      "name": "Card",
+                      "width": "fill_container",
+                      "descendants": {
+                        "zvMaG": {
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "N0dDfR",
+                              "name": "Row",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "justifyContent": "space_between",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "j3ORi",
+                                  "name": "Text",
+                                  "fill": "$ink",
+                                  "content": "Owed to Warehouse Receiver",
+                                  "fontFamily": "$font-display",
+                                  "fontSize": 19,
+                                  "fontWeight": "700"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "A695l",
+                                  "name": "Text",
+                                  "fill": "$ink",
+                                  "content": "Rp 245,000",
+                                  "fontFamily": "$font-mono",
+                                  "fontSize": 15,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "v3uqJ",
+                              "type": "ref",
+                              "ref": "aBX5X",
+                              "name": "KV — Paid back",
+                              "width": "fill_container",
+                              "descendants": {
+                                "wtBa4": {
+                                  "content": "Paid back"
+                                },
+                                "ObVfa": {
+                                  "content": "Today"
+                                }
+                              }
+                            },
+                            {
+                              "id": "JZHJs",
+                              "type": "ref",
+                              "ref": "aBX5X",
+                              "name": "KV — How",
+                              "width": "fill_container",
+                              "descendants": {
+                                "wtBa4": {
+                                  "content": "How"
+                                },
+                                "ObVfa": {
+                                  "content": "Transfer · BCA 0123"
+                                }
+                              }
+                            },
+                            {
+                              "id": "sb2Nt",
+                              "type": "ref",
+                              "ref": "WyJCa",
+                              "name": "Button — Undo paid back",
+                              "width": "fill_container",
+                              "padding": [
+                                8,
+                                14
+                              ],
+                              "descendants": {
+                                "zwEB2": {
+                                  "content": "UNDO PAID BACK",
+                                  "fontSize": 15
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "text",
+                      "id": "IOjVJ",
+                      "name": "Helper",
+                      "fill": "$steel",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Undo asks for a reason, recorded in the history.",
+                      "lineHeight": 1.4,
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -15754,7 +16755,7 @@
                           "id": "QGh2L",
                           "name": "Head",
                           "fill": "$danger",
-                          "content": "DTO GAP SURFACED BY DRAWING",
+                          "content": "REV 3 — PAYING BACK (BE-18)",
                           "fontFamily": "$font-display",
                           "fontSize": 12,
                           "fontWeight": "700",
@@ -15767,95 +16768,7 @@
                           "fill": "$steel",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "reimbursedTo and reimbursedAt exist on the entity but not on the response — even after paying, the app couldn't show when or by whom.",
-                          "lineHeight": 1.45,
-                          "fontFamily": "$font-body",
-                          "fontSize": 12.5,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "wyNhV",
-                      "name": "Note — Client-side filter",
-                      "width": "fill_container",
-                      "stroke": "$warn",
-                      "strokeWidth": {
-                        "left": 3
-                      },
-                      "layout": "vertical",
-                      "gap": 2,
-                      "padding": [
-                        0,
-                        0,
-                        0,
-                        11
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "gwq4w",
-                          "name": "Head",
-                          "fill": "$warn",
-                          "content": "CLIENT-SIDE FILTER",
-                          "fontFamily": "$font-display",
-                          "fontSize": 12,
-                          "fontWeight": "700",
-                          "letterSpacing": 1.3
-                        },
-                        {
-                          "type": "text",
-                          "id": "mPPJE",
-                          "name": "Text",
-                          "fill": "$steel",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "Personal + pending is filtered on the device. No API filter exists, so this can't paginate once the list grows.",
-                          "lineHeight": 1.45,
-                          "fontFamily": "$font-body",
-                          "fontSize": 12.5,
-                          "fontWeight": "normal"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "frame",
-                      "id": "fgDIP",
-                      "name": "Note — No mark-as-reimbursed button, on purpose",
-                      "width": "fill_container",
-                      "stroke": "$steel",
-                      "strokeWidth": {
-                        "left": 3
-                      },
-                      "layout": "vertical",
-                      "gap": 2,
-                      "padding": [
-                        0,
-                        0,
-                        0,
-                        11
-                      ],
-                      "children": [
-                        {
-                          "type": "text",
-                          "id": "BMZ2L",
-                          "name": "Head",
-                          "fill": "$steel",
-                          "content": "NO MARK-AS-REIMBURSED BUTTON, ON PURPOSE",
-                          "fontFamily": "$font-display",
-                          "fontSize": 12,
-                          "fontWeight": "700",
-                          "letterSpacing": 1.3
-                        },
-                        {
-                          "type": "text",
-                          "id": "inEcm",
-                          "name": "Text",
-                          "fill": "$steel",
-                          "textGrowth": "fixed-width",
-                          "width": "fill_container",
-                          "content": "It would be an orphan action — no backing endpoint anywhere in the backend.",
+                          "content": "The store Owner marks one or several paid back (date, cash or transfer, reference) and can undo with a reason; the person owed is told and sees their own amount. Filtered on the server.",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
@@ -16068,6 +16981,23 @@
                                       "fontSize": 14
                                     }
                                   }
+                                },
+                                {
+                                  "id": "X98yi",
+                                  "type": "ref",
+                                  "ref": "WyJCa",
+                                  "name": "Button — Self-received",
+                                  "width": "fit_content",
+                                  "padding": [
+                                    6,
+                                    10
+                                  ],
+                                  "descendants": {
+                                    "zwEB2": {
+                                      "content": "SELF-RECEIVED",
+                                      "fontSize": 14
+                                    }
+                                  }
                                 }
                               ]
                             }
@@ -16191,7 +17121,8 @@
                                       "id": "P8T925",
                                       "name": "Row",
                                       "width": "fill_container",
-                                      "gap": 10,
+                                      "layout": "vertical",
+                                      "gap": 6,
                                       "justifyContent": "space_between",
                                       "alignItems": "center",
                                       "children": [
@@ -16206,17 +17137,38 @@
                                           "fontWeight": "normal"
                                         },
                                         {
-                                          "id": "cQGgQ",
-                                          "type": "ref",
-                                          "ref": "Ayr7m",
-                                          "name": "Chip — Realisasi",
-                                          "stroke": "$steel",
-                                          "descendants": {
-                                            "yKzvx": {
-                                              "content": "REALISASI",
-                                              "fill": "$steel"
+                                          "type": "frame",
+                                          "id": "urxNS",
+                                          "name": "Chips",
+                                          "gap": 6,
+                                          "children": [
+                                            {
+                                              "id": "pBPds",
+                                              "type": "ref",
+                                              "ref": "Ayr7m",
+                                              "name": "Chip — Self-received",
+                                              "stroke": "$warn",
+                                              "descendants": {
+                                                "yKzvx": {
+                                                  "content": "SELF-RECEIVED",
+                                                  "fill": "$warn"
+                                                }
+                                              }
+                                            },
+                                            {
+                                              "id": "cQGgQ",
+                                              "type": "ref",
+                                              "ref": "Ayr7m",
+                                              "name": "Chip — Realisasi",
+                                              "stroke": "$steel",
+                                              "descendants": {
+                                                "yKzvx": {
+                                                  "content": "REALISASI",
+                                                  "fill": "$steel"
+                                                }
+                                              }
                                             }
-                                          }
+                                          ]
                                         }
                                       ]
                                     },
@@ -17005,6 +17957,7 @@
                                                   "type": "frame",
                                                   "id": "e5rMFv",
                                                   "name": "System",
+                                                  "width": "fill_container",
                                                   "gap": 4,
                                                   "alignItems": "center",
                                                   "children": [
@@ -17023,7 +17976,9 @@
                                                       "id": "QU22U",
                                                       "name": "Actor",
                                                       "fill": "$steel",
-                                                      "content": "System",
+                                                      "textGrowth": "fixed-width",
+                                                      "width": "fill_container",
+                                                      "content": "Automatic · after Rina Wijaya — SHP-ORD-88213 approved",
                                                       "fontFamily": "$font-body",
                                                       "fontSize": 14,
                                                       "fontWeight": "normal",
@@ -17034,7 +17989,10 @@
                                                 {
                                                   "type": "text",
                                                   "id": "T2WQf",
+                                                  "x": 66,
+                                                  "y": 1.5,
                                                   "name": "Branch",
+                                                  "enabled": false,
                                                   "fill": "$mute",
                                                   "content": "· Outlet Bandung",
                                                   "fontFamily": "$font-body",
@@ -17137,10 +18095,13 @@
                                                       "content": "Changed by"
                                                     },
                                                     "ObVfa": {
-                                                      "content": "System or pre-log change",
+                                                      "content": "Automatic · after Rina Wijaya",
                                                       "fontStyle": "italic",
                                                       "fill": "$steel",
-                                                      "fontSize": 12
+                                                      "fontSize": 12,
+                                                      "textGrowth": "fixed-width",
+                                                      "width": 150,
+                                                      "textAlign": "right"
                                                     }
                                                   }
                                                 }
@@ -17929,7 +18890,7 @@
                           "id": "zJ8BK",
                           "name": "Head",
                           "fill": "$steel",
-                          "content": "NO ACTOR IS NEVER A BLANK",
+                          "content": "REV 3 — AUTOMATIC CHANGES NAME THEIR TRIGGER (BE-22)",
                           "fontFamily": "$font-display",
                           "fontSize": 12,
                           "fontWeight": "700",
@@ -17942,7 +18903,7 @@
                           "fill": "$steel",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "A server-derived change (e.g. a PRA recomputed to FULFILLED) or a row written before actors were recorded shows a lock and italic 'System' — the derived-field treatment.",
+                          "content": "When the server changes a status itself (a limit fulfilled, an order received), the entry says whose action caused it. A row with no actor at all says \"Not recorded\" — test data only.",
                           "lineHeight": 1.45,
                           "fontFamily": "$font-body",
                           "fontSize": 12.5,
