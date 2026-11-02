@@ -3,7 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
-import { canReadActivityLog } from '../../../auth/permissions';
+import { canReadActivityLog, canReadCashflow } from '../../../auth/permissions';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
@@ -20,7 +20,7 @@ const SCREENS: { code: string; label: string; href: Href }[] = [
   { code: 'PROC-10', label: 'Expenses', href: '/(app)/expenses' },
 ];
 
-// Module 1 (Procurement) menu — entry point into PROC-01…08 and PROC-10. Dashboard is
+// Module 1 (Procurement) menu — entry point into PROC-01…10 and the cashflow list. Dashboard is
 // still scaffolding (module 3 hasn't gone through the screen-inventory
 // process), so this menu is the real navigation home for the one module
 // that has.
@@ -37,10 +37,15 @@ export default function ProcurementMenuScreen() {
               <Button label={`${s.code} · ${s.label}`} variant="secondary" />
             </Link>
           ))}
-          {/* Gated: ADMIN or PROCUREMENT role, or Owner scope and above. Shown to
-              everyone so the gate is visible, disabled for those it excludes. */}
+          {/* Gated: ADMIN, PROCUREMENT or ACCOUNTING role, or Owner scope and
+              above. Shown to everyone so the gate is visible, disabled for
+              those it excludes. */}
           <Link href="/(app)/procurement/activity" asChild>
-            <Button label="PROC-09 · Activity log" variant="gated" gate="ADMIN·PROC·OWNER+" disabled={!canReadActivityLog(user)} />
+            <Button label="PROC-09 · Activity log" variant="gated" gate="ADMIN·PROC·ACCT·OWNER+" disabled={!canReadActivityLog(user)} />
+          </Link>
+          {/* BE-41: money out, day by day. Accounting or Owner+. */}
+          <Link href="/(app)/procurement/cashflow" asChild>
+            <Button label="Cashflow" variant="gated" gate="ACCT·OWNER+" disabled={!canReadCashflow(user)} />
           </Link>
         </View>
       </ScrollView>

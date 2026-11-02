@@ -8,19 +8,25 @@ import { useAuth } from './AuthContext';
  * checks per screen.
  */
 export function useAuthGuard() {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  // BE-36: someone else chose this password (a reset, or a new account), so
+  // Change password comes before anything else.
+  const mustChange = !!user?.mustChangePassword;
 
   useEffect(() => {
     if (status === 'loading') return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const onChangePassword = segments.join('/') === '(app)/account/password';
 
     if (status === 'unauthenticated' && !inAuthGroup) {
       router.replace('/(auth)/login');
+    } else if (status === 'authenticated' && mustChange && !onChangePassword) {
+      router.replace('/(app)/account/password');
     } else if (status === 'authenticated' && inAuthGroup) {
       router.replace('/(app)/dashboard');
     }
-  }, [status, segments, router]);
+  }, [status, mustChange, segments, router]);
 }

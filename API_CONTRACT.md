@@ -10,6 +10,25 @@ Regenerate this by re-reading the backend rather than hand-editing if it drifts 
 
 ---
 
+## Changes since BE-28 (backend `main` 6ea67d6, 30 Oct 2026)
+
+Read from source on backend `main` (`module/auth`, `config/SecurityConfig`, `common/security/MoneyAccess`, `module/maintenance` `StoreSettings*`, `module/procurement` `Cashflow*` and `RealisasiService`, `module/part` category and type services) and the change queue's "What was done" notes for BE-29…BE-41. Where these contradict a section below, these win.
+
+| Change | Status / shape | Mobile handling |
+|---|---|---|
+| One category list (BE-29) | Categories and types live once, at the root tenant. `GET /part-categories`, `/part-types`, `/part-types/category/{id}` return HQ's list to everyone. `POST/PUT/DELETE` and `/seed`: HQ admins only (`requireHqCatalogAdmin`: ADMIN role or PRINCIPAL, signed in at the root), else 403 — a store's own Admin included. `PartCategoryRequest {name, description, consumable}`, `PartTypeRequest {categoryId, name, description}`; duplicate name → 400. Delete category: 400 while it has types or any item uses it (category DELETE answers 204, no body). Delete type: 400 while any item uses it | INV-07 Categories (`inventory/categories.tsx`): read for everyone; add / rename / flag / delete for HQ admins, gated `HQ ADMIN`; flipping `consumable` warns that every store's items are recounted |
+| Uploads without R2 (BE-30) | `UPLOAD_STORAGE=local` (default): files on the server's disk, `putUrl` / view link point back at the server (`/uploads-local`, signed like R2's). Production sets `UPLOAD_STORAGE=r2` | No change |
+| Scope grants (BE-31) | `PATCH /users/{id}/scope`: an ADMIN grants only up to their own **stored** scope (none without one), never to themself, never over someone above them (403). BE-34 adds the store's Owner | Scope picker offers only `grantableScopes()`; hidden on your own page |
+| `PATCH /auth/password` (BE-32, BE-36) | `{currentPassword, newPassword}`, new 8–72 characters and different. Wrong current → **400** "Your current password is wrong" (not 401). Returns `AuthResponse` with a fresh token; every older token, the caller's own included, is refused from then on | Change password (`account/password.tsx`); `AuthContext.adoptToken()` stores the returned token |
+| Switch off (BE-33) | `PATCH /users/{id}/active {active, reason}` — reason required to switch off (400). An ADMIN inside their tree, never themself or someone above. From then: login → **403** "This account is switched off"; any existing token → **401** `{"error":"This account is switched off"}`; no new notifications; not an Owner for self-approval; can't be named on a new record (400 "{name} is switched off"). `GET /users[?tenantId=&active=]` (ADMIN: tree or one store). `UserProfileResponse` + `tenantName`, `active`, `deactivatedAt`, `deactivatedByName`, `deactivationReason` | Users (`users/index.tsx`): Switched on / Switched off tabs; Switch off with reason, Switch on; login shows the 403 message; a mid-session 401 signs out and shows the server's reason |
+| The store's Owner manages people (BE-34) | `POST /auth/register`, `PATCH /users/{id}/scope`, `/role`, `/active`, `/password`, `GET /users`: an ADMIN as above, or the store's OWNER+ (stored scope) for their own store's people below Owner who aren't Admins. The Owner gives SUPERVISOR or MANAGER only (403 above), any role but ADMIN; `GET /users?tenantId=` another store → 403. New people always start OPERATOR, no scope | People entry on the dashboard for Admins and Owner+; Owners and Admins read-only for a store Owner (`canManagePerson()`); Add a person (`users/add.tsx`) |
+| "Low" if either rule (BE-35) | With usage data the minimum **also** applies now: low when it runs out before target days **or** stock ≤ minimum. `lowBecause` stays `RUNS_OUT_SOON` \| `BELOW_MINIMUM`. Supersedes "the minimum does not also apply" in the BE-27 row below | No change; more items show as low |
+| Reset a password (BE-36) | `PATCH /users/{id}/password {newPassword}` (8–72): ADMIN inside their tree (never above them) or the store's Owner (BE-34 rule); never yourself (403). Sets `mustChangePassword`. Register sets it too. `AuthResponse` and `UserProfileResponse` + `mustChangePassword`. Any password change or reset refuses older tokens: **401** `{"error":"Your password was changed; sign in again"}`. `register.password` is now 8–72 | Reset password on a person's page; `useAuthGuard` opens Change password first while `mustChangePassword` is true (Sign out is the only other way out) |
+| Maintenance gated; no token = 401 (BE-37) | Part fit/replace/condition, work orders, service events, schedules: MANAGER+ scope or TECHNICIAN role, else 403. No `Authorization` header → **401** `{"error":"Sign in first"}` (was a bodyless 403) | The app has no maintenance screens yet; nothing to gate |
+| Store settings (BE-38) | `GET /tenants/{id}/settings` (inside the caller's tree) → `StoreSettingsResponse{tenantId, tenantName, customised, daysOfCoverTarget, burnRateWindowDays, burnRateMinObservationDays, burnRateMinEvents, healthThreshold, minimumHealthForOperation, maintenanceIntervalDays, partEndOfLifeWarningDays, maxWornParts, maxRefurbishedParts, maxRemovedParts, autoCreateWorkOrder}` with defaults filled in. `PATCH` same fields, each optional with ranges (target 1–365, window 7–365, min observation 1–365 and ≤ window, min events 1–1000, health 0–100, interval 1–3650, end-of-life 0–365, max parts 0–100): the store's own OWNER+ signed in there, else 403 | Store settings (`settings/store.tsx`): read-only for everyone else and for HQ; sends only changed values |
+| Purchase receipt photos (BE-39, BE-40) | `CreateRealisasiRequest.receiptUploadIds` (uploads with purpose `PURCHASE_RECEIPT`, by the caller, unused); a bad one refuses the whole purchase (400). `PERSONAL_REIMBURSABLE` with none → **400** "Add a photo of the receipt: it's what you're paid back against", unless it supersedes one that has them. `RealisasiResponse.receiptUploadIds`: null unless OWNER+, Accounting or whoever logged it | PROC-04: "Paid from" is a choice (Store's account / Paid by me), Receipt photos via `PhotoPicker`, required for Paid by me; result and PROC-08 rows open the receipt |
+| Accounting reads money; cashflow (BE-41) | `MoneyAccess.canSee()` = OWNER+ or ACCOUNTING: every amount (purchases, orders, limits, expenses, HQ prices, receipt photos), `GET /procurement/spending`, `GET /procurement/activity`. Accounting still approves, rejects and pays back nothing. `GET /procurement/cashflow?from=&to=&tenantId=` (inclusive dates, default this month, ≤ a year; HQ: one store or the tree) → `CashflowResponse{from, to, totalIn, totalOut, net, events[{date, direction: OUT, kind: PURCHASE\|PURCHASE_PAYBACK\|EXPENSE\|EXPENSE_PAYBACK\|ORDER_TO_HQ, amount, reference, counterparty, method, recordType, recordId, recordStatus, tenantId, tenantName}]}`, newest first. Store-paid purchases are listed waiting or rejected too, with their status (decision #34) | `canReadSpending`, `canReadActivityLog` include Accounting; budget editing stays Owner (`canSetBudget`); Cashflow (`procurement/cashflow.tsx`) by month, store picker for HQ |
+
 ## Changes since BE-25 (backend `main` 32ba932, 23 Oct 2026)
 
 Read from source on backend `main` (`module/inventory`, `module/burnrate`, `module/part`, `module/procurement`) and the change queue's "What was done" notes for BE-26, BE-27 and BE-28. Where these contradict a section below, these win.
@@ -19,7 +38,7 @@ Read from source on backend `main` (`module/inventory`, `module/burnrate`, `modu
 | Store on every row (BE-26) | `tenantId`, `tenantName` on `PartResponse`, stock-summary / low-stock rows, `BurnRateResponse`, `StockAdjustmentResponse`, `PurchaseRequestAuthorizationResponse`; `catalogPartId` on stock and burn-rate rows. `?tenantId=` on `GET /parts`, `/inventory/stock-summary`, `/inventory/low-stock`, `/burn-rate` (that store's subtree, inside the caller's tree; outside → 400 "Store not found") | Store names on HQ's lists; PROC-01 shows only the picked store's items; PROC-04 only the picked store's limits; INV-03 groups stores under each HQ item |
 | `GET /parts/{id}/movements?limit=` (BE-26) | Newest first, default 50, max 500, tree-scoped (another root → 400). `StockMovementResponse{id, partId, partName, movementType, quantity (signed), beforeStock, afterStock, notes, referenceType, referenceId, actorId, actorName, createdAt}`. Every movement since V14 names who made it (an approval names the approver) | INV-05 history |
 | Dashboard and burn rate (BE-26) | "Used today" counts `MAINTENANCE_USAGE` and `CONSUMABLE_TAKE`. Burn rate uses each item's own store's policy. `GET /inventory/dashboard` still takes no store filter and sums the caller's tree | Tiles unchanged; still hidden for HQ |
-| One "low" rule (BE-27) | Stock-summary and low-stock rows + `lowBecause` (`RUNS_OUT_SOON` | `BELOW_MINIMUM` | null), and `daysOfCover`, `targetDays` when the item has usage data. `status` is OUT_OF_STOCK at ≤ 0, else LOW_STOCK by the rule. With usage data the minimum does **not** also apply. Dashboard `lowStock` and the `LOW_STOCK` alert (once, to the store's MANAGER+ and ADMINs) use the same rule | The phone no longer computes "low": `lib/stockLevel.ts` reads `status` / `lowBecause`; burn rate is only used for suggested amounts |
+| One "low" rule (BE-27) | Stock-summary and low-stock rows + `lowBecause` (`RUNS_OUT_SOON` | `BELOW_MINIMUM` | null), and `daysOfCover`, `targetDays` when the item has usage data. `status` is OUT_OF_STOCK at ≤ 0, else LOW_STOCK by the rule. With usage data the minimum does **not** also apply (it does since BE-35). Dashboard `lowStock` and the `LOW_STOCK` alert (once, to the store's MANAGER+ and ADMINs) use the same rule | The phone no longer computes "low": `lib/stockLevel.ts` reads `status` / `lowBecause`; burn rate is only used for suggested amounts |
 | HQ prices (BE-28) | `PATCH /parts/{id}/hq-flags` + `price` (> 0), HQ admins only; selling without a price → 400. `GET /catalog` + `price`, `PartResponse.hqPrice` (a store item shows its HQ item's) — both null unless OWNER+ or an HQ admin. Orders: `PurchaseOrderItemRequest.price` ignored; the server takes HQ's price on create and again on send, then freezes it. No price → 400 "HQ hasn't set a price for {name} yet" | PROC-07 no longer asks for a price; shows HQ's price and a running total to Owner+. INV-09 HQ catalog sets sold / must-buy / price and store links |
 
 ## Changes since BE-23 (backend `main` d51096e, 23 Oct 2026)
@@ -84,7 +103,7 @@ Read from source in the backend repo (`c:\richards stuff\demo`). Where these con
 |---|---|---|
 | Permission denials | 403 (was 400). SoD violations stay 400 | Screens show the server message; PRA create maps 403 to a Manager+ message |
 | Expired or invalid JWT | 401, **plain-text** body `Invalid JWT token` (from `JwtAuthenticationFilter`) | `api/client.ts` parses non-JSON bodies; any 401 on an authed request signs the user out |
-| No token at all | 403 (backend plans to make this 401) | Only hit when signed out |
+| No token at all | 403 (401 since BE-37) | Only hit when signed out |
 | Unknown path / wrong method | 404 / 405 (were 500) | Outbox fails 4xx at once, retries 5xx up to 5 times |
 | `POST /auth/register` | ADMIN bearer token required; `scope` in body ignored | Unused in the app |
 | `POST /auth/login` | Unknown email 400 `Invalid credentials`; wrong password 401 | Both shown as "Email or password is incorrect." |
@@ -114,8 +133,9 @@ Read from source in the backend repo (`c:\richards stuff\demo`). Where these con
 | `BadCredentialsException` | 401 | `{ timestamp, error: "Invalid username or password" }` |
 | Generic `RuntimeException` (most service-layer manual checks) | 400 | `{ timestamp, error }` — no `details` map, the message is the whole story |
 | Anything else | 500 | `{ timestamp, error: "Internal server error", desc }` |
-| Missing JWT (Spring Security filter chain) | 403 | **no body at all** — never reaches `GlobalExceptionHandler` |
+| Missing JWT (Spring Security filter chain) | 401 (BE-37; was a bodyless 403) | `{ error: "Sign in first" }` — never reaches `GlobalExceptionHandler` |
 | Expired or malformed JWT (`JwtAuthenticationFilter`) | 401 | plain text `Invalid JWT token` — not JSON |
+| Switched-off user, or a token from before the last password change (`JwtAuthenticationFilter`, BE-33/36) | 401 | `{ error: "This account is switched off" }` / `{ error: "Your password was changed; sign in again" }` |
 
 The mobile app's `api/client.ts` already reads `details` and appends it to the thrown `ApiError.message`.
 
@@ -144,16 +164,16 @@ as a 400, not an actual 404).
 
 ## Auth module
 
-### `POST /auth/register` — public
+### `POST /auth/register` — an ADMIN (their tree) or the store's OWNER+ (own store), BE-12 / BE-34
 | Request (`RegisterRequest`) | Type | Required |
 |---|---|---|
-| `email` | String | `@NotBlank` |
-| `password` | String | `@NotBlank` |
+| `email` | String | `@NotBlank`; already registered → 400 |
+| `password` | String | `@NotBlank`, 8–72 characters (BE-36) |
 | `fullName` | String | `@NotBlank` |
-| `tenantCode` | String | optional — defaults to `BLITZ_BDG` server-side |
-| `scope` | `Scope` | optional — `null` if omitted, no default applied |
+| `tenantCode` | String | optional — defaults to the caller's own store; an Owner may name only their own |
 
-Response `data`: `{ token: string }`
+A `scope` key is ignored: the person starts as OPERATOR with no scope and `mustChangePassword: true`.
+Response `data` (`AuthResponse`): `{ token: string, mustChangePassword: boolean }` — the new person's token.
 
 ### `POST /auth/login` — public
 | Request (`LoginRequest`) | Type | Required |
@@ -161,14 +181,16 @@ Response `data`: `{ token: string }`
 | `email` | String | `@NotBlank` |
 | `password` | String | `@NotBlank` |
 
-Response `data`: `{ token: string }`
+Response `data` (`AuthResponse`): `{ token: string, mustChangePassword: boolean }`. Unknown email 400, wrong password 401, switched off 403.
+
+### `PATCH /auth/password` — authenticated, your own (BE-32)
+Request: `{ currentPassword, newPassword }` (8–72, different). Response `data`: `AuthResponse` with a fresh token.
 
 ### `GET /auth/me` — authenticated
-Response `data` (`UserProfileResponse`): `{ id: UUID, email: string, fullName: string, role: Role, scope: Scope | null }`
+Response `data` (`UserProfileResponse`): `{ id, email, fullName, role: Role, scope: Scope | null, tenantCode, tenantName, active, deactivatedAt, deactivatedByName, deactivationReason, mustChangePassword }`
 
-### `PATCH /users/{id}/scope` — ⚠️ `Role.ADMIN` only (the one real `@PreAuthorize` in the whole API)
-Request: `{ scope: Scope }` — `@NotNull`
-Response `data`: `UserProfileResponse` (same shape as `/auth/me`)
+### `/users` — an ADMIN or the store's OWNER+, checked in `UserService` (BE-31…BE-36)
+`GET /users[?tenantId=&active=]`; `PATCH /users/{id}/scope {scope}`, `/role {role}`, `/active {active, reason}`, `/password {newPassword}` — each answers `UserProfileResponse`. Rules in the BE-28 changes table above.
 
 ---
 

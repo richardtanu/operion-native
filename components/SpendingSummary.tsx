@@ -13,15 +13,19 @@ import { rp } from '../lib/money';
 import { Card } from './Card';
 import { KV } from './KV';
 
-type SpendingSummaryProps = { token: string };
+type SpendingSummaryProps = {
+  token: string;
+  /** Only the store's Owner sets its budget; Accounting reads it (BE-41). */
+  canSetBudget: boolean;
+};
 
-// BE-16, OWNER+ only (callers check canReadSpending first). One card per
+// BE-16, OWNER+ or Accounting (callers check canReadSpending first). One card per
 // store in the caller's tree: a store Owner sees their own store, HQ sees
 // every store. "Spent" and "committed" mean exactly what BE-16's
 // Definitions say; other expenses (BE-19) show as one line with the HQ /
 // Branch specific split beside it. Over budget is a warning colour, never a
 // block.
-export function SpendingSummary({ token }: SpendingSummaryProps) {
+export function SpendingSummary({ token, canSetBudget }: SpendingSummaryProps) {
   const { color, type: typeScale } = useTheme();
   const [rows, setRows] = useState<StoreSpendingResponse[] | null>(null);
   const month = toIsoDate(new Date()).slice(0, 7);
@@ -102,7 +106,7 @@ export function SpendingSummary({ token }: SpendingSummaryProps) {
                 : `Budget ${rp(r.budget)} · ${rp(r.budget - r.spent - r.committed - r.otherExpenses)} left after committed and other expenses.`}
             </Text>
           ) : null}
-          {i === 0 && !editing ? (
+          {i === 0 && !editing && canSetBudget ? (
             <Text
               onPress={() => {
                 setBudgetText(r.budget != null ? String(r.budget) : '');

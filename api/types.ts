@@ -30,21 +30,28 @@ export interface LoginRequest {
   password: string;
 }
 
-/** ADMIN-only since BE-12. There is no scope field: grant one afterwards with PATCH /users/{id}/scope. */
+/**
+ * An ADMIN (inside their tree) or, since BE-34, a store's Owner (their own
+ * store only). The person starts as OPERATOR with no scope: grant one
+ * afterwards with PATCH /users/{id}/scope.
+ */
 export interface RegisterRequest {
   email: string;
+  /** 8 to 72 characters (BE-36); the person must change it at their first sign-in. */
   password: string;
   fullName: string;
-  /** Defaults to the calling ADMIN's own tenant; must be inside their tenant tree. */
+  /** Defaults to the caller's own store; an Admin may name one inside their tree. */
   tenantCode?: string;
 }
 
-/** POST /auth/login and /auth/register both return just this — no user object. */
+/** POST /auth/login, /auth/register and PATCH /auth/password return just this — no user object. */
 export interface AuthResponse {
   token: string;
+  /** BE-36: someone else chose this password; open Change password before anything else. */
+  mustChangePassword: boolean;
 }
 
-/** GET /auth/me — the only place user profile data actually comes from. */
+/** GET /auth/me and every /users answer. */
 export interface UserProfileResponse {
   id: string;
   email: string;
@@ -53,6 +60,35 @@ export interface UserProfileResponse {
   scope: Scope | null;
   /** Tenant.code (e.g. "BLITZ_BDG") — added specifically so the client can theme itself per tenant. */
   tenantCode: string;
+  /** BE-33: the store's name, for HQ's user list. */
+  tenantName: string;
+  /** BE-33: false = switched off (left the business). */
+  active: boolean;
+  deactivatedAt: string | null;
+  deactivatedByName: string | null;
+  deactivationReason: string | null;
+  /** BE-36: someone else chose the current password. */
+  mustChangePassword: boolean;
+}
+
+/** PATCH /auth/password (BE-32): your own. A wrong current password is 400, not 401. */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  /** 8 to 72 characters, different from the current one. */
+  newPassword: string;
+}
+
+/** PATCH /users/{id}/active (BE-33). A reason is required to switch someone off. */
+export interface UpdateUserActiveRequest {
+  active: boolean;
+  reason?: string;
+}
+
+/** Optional filters on GET /users (BE-33). */
+export interface UserFilters {
+  /** An Admin: one store in their tree. An Owner may only name their own. */
+  tenantId?: string;
+  active?: boolean;
 }
 
 /**
@@ -181,6 +217,23 @@ export interface PartTypeResponse {
 }
 
 /**
+ * POST /part-categories, PUT /part-categories/{id} (BE-29): HQ admins only,
+ * on the one list every store reads. On update, a field left out stays.
+ */
+export interface SavePartCategoryRequest {
+  name?: string;
+  description?: string;
+  consumable?: boolean;
+}
+
+/** POST /part-types, PUT /part-types/{id} (BE-29): HQ admins only. */
+export interface SavePartTypeRequest {
+  categoryId?: string;
+  name?: string;
+  description?: string;
+}
+
+/**
  * GET /catalog (BE-21): what HQ sells — the root tenant's live `soldByHq`
  * parts, name order. `storePartId`/`storeCurrentStock` are the caller's own
  * store's linked copy, null until the store first orders the item.
@@ -210,6 +263,37 @@ export interface TenantResponse {
   /** BE-16: null below Owner scope, and when the store hasn't set one. */
   monthlyPurchaseBudget: number | null;
 }
+
+/**
+ * GET /tenants/{id}/settings (BE-38): anyone at the store or above it. The
+ * effective values: a store that never saved any (`customised: false`)
+ * reads the defaults.
+ */
+export interface StoreSettingsResponse {
+  tenantId: string;
+  tenantName: string;
+  customised: boolean;
+  /** Stock: an item is low when it runs out before this many days (BE-27). */
+  daysOfCoverTarget: number;
+  burnRateWindowDays: number;
+  burnRateMinObservationDays: number;
+  burnRateMinEvents: number;
+  /** Maintenance: when a unit needs attention. */
+  healthThreshold: number;
+  minimumHealthForOperation: number;
+  maintenanceIntervalDays: number;
+  partEndOfLifeWarningDays: number;
+  maxWornParts: number;
+  maxRefurbishedParts: number;
+  maxRemovedParts: number;
+  autoCreateWorkOrder: boolean;
+}
+
+/**
+ * PATCH /tenants/{id}/settings (BE-38): the store's own OWNER+ only, signed
+ * in at that store (HQ reads, can't set). A field left out keeps its value.
+ */
+export type StoreSettingsRequest = Partial<Omit<StoreSettingsResponse, 'tenantId' | 'tenantName' | 'customised'>>;
 
 export interface CreatePurchaseRequestItemRequest {
   partId: string;
@@ -370,6 +454,8 @@ export interface RealisasiResponse {
   insurance: number | null;
   serviceFee: number | null;
   totalCost: number | null;
+  /** BE-39: receipt photos. Null unless OWNER+, Accounting (BE-41) or whoever logged it. */
+  receiptUploadIds: string[] | null;
   attachments: string | null;
   retroPurchaseFlag: boolean;
   createdById: string;
@@ -400,7 +486,7 @@ export interface CreateRealisasiRequest {
   /** BE-21: where it was bought, for a purchase outside HQ. */
   sellerName?: string;
   paymentRef?: string;
-  paymentMethod: string;
+  paymentMethod: PaymentMethod;
   purchasedAt: string;
   subtotal: number;
   sellerDiscount: number;
@@ -408,6 +494,11 @@ export interface CreateRealisasiRequest {
   shipping: number;
   insurance: number;
   serviceFee: number;
+  /**
+   * BE-39: uploads with purpose PURCHASE_RECEIPT. Required (≥ 1) for
+   * PERSONAL_REIMBURSABLE since BE-40, unless a correction's original has them.
+   */
+  receiptUploadIds?: string[];
   attachments?: string;
   retroPurchaseFlag?: boolean;
   items: CreateRealisasiItemRequest[];
@@ -588,6 +679,46 @@ export interface StoreSpendingResponse {
   /** spent + committed + otherExpenses > budget; null without a budget. A warning, never a block. */
   overBudget: boolean | null;
   topParts: SpendingPartResponse[];
+}
+
+// ---------- Cashflow (BE-41) ----------
+
+/** Every row is OUT for now: the app records no income yet (decision #35). */
+export type CashflowDirection = 'IN' | 'OUT';
+export type CashflowKind = 'PURCHASE' | 'PURCHASE_PAYBACK' | 'EXPENSE' | 'EXPENSE_PAYBACK' | 'ORDER_TO_HQ';
+
+/** One movement of money, dated when the store's money actually moved. */
+export interface CashflowEventResponse {
+  date: string;
+  direction: CashflowDirection;
+  kind: CashflowKind;
+  amount: number;
+  /** The marketplace order ref, the order number, or the expense's description. */
+  reference: string | null;
+  /** The seller, the person paid back, or HQ. Null for a store expense. */
+  counterparty: string | null;
+  /** CASH / TRANSFER on a pay-back. */
+  method: string | null;
+  recordType: 'REALISASI' | 'EXPENSE' | 'PURCHASE_ORDER';
+  recordId: string;
+  /** The record's status now, e.g. a purchase still waiting for the Owner, or rejected (decision #34). */
+  recordStatus: string;
+  tenantId: string;
+  tenantName: string;
+}
+
+/**
+ * GET /procurement/cashflow?from=&to=&tenantId= (BE-41): Accounting or
+ * OWNER+. `from`/`to` inclusive `yyyy-MM-dd`, default this month, at most a
+ * year. Newest first.
+ */
+export interface CashflowResponse {
+  from: string;
+  to: string;
+  totalIn: number;
+  totalOut: number;
+  net: number;
+  events: CashflowEventResponse[];
 }
 
 // ---------- Expenses (BE-19, PROC-10) ----------

@@ -78,7 +78,7 @@ export default function ActivityLogScreen() {
     } catch (err) {
       setError(
         err instanceof ApiError && err.status === 403
-          ? 'The activity log is for ADMIN or PROCUREMENT users, or Owner scope and above.'
+          ? 'The activity log is for ADMIN, PROCUREMENT or ACCOUNTING users, or Owner scope and above.'
           : err instanceof ApiError
             ? err.message
             : 'Could not load the activity log.',
@@ -115,7 +115,7 @@ export default function ActivityLogScreen() {
         <View className="gap-md px-xl pt-xl">
           <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Activity Log</Text>
           <Callout tone="warning" title="Not available for your account">
-            The activity log is for ADMIN or PROCUREMENT users, or Owner scope and above. Ask an admin if you need it.
+            The activity log is for ADMIN, PROCUREMENT or ACCOUNTING users, or Owner scope and above. Ask an admin if you need it.
           </Callout>
         </View>
       </SafeAreaView>

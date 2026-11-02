@@ -11,7 +11,7 @@ import {
   rejectPurchaseRequest,
 } from '../../../api/procurement';
 import { getTenantTree } from '../../../api/tenants';
-import { canReadSpending, ownerPlus as isOwnerPlus } from '../../../auth/permissions';
+import { canReadSpending, canSetBudget, ownerPlus as isOwnerPlus } from '../../../auth/permissions';
 import { ApiError } from '../../../api/httpError';
 import type { PurchaseRequestResponse, PurchaseRequestStatus, StatusHistoryEntry } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -27,7 +27,7 @@ const FILTERS: PurchaseRequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'OR
 // screen. Approve/reject: the store's own OWNER+ (HQ can't decide for a
 // store). Cancel (BE-15): a PENDING request by its requester or the store's
 // OWNER+, an APPROVED one by the store's OWNER+ only, always with a reason.
-// OWNER+ also sees the store's spending this month (BE-16).
+// OWNER+ and Accounting (BE-41) also see the store's spending this month (BE-16).
 export default function PurchaseRequestListScreen() {
   const { color, type: typeScale } = useTheme();
   const { user, token } = useAuth();
@@ -107,7 +107,7 @@ export default function PurchaseRequestListScreen() {
       <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
         <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Requests</Text>
 
-        {token && canReadSpending(user) ? <SpendingSummary token={token} /> : null}
+        {token && canReadSpending(user) ? <SpendingSummary token={token} canSetBudget={canSetBudget(user)} /> : null}
 
         <View className="flex-row flex-wrap" style={{ gap: 6 }}>
           {FILTERS.map((f) => (

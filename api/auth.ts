@@ -1,13 +1,17 @@
 import { apiRequest } from './client';
-import type { AuthResponse, LoginRequest, RegisterRequest, UserProfileResponse } from './types';
+import type { AuthResponse, ChangePasswordRequest, LoginRequest, UserProfileResponse } from './types';
 
 export function login(request: LoginRequest): Promise<AuthResponse> {
   return apiRequest<AuthResponse>('/auth/login', { method: 'POST', body: request });
 }
 
-/** ADMIN bearer token required since BE-12 — unused in the app (no registration UI). */
-export function register(request: RegisterRequest, adminToken: string): Promise<AuthResponse> {
-  return apiRequest<AuthResponse>('/auth/register', { method: 'POST', body: request, token: adminToken });
+/**
+ * BE-32: your own password, proving the current one first. A wrong current
+ * password is 400, so the app stays signed in. Every older sign-in ends
+ * (BE-36), this one included: keep the token that comes back.
+ */
+export function changePassword(request: ChangePasswordRequest, token: string): Promise<AuthResponse> {
+  return apiRequest<AuthResponse>('/auth/password', { method: 'PATCH', body: request, token });
 }
 
 /** Login/register return only a token — this is the actual source of user profile data. */

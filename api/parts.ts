@@ -4,6 +4,8 @@ import type {
   PartCategoryResponse,
   PartResponse,
   PartTypeResponse,
+  SavePartCategoryRequest,
+  SavePartTypeRequest,
   StockMovementResponse,
   UpdateHqFlagsRequest,
   UpdatePartRequest,
@@ -59,11 +61,46 @@ export function linkToCatalog(id: string, catalogPartId: string | null, token: s
   return apiRequest<PartResponse>(`/parts/${id}/catalog-link`, { method: 'PATCH', body: { catalogPartId }, token });
 }
 
-/** Reads are open to anyone; changes are ADMIN only (BE-25), HQ admins only after BE-29. */
+/**
+ * BE-29: one list, HQ's, read by every store through the same endpoints.
+ * Reads are open to anyone signed in; changes are HQ admins only (ADMIN role
+ * or PRINCIPAL, signed in at HQ), and a store's own Admin gets 403.
+ */
 export function listCategories(token: string): Promise<PartCategoryResponse[]> {
   return apiRequest<PartCategoryResponse[]>('/part-categories', { token });
 }
 
 export function listPartTypes(categoryId: string, token: string): Promise<PartTypeResponse[]> {
   return apiRequest<PartTypeResponse[]>(`/part-types/category/${categoryId}`, { token });
+}
+
+export function listAllPartTypes(token: string): Promise<PartTypeResponse[]> {
+  return apiRequest<PartTypeResponse[]>('/part-types', { token });
+}
+
+/** Names are unique on the list (400 "Category already exists"). */
+export function createCategory(request: SavePartCategoryRequest, token: string): Promise<PartCategoryResponse> {
+  return apiRequest<PartCategoryResponse>('/part-categories', { method: 'POST', body: request, token });
+}
+
+export function updateCategory(id: string, request: SavePartCategoryRequest, token: string): Promise<PartCategoryResponse> {
+  return apiRequest<PartCategoryResponse>(`/part-categories/${id}`, { method: 'PUT', body: request, token });
+}
+
+/** 400 while it still has types or any store's item uses it. */
+export function deleteCategory(id: string, token: string): Promise<void> {
+  return apiRequest<void>(`/part-categories/${id}`, { method: 'DELETE', token });
+}
+
+export function createPartType(request: SavePartTypeRequest, token: string): Promise<PartTypeResponse> {
+  return apiRequest<PartTypeResponse>('/part-types', { method: 'POST', body: request, token });
+}
+
+export function updatePartType(id: string, request: SavePartTypeRequest, token: string): Promise<PartTypeResponse> {
+  return apiRequest<PartTypeResponse>(`/part-types/${id}`, { method: 'PUT', body: request, token });
+}
+
+/** 400 while any item uses it. */
+export function deletePartType(id: string, token: string): Promise<void> {
+  return apiRequest<void>(`/part-types/${id}`, { method: 'DELETE', token });
 }

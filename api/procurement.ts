@@ -1,6 +1,7 @@
 import { apiRequest, queryString } from './client';
 import type {
   CancelPurchaseOrderRequest,
+  CashflowResponse,
   CatalogItemResponse,
   CreateGoodsReceiptRequest,
   CreatePurchaseOrderRequest,
@@ -193,11 +194,16 @@ export function getCatalog(token: string): Promise<CatalogItemResponse[]> {
   return apiRequest<CatalogItemResponse[]>('/catalog', { token });
 }
 
-// ---------- Spending (BE-16) ----------
+// ---------- Spending (BE-16) and cashflow (BE-41) ----------
 
-/** OWNER+ only (403 below). `month` is `yyyy-MM`. Omit `tenantId` for every store in the caller's tree. */
+/** OWNER+ or Accounting (BE-41); 403 below. `month` is `yyyy-MM`. Omit `tenantId` for every store in the caller's tree. */
 export function getSpending(month: string, token: string, tenantId?: string): Promise<StoreSpendingResponse[]> {
   return apiRequest<StoreSpendingResponse[]>(`/procurement/spending${queryString({ month, tenantId })}`, { token });
+}
+
+/** OWNER+ or Accounting. `from`/`to` inclusive `yyyy-MM-dd`, default this month, at most a year apart. */
+export function getCashflow(token: string, params: { from?: string; to?: string; tenantId?: string } = {}): Promise<CashflowResponse> {
+  return apiRequest<CashflowResponse>(`/procurement/cashflow${queryString(params)}`, { token });
 }
 
 export function getPurchaseOrderHistory(id: string, token: string): Promise<StatusHistoryEntry[]> {
@@ -211,7 +217,7 @@ export function getPurchaseOrderHistory(id: string, token: string): Promise<Stat
 
 // ---------- Activity log (BE-07) ----------
 
-/** Newest first, across the caller's tenant tree. 403 unless ADMIN or PROCUREMENT role, or OWNER+ scope. */
+/** Newest first, across the caller's tenant tree. 403 unless ADMIN, PROCUREMENT or ACCOUNTING (BE-41) role, or OWNER+ scope. */
 export function getProcurementActivity(filters: ProcurementActivityFilters, token: string): Promise<ProcurementActivityEntry[]> {
   return apiRequest<ProcurementActivityEntry[]>(`/procurement/activity${queryString(filters)}`, { token });
 }
