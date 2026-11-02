@@ -12,8 +12,9 @@ import { textStyle } from '../../../theme/typeStyle';
 
 // Module 2 (Inventory) menu — the store's entry into INV-01, 02, 04 and 06
 // (Gate 1 found the app had none). Signed in at HQ, it also opens HQ's own
-// screens: stock across stores (INV-03) and the catalog (INV-09). Categories
-// (INV-07) wait for BE-29's single list.
+// screens: stock across stores (INV-03) and the catalog (INV-09).
+// Categories (INV-07) is HQ's one list (BE-29): every store reads it, HQ
+// admins change it.
 export default function InventoryMenuScreen() {
   const { color, type: typeScale } = useTheme();
   const { token } = useAuth();
@@ -60,6 +61,9 @@ export default function InventoryMenuScreen() {
           </Link>
           <Link href="/(app)/inventory/items" asChild>
             <Button label="Items" variant="secondary" />
+          </Link>
+          <Link href="/(app)/inventory/categories" asChild>
+            <Button label="Categories" variant="secondary" />
           </Link>
         </View>
       </ScrollView>

@@ -4,6 +4,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Callout, Section } from '../../components';
 import { useAuth } from '../../auth/AuthContext';
+import { canManagePeople } from '../../auth/permissions';
 import { getUnreadCount } from '../../api/notifications';
 import { getInventoryDashboard } from '../../api/inventory';
 import { getTenantTree } from '../../api/tenants';
@@ -106,6 +107,21 @@ export default function DashboardScreen() {
         <Link href="/(app)/notifications" asChild>
           <Button label={unread ? `Notifications · ${unread} unread` : 'Notifications'} variant="secondary" />
         </Link>
+
+        <View className="gap-sm">
+          <Section>Settings</Section>
+          {canManagePeople(user) ? (
+            <Link href="/(app)/users" asChild>
+              <Button label="People" variant="secondary" />
+            </Link>
+          ) : null}
+          <Link href="/(app)/settings/store" asChild>
+            <Button label="Store settings" variant="secondary" />
+          </Link>
+          <Link href="/(app)/account/password" asChild>
+            <Button label="Change password" variant="secondary" />
+          </Link>
+        </View>
 
         {__DEV__ ? (
           <Link href="/(app)/debug-outbox" asChild>

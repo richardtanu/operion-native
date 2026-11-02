@@ -1,8 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, Field, KV, Row, Section, SelectField, StepTabs, type StepState } from '../../../components';
+import {
+  Button,
+  Callout,
+  Card,
+  Chip,
+  Field,
+  FieldLabel,
+  KV,
+  PhotoPicker,
+  Row,
+  Section,
+  SelectField,
+  StepTabs,
+  type StepState,
+  type UploadedPhoto,
+} from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import {
   approveRealisasi,
@@ -14,10 +29,12 @@ import {
 } from '../../../api/procurement';
 import { listParts } from '../../../api/parts';
 import { getTenantTree } from '../../../api/tenants';
+import { viewUpload } from '../../../api/uploads';
 import { canBuyForAnotherStore, canLogPurchase, ownerPlus as isOwnerPlus } from '../../../auth/permissions';
 import { ApiError } from '../../../api/httpError';
 import type {
   CreateRealisasiRequest,
+  PaymentMethod,
   PurchaseRequestAuthorizationItemResponse,
   PurchaseRequestAuthorizationResponse,
   RealisasiResponse,
@@ -71,10 +88,16 @@ const EMPTY_TEXT: FormText = {
   actualUnitPrice: '',
 };
 
-type ErrorKey = TextKey | 'praLine' | 'store';
+const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  COMPANY_ACCOUNT: 'Store’s account',
+  PERSONAL_REIMBURSABLE: 'Paid by me',
+};
+
+type ErrorKey = TextKey | 'praLine' | 'store' | 'receipt';
 const STEP_OF: Record<ErrorKey, Step> = {
   praLine: 0,
   store: 0,
+  receipt: 0,
   sellerName: 0,
   channel: 0,
   paymentMethod: 0,
@@ -99,6 +122,8 @@ type Rules = {
   boughtAtHq: boolean;
   /** HQ Procurement must say which store they're buying for (BE-17). */
   needsStore: boolean;
+  /** Paid by me with no receipt photo, and no original's photo to rely on (BE-40). */
+  needsReceipt: boolean;
 };
 
 function validate(text: FormText, r: Rules): Partial<Record<ErrorKey, string>> {
@@ -109,7 +134,9 @@ function validate(text: FormText, r: Rules): Partial<Record<ErrorKey, string>> {
   else if (r.mandatoryOutsideHq) errors.praLine = 'This item must be bought from HQ. Choose “At HQ” below, or order it from HQ.';
   if (!r.boughtAtHq && !text.sellerName.trim()) errors.sellerName = 'Say where you bought it, e.g. “Shopee · Toko Airsoft Jaya”.';
   if (!text.channel.trim()) errors.channel = required;
-  if (!text.paymentMethod.trim()) errors.paymentMethod = required;
+  // An older draft may hold free text here, from before this was a choice.
+  if (!(text.paymentMethod in PAYMENT_LABEL)) errors.paymentMethod = 'Say who paid.';
+  if (r.needsReceipt) errors.receipt = 'Add a photo of the receipt: it’s what you’re paid back against.';
   if (!text.purchasedAt.trim()) errors.purchasedAt = required;
   else if (!toLocalDateTime(text.purchasedAt)) errors.purchasedAt = 'Use a real date, YYYY-MM-DD.';
 
@@ -135,6 +162,8 @@ function validate(text: FormText, r: Rules): Partial<Record<ErrorKey, string>> {
 // first one with a problem (decision #11). Six separate cost inputs (never
 // one total), two independent status dimensions, supersede-not-edit
 // correction. Half-finished purchases can be saved as drafts on this phone.
+// Receipt photos (BE-39) are required when paid by me (BE-40) — the Owner
+// pays you back against them — unless a correction's original has them.
 export default function CreateRealisasiScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const router = useRouter();
@@ -156,6 +185,11 @@ export default function CreateRealisasiScreen() {
   const [rejectReason, setRejectReason] = useState('');
   const [text, setText] = useState<FormText>(EMPTY_TEXT);
   const set = (k: TextKey) => (v: string) => setText((t) => ({ ...t, [k]: v }));
+  // Uploaded as soon as they're picked; not kept in a draft (an unattached
+  // upload is swept after 24 hours, a draft can wait days).
+  const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
+  // A correction may rely on the original's receipt photos (BE-40).
+  const [originalReceipts, setOriginalReceipts] = useState(0);
 
   // Set once Create has been pressed: only then do gaps show as errors.
   const [attempted, setAttempted] = useState(false);
@@ -235,8 +269,9 @@ export default function CreateRealisasiScreen() {
         mandatoryOutsideHq: !!selectedLine && mandatoryParts.has(selectedLine.item.partId) && !boughtAtHq,
         boughtAtHq,
         needsStore: picksStore && !supersedeTargetId && !storeId,
+        needsReceipt: text.paymentMethod === 'PERSONAL_REIMBURSABLE' && photos.length === 0 && originalReceipts === 0,
       }),
-    [text, selectedLine, mandatoryParts, boughtAtHq, picksStore, supersedeTargetId, storeId],
+    [text, selectedLine, mandatoryParts, boughtAtHq, picksStore, supersedeTargetId, storeId, photos, originalReceipts],
   );
   const errorsOnStep = (s: Step) => (Object.keys(errors) as ErrorKey[]).filter((k) => STEP_OF[k] === s);
   const stepStates: StepState[] = ([0, 1, 2] as Step[]).map((s) =>
@@ -252,6 +287,8 @@ export default function CreateRealisasiScreen() {
     setBoughtAtHq(false);
     setStoreId(null);
     setText(EMPTY_TEXT);
+    setPhotos([]);
+    setOriginalReceipts(0);
     setAttempted(false);
     setSupersedeTargetId(null);
     setOriginal(null);
@@ -277,7 +314,9 @@ export default function CreateRealisasiScreen() {
     try {
       const id = await saveDraft(user.id, draftId, draftForm(), step);
       setDraftId(id);
-      setDraftNotice(`Saved on this phone at ${formatTime(new Date())}.`);
+      setDraftNotice(
+        `Saved on this phone at ${formatTime(new Date())}.${photos.length ? ' Photos aren’t kept in a draft: add them again when you create it.' : ''}`,
+      );
       refreshDrafts();
     } catch {
       setDraftNotice('Could not save the draft on this phone.');
@@ -289,6 +328,8 @@ export default function CreateRealisasiScreen() {
     const restored = { ...EMPTY_TEXT };
     for (const k of Object.keys(EMPTY_TEXT) as TextKey[]) restored[k] = d.form[k] ?? '';
     setText(restored);
+    setPhotos([]);
+    setOriginalReceipts(0);
     setSelectedLine(null);
     setPendingLine(praId && praItemId ? { praId, itemId: praItemId } : null);
     setSupplierId(draftSupplier);
@@ -330,7 +371,7 @@ export default function CreateRealisasiScreen() {
       channel: text.channel.trim(),
       supplierId: boughtAtHq ? centre!.id : undefined,
       sellerName: boughtAtHq ? undefined : text.sellerName.trim(),
-      paymentMethod: text.paymentMethod.trim(),
+      paymentMethod: text.paymentMethod as PaymentMethod,
       paymentRef: text.paymentRef.trim() || undefined,
       purchasedAt: purchasedAtValue,
       subtotal: Number(text.subtotal) || 0,
@@ -339,6 +380,7 @@ export default function CreateRealisasiScreen() {
       shipping: Number(text.shipping) || 0,
       insurance: Number(text.insurance) || 0,
       serviceFee: Number(text.serviceFee) || 0,
+      ...(photos.length ? { receiptUploadIds: photos.map((p) => p.uploadId) } : {}),
       attachments: text.attachments.trim() || undefined,
       items: [
         {
@@ -360,6 +402,7 @@ export default function CreateRealisasiScreen() {
         setDraftId(null);
         refreshDrafts();
       }
+      setPhotos([]);
       setResult(response);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not save this realisasi.');
@@ -406,12 +449,25 @@ export default function CreateRealisasiScreen() {
     setBoughtAtHq(!!centre && result.supplierId === centre.id);
     setText(copied);
     setOriginal(copied);
+    setPhotos([]);
+    setOriginalReceipts(result.receiptUploadIds?.length ?? 0);
     setSupersedeReason('');
     setAttempted(false);
     setDraftId(null);
     setDraftNotice(null);
     setResult(null);
     setStep(0);
+  };
+
+  const openReceipt = async (uploadId: string) => {
+    if (!token) return;
+    setActionError(null);
+    try {
+      const view = await viewUpload(uploadId, token);
+      await Linking.openURL(view.getUrl);
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : 'Could not open the receipt.');
+    }
   };
 
   const ownerPlus = isOwnerPlus(user);
@@ -438,7 +494,17 @@ export default function CreateRealisasiScreen() {
 
           <Card>
             <KV k="Bought from" v={result.sellerName ?? result.supplierName ?? '—'} />
+            <KV k="Paid" v={PAYMENT_LABEL[result.paymentMethod as PaymentMethod] ?? result.paymentMethod} />
             {result.externalOrderRef ? <KV k="Order ref" v={result.externalOrderRef} /> : null}
+            {result.receiptUploadIds?.length ? (
+              <View className="flex-row flex-wrap" style={{ gap: 12, marginTop: 6 }}>
+                {result.receiptUploadIds.map((id, i) => (
+                  <Text key={id} onPress={() => openReceipt(id)} accessibilityRole="button" style={{ ...textStyle(typeScale.helper), color: color.info }}>
+                    {result.receiptUploadIds!.length === 1 ? 'View receipt' : `Receipt ${i + 1}`}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
           </Card>
 
           {result.items.map((item) => (
@@ -651,17 +717,45 @@ export default function CreateRealisasiScreen() {
               />
             )}
 
+            <View style={{ gap: 6 }}>
+              <FieldLabel>Paid from</FieldLabel>
+              <Row gap={0}>
+                {(['COMPANY_ACCOUNT', 'PERSONAL_REIMBURSABLE'] as PaymentMethod[]).map((m) => (
+                  <View key={m} style={{ flex: 1 }}>
+                    <Button label={PAYMENT_LABEL[m]} variant={text.paymentMethod === m ? 'primary' : 'secondary'} onPress={() => set('paymentMethod')(m)} />
+                  </View>
+                ))}
+              </Row>
+              {shownError('paymentMethod') ? (
+                <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{shownError('paymentMethod')}</Text>
+              ) : original && original.paymentMethod !== text.paymentMethod ? (
+                <Text style={{ ...textStyle(typeScale.helper), color: color.info }}>
+                  {`Was: ${PAYMENT_LABEL[original.paymentMethod as PaymentMethod] ?? original.paymentMethod}`}
+                </Text>
+              ) : text.paymentMethod === 'PERSONAL_REIMBURSABLE' ? (
+                <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>The store’s Owner pays you back (PROC-08).</Text>
+              ) : null}
+            </View>
             <Row>
-              <Field
-                label="Payment method"
-                value={text.paymentMethod}
-                onChangeText={set('paymentMethod')}
-                placeholder="PERSONAL_REIMBURSABLE"
-                error={shownError('paymentMethod')}
-                changedFrom={was('paymentMethod')}
-              />
               <Field label="Payment ref" value={text.paymentRef} onChangeText={set('paymentRef')} mono placeholder="TRX-93921" changedFrom={was('paymentRef')} />
             </Row>
+            {token ? (
+              <PhotoPicker
+                label="Receipt photos"
+                purpose="PURCHASE_RECEIPT"
+                token={token}
+                photos={photos}
+                onChange={setPhotos}
+                sub={
+                  originalReceipts > 0 && photos.length === 0
+                    ? `The original's ${originalReceipts === 1 ? 'photo stays' : `${originalReceipts} photos stay`} with the correction; add one only if the receipt changed.`
+                    : text.paymentMethod === 'PERSONAL_REIMBURSABLE'
+                      ? 'Required when you paid yourself: it’s what the Owner pays you back against. Only the Owner, Accounting and you see it.'
+                      : 'Optional when the store paid. Only the Owner, Accounting and you see it.'
+                }
+                error={shownError('receipt')}
+              />
+            ) : null}
             <Row>
               <Field
                 label="Purchased at"
@@ -674,18 +768,14 @@ export default function CreateRealisasiScreen() {
               />
             </Row>
             <Field
-              label="Attachment"
+              label="Link"
               value={text.attachments}
               onChangeText={set('attachments')}
               mono
               placeholder="https://…"
-              sub="URL field, not a file picker — no upload backing exists"
+              sub="Optional: the order page, if there is one. The receipt itself goes in Receipt photos."
               changedFrom={was('attachments')}
             />
-            <Callout>
-              Optional here on purpose, so an urgent purchase is never blocked from being logged. Goods receipt
-              refuses to run without it.
-            </Callout>
           </>
         ) : null}
 

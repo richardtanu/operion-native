@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Check } from 'lucide-react-native';
 import { Button, Callout, Card, Chip, Field, KV, Row } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { ownerPlus as isOwnerPlus } from '../../../auth/permissions';
 import { listRealisasi, markReimbursed, undoReimbursement } from '../../../api/procurement';
+import { viewUpload } from '../../../api/uploads';
 import { ApiError } from '../../../api/httpError';
 import type { RealisasiResponse, ReimbursementMethod } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -21,7 +22,8 @@ type Tab = 'PENDING' | 'REIMBURSED';
 // several and marks them paid back on whatever schedule suits the branch;
 // undo needs a reason. Nobody marks money owed to themself (403), HQ can see
 // but not mark (403). The person owed always sees their own amounts; every
-// other amount is hidden below Owner.
+// other amount is hidden below Owner, except from Accounting (BE-41). The
+// receipt photo (BE-40) is what the Owner checks before paying back.
 export default function ReimbursementsScreen() {
   const { color, type: typeScale, radius, border } = useTheme();
   const { user, token } = useAuth();
@@ -79,6 +81,17 @@ export default function ReimbursementsScreen() {
       setActionError(err instanceof ApiError ? err.message : 'Could not mark these paid back.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const openReceipt = async (uploadId: string) => {
+    if (!token) return;
+    setActionError(null);
+    try {
+      const view = await viewUpload(uploadId, token);
+      await Linking.openURL(view.getUrl);
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : 'Could not open the receipt.');
     }
   };
 
@@ -189,6 +202,13 @@ export default function ReimbursementsScreen() {
                     <Chip label="Owed" tone="warning" />
                   </View>
                 )}
+
+                {/* BE-39/40: the receipt the Owner pays back against. Null for anyone who can't see it. */}
+                {r.receiptUploadIds?.length ? (
+                  <Text onPress={() => openReceipt(r.receiptUploadIds![0])} accessibilityRole="button" style={{ ...textStyle(typeScale.helper), color: color.info, marginTop: 6 }}>
+                    {r.receiptUploadIds.length === 1 ? 'View receipt' : `View receipt (1 of ${r.receiptUploadIds.length})`}
+                  </Text>
+                ) : null}
               </Card>
             </Pressable>
           );

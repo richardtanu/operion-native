@@ -27,7 +27,7 @@ export default function LoginScreen() {
 
 function LoginScreenBody() {
   const { color, type: typeScale } = useTheme();
-  const { login, sessionExpired } = useAuth();
+  const { login, sessionExpired, signOutReason } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +65,9 @@ function LoginScreenBody() {
           <TextField label="Password" value={password} onChangeText={setPassword} secureTextEntry placeholder="••••••••" />
         </View>
 
-        {sessionExpired && !error ? <Callout tone="warning">Your session expired. Sign in again to continue.</Callout> : null}
+        {sessionExpired && !error ? (
+          <Callout tone="warning">{signOutReason ? `${signOutReason}.` : 'Your session expired. Sign in again to continue.'}</Callout>
+        ) : null}
         {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 
         <Button label={submitting ? 'Signing in…' : 'Sign in'} onPress={handleSubmit} disabled={submitting} />

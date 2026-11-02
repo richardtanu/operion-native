@@ -9,10 +9,15 @@ type RequestOptions = {
   token?: string | null;
 };
 
-let unauthorizedHandler: (() => void) | null = null;
+let unauthorizedHandler: ((reason: string | null) => void) | null = null;
 
-/** AuthContext registers its logout here, so any screen's 401 ends the session in one place. */
-export function setUnauthorizedHandler(handler: (() => void) | null): void {
+/**
+ * AuthContext registers its logout here, so any screen's 401 ends the session
+ * in one place. `reason` is the server's own words when it gives one ("This
+ * account is switched off", BE-33; "Your password was changed; sign in
+ * again", BE-36); null for an expired or unreadable token.
+ */
+export function setUnauthorizedHandler(handler: ((reason: string | null) => void) | null): void {
   unauthorizedHandler = handler;
 }
 
@@ -62,10 +67,12 @@ export async function apiRequest<TResponse>(path: string, options: RequestOption
   }
 
   // 401 only ever means the token itself was rejected (expired after 24h,
-  // or JWT_SECRET rotated). 403 is NOT a dead session since BE-12: it is a
-  // permission denial, and the user stays signed in.
+  // JWT_SECRET rotated, the account switched off, or the password changed
+  // since). 403 is NOT a dead session since BE-12: it is a permission
+  // denial, and the user stays signed in.
   if (response.status === 401 && token) {
-    unauthorizedHandler?.();
+    const reason = data && typeof data === 'object' && 'error' in data && typeof data.error === 'string' ? data.error : null;
+    unauthorizedHandler?.(reason);
   }
 
   if (!response.ok) {
