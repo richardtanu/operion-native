@@ -6,8 +6,8 @@ import type { Theme } from './themeTypes';
 /**
  * The app's default theme (product owner, 21 Oct 2026): every tenant gets
  * Tactical Green unless `THEMES_BY_TENANT` says otherwise. The light "range
- * safety board" theme (themes/light.ts) stays available per tenant, and is
- * still what the design file is drawn in.
+ * safety board" theme (themes/light.ts) stays available per tenant. Since
+ * 15 Nov 2026 the design file is drawn in Tactical Green too.
  */
 const APP_DEFAULT_THEME: Theme = tacticalGreenTheme;
 

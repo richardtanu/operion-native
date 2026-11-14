@@ -3,7 +3,9 @@
  * theme/themes/light.ts. Since 21 Oct 2026 the app's default theme is
  * Tactical Green (theme/themes/tacticalGreen.ts, chosen in
  * theme/ThemeContext.tsx); a tenant gets this one only through a
- * THEMES_BY_TENANT entry. The design file (operion.pen) is still drawn in it.
+ * THEMES_BY_TENANT entry. The design file (operion.pen) was drawn in it until
+ * 15 Nov 2026; it is now in Tactical Green. The type, radius and spacing
+ * scales below are shared by both themes.
  *
  * Plain JS on purpose — tailwind.config loads this via Node `require`,
  * which can't parse TS. Types live in tokens.d.ts. Only spacing/radius are
