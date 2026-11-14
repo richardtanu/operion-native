@@ -32,8 +32,10 @@ console.log('Starting Cloudflare tunnels first (to learn their public URLs)...\n
 // (confirmed via cloudflared's own connectivity pre-check, which detected
 // it and suggested this exact fallback after ~47s of failed QUIC retries
 // during testing). Skip straight to the protocol that actually works here.
+// One quoted command string, not (file, args): the repo lives under
+// "C:\richards stuff\", and an unquoted path splits at the space.
 function openTunnel(label, localUrl) {
-  const child = spawn(CLOUDFLARED, ['tunnel', '--protocol', 'http2', '--url', localUrl], {
+  const child = spawn(`"${CLOUDFLARED}" tunnel --protocol http2 --url ${localUrl}`, {
     shell: true,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -67,7 +69,7 @@ Promise.all([metroTunnel.url, backendTunnel ? backendTunnel.url : null]).then(([
 });
 
 function startMetro(publicUrl, backendUrl) {
-  metro = spawn('npx', ['expo', 'start'], {
+  metro = spawn('npx expo start', {
     cwd: PROJECT_DIR,
     shell: true,
     stdio: ['ignore', 'pipe', 'pipe'],
