@@ -18,7 +18,7 @@ type FieldProps = {
    * never a manual text field once a real list endpoint backs it.
    */
   variant?: FieldVariant;
-  /** Force monospace value styling (IDs, quantities, money) even outside 'derived'. */
+  /** Number styling (tabular digits) for quantities and money, even outside 'derived'. */
   mono?: boolean;
   /** Helper caption below the field — unit labels, backend-rule notes. */
   sub?: string;
@@ -63,17 +63,18 @@ export function Field({
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     gap: 8,
-    borderRadius: radius.sm,
-    borderWidth: isDerived ? 0 : error || isChanged ? border.strong : border.base,
+    minHeight: 48,
+    borderRadius: radius.md,
+    borderWidth: isDerived ? 0 : error || isChanged ? border.strong : border.hair,
     borderColor: error ? color.danger : isChanged ? color.info : color.line,
     backgroundColor: isDerived ? color.derived : color.panel,
-    paddingVertical: 9,
-    paddingHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
   };
 
   const valueTextStyle = {
     ...textStyle(typeScale.value),
-    fontFamily: mono || isDerived ? font.mono : font.body,
+    fontFamily: mono || isDerived ? font.bodyMedium : font.body,
     fontStyle: isDerived ? ('italic' as const) : ('normal' as const),
     color: isEmpty ? color.mute : isDerived ? color.steel : color.ink,
     flex: 1,
@@ -113,13 +114,13 @@ export function Field({
       )}
 
       {error ? (
-        <Text style={{ ...textStyle(typeScale.helper), color: color.danger, marginTop: 3 }}>{error}</Text>
+        <Text style={{ ...textStyle(typeScale.helper), color: color.danger, marginTop: 5 }}>{error}</Text>
       ) : isChanged ? (
-        <Text style={{ ...textStyle(typeScale.helper), color: color.info, marginTop: 3 }}>
+        <Text style={{ ...textStyle(typeScale.helper), color: color.info, marginTop: 5 }}>
           Changed from {changedFrom || 'empty'}
         </Text>
       ) : sub ? (
-        <Text style={{ ...textStyle(typeScale.helper), color: color.mute, marginTop: 3 }}>{sub}</Text>
+        <Text style={{ ...textStyle(typeScale.helper), color: color.mute, marginTop: 5 }}>{sub}</Text>
       ) : null}
     </View>
   );

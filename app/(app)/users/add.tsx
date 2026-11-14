@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Field, KV, SelectField } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Card, Field, KV, Screen, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canManagePeople } from '../../../auth/permissions';
 import { listUsers, registerUser } from '../../../api/users';
@@ -81,69 +80,63 @@ export default function AddPersonScreen() {
 
   if (added) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <View className="flex-1 gap-lg px-xl pt-xl">
-          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Person added</Text>
-          <Card>
-            <KV k="Name" v={added.name} />
-            <KV k="Email" v={added.email} />
-            {added.store ? <KV k="Store" v={added.store} /> : null}
-            <KV k="Starts as" v="Operator, no scope" />
-          </Card>
-          <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>
-            Give them a scope and a role next. Tell them the first password in person; they choose their own at their
-            first sign-in.
-          </Text>
-          <Button label={`Open ${added.name}`} onPress={openAdded} />
-          <Button label="Add another" variant="secondary" onPress={() => setAdded(null)} />
-        </View>
-      </SafeAreaView>
+      <Screen title="Person added">
+        <Card>
+          <KV k="Name" v={added.name} />
+          <KV k="Email" v={added.email} />
+          {added.store ? <KV k="Store" v={added.store} /> : null}
+          <KV k="Starts as" v="Operator, no scope" />
+        </Card>
+        <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>
+          Give them a scope and a role next. Tell them the first password in person; they choose their own at their
+          first sign-in.
+        </Text>
+        <Button label={`Open ${added.name}`} onPress={openAdded} />
+        <Button label="Add another" variant="secondary" onPress={() => setAdded(null)} />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Add a person</Text>
+    <Screen title="Add a person">
 
-        {!allowed ? <Callout tone="warning">Only an Admin or the store’s Owner adds people.</Callout> : null}
+      {!allowed ? <Callout tone="warning">Only an Admin or the store’s Owner adds people.</Callout> : null}
 
-        {isAdmin && stores.length > 1 ? (
-          <SelectField
-            label="Store"
-            value={storeCode}
-            items={stores.map((t) => ({ id: t.code, label: t.name, sublabel: t.code }))}
-            onChange={setStoreCode}
-          />
-        ) : store ? (
-          <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{`Joins ${store.name}.`}</Text>
-        ) : null}
-
-        <Field label="Full name" value={fullName} onChangeText={setFullName} placeholder="e.g. Rina Wijaya" />
-        <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="rina@example.com" />
-        <Field
-          label="First password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-          sub="8 to 72 characters. They must change it at their first sign-in."
+      {isAdmin && stores.length > 1 ? (
+        <SelectField
+          label="Store"
+          value={storeCode}
+          items={stores.map((t) => ({ id: t.code, label: t.name, sublabel: t.code }))}
+          onChange={setStoreCode}
         />
+      ) : store ? (
+        <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{`Joins ${store.name}.`}</Text>
+      ) : null}
 
-        {!isAdmin ? (
-          <Callout>You add people to your own store. HQ adds a store’s Owners and Admins.</Callout>
-        ) : null}
+      <Field label="Full name" value={fullName} onChangeText={setFullName} placeholder="e.g. Rina Wijaya" />
+      <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="rina@example.com" />
+      <Field
+        label="First password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        autoCapitalize="none"
+        sub="8 to 72 characters. They must change it at their first sign-in."
+      />
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
+      {!isAdmin ? (
+        <Callout>You add people to your own store. HQ adds a store’s Owners and Admins.</Callout>
+      ) : null}
 
-        <Button
-          label={submitting ? 'Adding…' : 'Add person'}
-          variant="gated"
-          gate="ADMIN·STORE OWNER"
-          disabled={submitting || !allowed}
-          onPress={handleSubmit}
-        />
-      </ScrollView>
-    </SafeAreaView>
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+
+      <Button
+        label={submitting ? 'Adding…' : 'Add person'}
+        variant="gated"
+        gate="ADMIN·STORE OWNER"
+        disabled={submitting || !allowed}
+        onPress={handleSubmit}
+      />
+    </Screen>
   );
 }

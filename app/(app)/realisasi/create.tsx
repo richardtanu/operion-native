@@ -1,23 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  Button,
-  Callout,
-  Card,
-  Chip,
-  Field,
-  FieldLabel,
-  KV,
-  PhotoPicker,
-  Row,
-  Section,
-  SelectField,
-  StepTabs,
-  type StepState,
-  type UploadedPhoto,
-} from '../../../components';
+import { Linking, Pressable, Text, View } from 'react-native';
+import { Button, Callout, Card, Chip, Field, FieldLabel, KV, PhotoPicker, Row, Screen, Section, SelectField, type StepState, StepTabs, type UploadedPhoto } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import {
   approveRealisasi,
@@ -475,103 +459,100 @@ export default function CreateRealisasiScreen() {
 
   if (result) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Realisasi saved</Text>
+      <Screen title="Purchase saved">
 
-          <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-            <Chip label={result.status} tone={result.status === 'FAILED' ? 'danger' : result.status === 'APPROVED' ? 'success' : 'pending'} />
-            <Chip label={result.varianceStatus} tone={result.varianceStatus === 'ESCALATED' ? 'danger' : 'neutral'} solid={result.varianceStatus === 'ESCALATED'} />
-            {result.reimbursementStatus ? <Chip label={`Reimb. ${result.reimbursementStatus}`} tone="warning" /> : null}
-          </View>
+        <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+          <Chip label={result.status} tone={result.status === 'FAILED' ? 'danger' : result.status === 'APPROVED' ? 'success' : 'pending'} />
+          <Chip label={result.varianceStatus} tone={result.varianceStatus === 'ESCALATED' ? 'danger' : 'neutral'} solid={result.varianceStatus === 'ESCALATED'} />
+          {result.reimbursementStatus ? <Chip label={`Reimb. ${result.reimbursementStatus}`} tone="warning" /> : null}
+        </View>
 
-          {result.varianceStatus === 'ESCALATED' && result.status === 'PENDING_APPROVAL' ? (
-            <Callout tone="warning">
-              Only escalated purchases need this. A purchase inside the ceiling auto-approves at creation — no
-              approval step, nothing to tap.
-            </Callout>
+        {result.varianceStatus === 'ESCALATED' && result.status === 'PENDING_APPROVAL' ? (
+          <Callout tone="warning">
+            Only escalated purchases need this. A purchase inside the ceiling auto-approves at creation — no
+            approval step, nothing to tap.
+          </Callout>
+        ) : null}
+
+        <Card>
+          <KV k="Bought from" v={result.sellerName ?? result.supplierName ?? '—'} />
+          <KV k="Paid" v={PAYMENT_LABEL[result.paymentMethod as PaymentMethod] ?? result.paymentMethod} />
+          {result.externalOrderRef ? <KV k="Order ref" v={result.externalOrderRef} /> : null}
+          {result.receiptUploadIds?.length ? (
+            <View className="flex-row flex-wrap" style={{ gap: 12, marginTop: 6 }}>
+              {result.receiptUploadIds.map((id, i) => (
+                <Text key={id} onPress={() => openReceipt(id)} accessibilityRole="button" style={{ ...textStyle(typeScale.helper), color: color.info }}>
+                  {result.receiptUploadIds!.length === 1 ? 'View receipt' : `Receipt ${i + 1}`}
+                </Text>
+              ))}
+            </View>
           ) : null}
+        </Card>
 
-          <Card>
-            <KV k="Bought from" v={result.sellerName ?? result.supplierName ?? '—'} />
-            <KV k="Paid" v={PAYMENT_LABEL[result.paymentMethod as PaymentMethod] ?? result.paymentMethod} />
-            {result.externalOrderRef ? <KV k="Order ref" v={result.externalOrderRef} /> : null}
-            {result.receiptUploadIds?.length ? (
-              <View className="flex-row flex-wrap" style={{ gap: 12, marginTop: 6 }}>
-                {result.receiptUploadIds.map((id, i) => (
-                  <Text key={id} onPress={() => openReceipt(id)} accessibilityRole="button" style={{ ...textStyle(typeScale.helper), color: color.info }}>
-                    {result.receiptUploadIds!.length === 1 ? 'View receipt' : `Receipt ${i + 1}`}
-                  </Text>
-                ))}
+        {result.items.map((item) => (
+          <Card key={item.id}>
+            <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
+            <View style={{ marginTop: 8, borderTopWidth: border.hair, borderTopColor: color.hair }}>
+              <KV k={`Purchased (${item.purchaseUom})`} v={String(item.purchasedQty)} strong />
+              <KV k="Allocated landed cost" v={rp(item.allocatedLandedCost)} derived />
+            </View>
+          </Card>
+        ))}
+
+        <Card>
+          <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute }}>Total cost — computed, never entered</Text>
+          <Text style={{ ...textStyle(typeScale.valueLarge), color: color.ink }}>{rp(result.totalCost)}</Text>
+        </Card>
+
+        {result.reimbursementStatus === 'PENDING' ? (
+          <Callout>Paid with personal money: the store Owner pays it back and marks it in Reimbursements (PROC-08).</Callout>
+        ) : null}
+
+        {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
+
+        {result.status === 'PENDING_APPROVAL' || result.status === 'APPROVED' ? (
+          <Field
+            label="Reason (required to reject)"
+            value={rejectReason}
+            onChangeText={setRejectReason}
+            placeholder="e.g. over the limit without asking first"
+          />
+        ) : null}
+        {result.status === 'PENDING_APPROVAL' || result.status === 'APPROVED' ? (
+          <Row>
+            {result.status === 'PENDING_APPROVAL' ? (
+              <View style={{ flex: 1 }}>
+                <Button label="Approve" variant="gated" gate="OWNER+" disabled={!ownerPlus || busy} onPress={() => runAction(() => approveRealisasi(result.id, token!))} />
               </View>
             ) : null}
-          </Card>
+            <View style={{ flex: 1 }}>
+              <Button
+                label="Reject"
+                variant="gated"
+                gate="OWNER+"
+                disabled={!ownerPlus || busy || !rejectReason.trim()}
+                onPress={() => runAction(() => rejectRealisasi(result.id, { reason: rejectReason.trim() }, token!))}
+              />
+            </View>
+          </Row>
+        ) : null}
+        {result.status === 'PENDING_APPROVAL' || result.status === 'APPROVED' ? (
+          <Button
+            label="Supersede (correct this record)"
+            variant="gated"
+            gate="CREATOR·OWNER+"
+            disabled={!(ownerPlus || result.createdById === user?.id)}
+            onPress={startSupersede}
+          />
+        ) : null}
+        <Callout>
+          Supersede is replacement, not edit: the original stays visible read-only, the correction is a full new
+          record linked by supersedesId, and the ceiling reopens the moment the original flips.
+        </Callout>
 
-          {result.items.map((item) => (
-            <Card key={item.id}>
-              <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
-              <View style={{ marginTop: 8, borderTopWidth: border.hair, borderTopColor: color.hair }}>
-                <KV k={`Purchased (${item.purchaseUom})`} v={String(item.purchasedQty)} strong />
-                <KV k="Allocated landed cost" v={rp(item.allocatedLandedCost)} derived />
-              </View>
-            </Card>
-          ))}
-
-          <Card>
-            <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute }}>Total cost — computed, never entered</Text>
-            <Text style={{ ...textStyle(typeScale.valueLarge), color: color.ink }}>{rp(result.totalCost)}</Text>
-          </Card>
-
-          {result.reimbursementStatus === 'PENDING' ? (
-            <Callout>Paid with personal money: the store Owner pays it back and marks it in Reimbursements (PROC-08).</Callout>
-          ) : null}
-
-          {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
-
-          {result.status === 'PENDING_APPROVAL' || result.status === 'APPROVED' ? (
-            <Field
-              label="Reason (required to reject)"
-              value={rejectReason}
-              onChangeText={setRejectReason}
-              placeholder="e.g. over the limit without asking first"
-            />
-          ) : null}
-          {result.status === 'PENDING_APPROVAL' || result.status === 'APPROVED' ? (
-            <Row>
-              {result.status === 'PENDING_APPROVAL' ? (
-                <View style={{ flex: 1 }}>
-                  <Button label="Approve" variant="gated" gate="OWNER+" disabled={!ownerPlus || busy} onPress={() => runAction(() => approveRealisasi(result.id, token!))} />
-                </View>
-              ) : null}
-              <View style={{ flex: 1 }}>
-                <Button
-                  label="Reject"
-                  variant="gated"
-                  gate="OWNER+"
-                  disabled={!ownerPlus || busy || !rejectReason.trim()}
-                  onPress={() => runAction(() => rejectRealisasi(result.id, { reason: rejectReason.trim() }, token!))}
-                />
-              </View>
-            </Row>
-          ) : null}
-          {result.status === 'PENDING_APPROVAL' || result.status === 'APPROVED' ? (
-            <Button
-              label="Supersede (correct this record)"
-              variant="gated"
-              gate="CREATOR·OWNER+"
-              disabled={!(ownerPlus || result.createdById === user?.id)}
-              onPress={startSupersede}
-            />
-          ) : null}
-          <Callout>
-            Supersede is replacement, not edit: the original stays visible read-only, the correction is a full new
-            record linked by supersedesId, and the ceiling reopens the moment the original flips.
-          </Callout>
-
-          <Button label="New realisasi" variant="secondary" onPress={resetForm} />
-          <Button label="Back to Procurement" onPress={() => router.replace('/(app)/procurement')} />
-        </ScrollView>
-      </SafeAreaView>
+        <Button label="New realisasi" variant="secondary" onPress={resetForm} />
+        <Button label="Done" onPress={() => router.back()} />
+      </Screen>
     );
   }
 
@@ -579,332 +560,327 @@ export default function CreateRealisasiScreen() {
   const showDrafts = !supersedeTargetId && !draftId && drafts.length > 0;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>
-          {supersedeTargetId ? 'Supersede Realisasi' : draftId ? 'New Realisasi · draft' : 'New Realisasi'}
-        </Text>
+    <Screen title={supersedeTargetId ? 'Correct a purchase' : draftId ? 'Buy elsewhere · draft' : 'Buy elsewhere'}>
 
-        {showDrafts ? (
-          <View className="gap-sm">
-            <Section>{`Unfinished purchases · ${drafts.length}`}</Section>
-            {drafts.map((d) => {
-              const age = draftAgeDays(d);
-              const saved = new Date(d.updatedAt);
-              return (
-                <Card key={d.id} tone={age >= STALE_DRAFT_DAYS ? 'warning' : undefined}>
-                  <View className="flex-row items-center justify-between" style={{ gap: 8 }}>
-                    <Text style={{ ...textStyle(typeScale.body), color: color.ink, flex: 1 }} numberOfLines={1}>
-                      {d.form.partName ?? 'No PRA line picked yet'}
-                    </Text>
-                    {age >= STALE_DRAFT_DAYS ? <Chip label={`${age} days old`} tone="warning" /> : <Chip label="Draft" />}
-                  </View>
-                  <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 2 }}>
-                    {`Saved ${formatDayLabel(saved)} ${formatTime(saved)} · step ${d.step + 1} of 3`}
+      {showDrafts ? (
+        <View className="gap-sm">
+          <Section>{`Unfinished purchases · ${drafts.length}`}</Section>
+          {drafts.map((d) => {
+            const age = draftAgeDays(d);
+            const saved = new Date(d.updatedAt);
+            return (
+              <Card key={d.id} tone={age >= STALE_DRAFT_DAYS ? 'warning' : undefined}>
+                <View className="flex-row items-center justify-between" style={{ gap: 8 }}>
+                  <Text style={{ ...textStyle(typeScale.body), color: color.ink, flex: 1 }} numberOfLines={1}>
+                    {d.form.partName ?? 'No PRA line picked yet'}
                   </Text>
-                  <View className="flex-row" style={{ gap: 8, marginTop: 9 }}>
-                    <View style={{ flex: 1 }}>
-                      <Button label="Continue" variant="secondary" onPress={() => openDraft(d)} style={{ paddingVertical: 8 }} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Button
-                        label={discardArmed === d.id ? 'Confirm' : 'Discard'}
-                        variant="secondary"
-                        onPress={() => handleDiscard(d)}
-                        style={{ paddingVertical: 8 }}
-                      />
-                    </View>
+                  {age >= STALE_DRAFT_DAYS ? <Chip label={`${age} days old`} tone="warning" /> : <Chip label="Draft" />}
+                </View>
+                <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 2 }}>
+                  {`Saved ${formatDayLabel(saved)} ${formatTime(saved)} · step ${d.step + 1} of 3`}
+                </Text>
+                <View className="flex-row" style={{ gap: 8, marginTop: 9 }}>
+                  <View style={{ flex: 1 }}>
+                    <Button label="Continue" variant="secondary" onPress={() => openDraft(d)} style={{ paddingVertical: 8 }} />
                   </View>
-                  {discardArmed === d.id ? (
-                    <Text style={{ ...textStyle(typeScale.helper), color: color.danger, marginTop: 6 }}>
-                      Tap Confirm to delete this draft.
-                    </Text>
-                  ) : null}
-                </Card>
-              );
-            })}
-            <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-              Drafts stay on this phone until you create or discard them. Or start a new purchase below.
-            </Text>
-          </View>
-        ) : null}
-
-        {supersedeTargetId ? (
-          <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-            Everything is copied from the original. Fields you change are marked in blue; the original stays visible,
-            read-only.
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label={discardArmed === d.id ? 'Confirm' : 'Discard'}
+                      variant="secondary"
+                      onPress={() => handleDiscard(d)}
+                      style={{ paddingVertical: 8 }}
+                    />
+                  </View>
+                </View>
+                {discardArmed === d.id ? (
+                  <Text style={{ ...textStyle(typeScale.helper), color: color.danger, marginTop: 6 }}>
+                    Tap Confirm to delete this draft.
+                  </Text>
+                ) : null}
+              </Card>
+            );
+          })}
+          <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+            Drafts stay on this phone until you create or discard them. Or start a new purchase below.
           </Text>
-        ) : null}
+        </View>
+      ) : null}
 
-        <StepTabs steps={STEPS.map((label, i) => ({ label, state: stepStates[i] }))} active={step} onSelect={(i) => setStep(i as Step)} />
+      {supersedeTargetId ? (
+        <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+          Everything is copied from the original. Fields you change are marked in blue; the original stays visible,
+          read-only.
+        </Text>
+      ) : null}
 
-        {stepProblems > 0 ? (
-          <Callout tone="danger">
-            {`${stepProblems} ${stepProblems === 1 ? 'thing' : 'things'} to fix on this step before you can ${supersedeTargetId ? 'save the correction' : 'create'}.`}
-          </Callout>
-        ) : null}
+      <StepTabs steps={STEPS.map((label, i) => ({ label, state: stepStates[i] }))} active={step} onSelect={(i) => setStep(i as Step)} />
 
-        {step === 0 ? (
-          <>
-            {picksStore && !supersedeTargetId ? (
-              <SelectField
-                label="Bought for store"
-                value={storeId}
-                placeholder="Pick the store…"
-                items={stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))}
-                onChange={setStoreId}
-              />
-            ) : null}
-            {shownError('store') ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{shownError('store')}</Text> : null}
+      {stepProblems > 0 ? (
+        <Callout tone="danger">
+          {`${stepProblems} ${stepProblems === 1 ? 'thing' : 'things'} to fix on this step before you can ${supersedeTargetId ? 'save the correction' : 'create'}.`}
+        </Callout>
+      ) : null}
 
-            <Section>PRA line</Section>
-            {shownError('praLine') ? (
-              <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{shownError('praLine')}</Text>
-            ) : null}
-            {lineOptions.length === 0 ? (
-              <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No active PRA lines found.</Text>
-            ) : (
-              lineOptions.map((opt) => (
-                <Pressable
-                  key={opt.item.id}
-                  onPress={() => setSelectedLine(opt)}
-                  style={{
-                    borderWidth: border.base,
-                    borderColor: selectedLine?.item.id === opt.item.id ? color.ink : shownError('praLine') ? color.danger : color.hair,
-                    borderRadius: radius.sm,
-                    padding: 10,
-                    backgroundColor: color.panel,
-                  }}
-                >
-                  <View className="flex-row items-center justify-between" style={{ gap: 8 }}>
-                    <Text style={{ ...textStyle(typeScale.body), color: color.ink, flex: 1 }}>{opt.item.partName}</Text>
-                    {mandatoryParts.has(opt.item.partId) ? <Chip label="From HQ only" tone="warning" /> : null}
-                  </View>
-                  <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-                    {picksStore ? `${opt.tenantName} · ` : ''}PRA {opt.praId} · remaining {opt.item.remainingQty}
-                  </Text>
-                </Pressable>
-              ))
-            )}
+      {step === 0 ? (
+        <>
+          {picksStore && !supersedeTargetId ? (
+            <SelectField
+              label="Bought for store"
+              value={storeId}
+              placeholder="Pick the store…"
+              items={stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))}
+              onChange={setStoreId}
+            />
+          ) : null}
+          {shownError('store') ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{shownError('store')}</Text> : null}
 
-            <Row>
-              <Field label="Channel" value={text.channel} onChangeText={set('channel')} placeholder="Marketplace" error={shownError('channel')} changedFrom={was('channel')} />
-            </Row>
-            <Section>Bought from</Section>
-            <View className="flex-row" style={{ gap: 0 }}>
-              {([false, true] as const).map((atHq) => (
-                <View key={String(atHq)} style={{ flex: 1 }}>
-                  <Button
-                    label={atHq ? 'At HQ' : 'Elsewhere'}
-                    variant={boughtAtHq === atHq ? 'primary' : 'secondary'}
-                    onPress={() => setBoughtAtHq(atHq)}
-                  />
+          <Section>PRA line</Section>
+          {shownError('praLine') ? (
+            <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{shownError('praLine')}</Text>
+          ) : null}
+          {lineOptions.length === 0 ? (
+            <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No active PRA lines found.</Text>
+          ) : (
+            lineOptions.map((opt) => (
+              <Pressable
+                key={opt.item.id}
+                onPress={() => setSelectedLine(opt)}
+                style={{
+                  borderWidth: border.base,
+                  borderColor: selectedLine?.item.id === opt.item.id ? color.ink : shownError('praLine') ? color.danger : color.hair,
+                  borderRadius: radius.sm,
+                  padding: 10,
+                  backgroundColor: color.panel,
+                }}
+              >
+                <View className="flex-row items-center justify-between" style={{ gap: 8 }}>
+                  <Text style={{ ...textStyle(typeScale.body), color: color.ink, flex: 1 }}>{opt.item.partName}</Text>
+                  {mandatoryParts.has(opt.item.partId) ? <Chip label="From HQ only" tone="warning" /> : null}
+                </View>
+                <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                  {picksStore ? `${opt.tenantName} · ` : ''}PRA {opt.praId} · remaining {opt.item.remainingQty}
+                </Text>
+              </Pressable>
+            ))
+          )}
+
+          <Row>
+            <Field label="Channel" value={text.channel} onChangeText={set('channel')} placeholder="Marketplace" error={shownError('channel')} changedFrom={was('channel')} />
+          </Row>
+          <Section>Bought from</Section>
+          <View className="flex-row" style={{ gap: 0 }}>
+            {([false, true] as const).map((atHq) => (
+              <View key={String(atHq)} style={{ flex: 1 }}>
+                <Button
+                  label={atHq ? 'At HQ' : 'Elsewhere'}
+                  variant={boughtAtHq === atHq ? 'primary' : 'secondary'}
+                  onPress={() => setBoughtAtHq(atHq)}
+                />
+              </View>
+            ))}
+          </View>
+          {boughtAtHq ? (
+            <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+              An urgent buy at {centre?.name ?? 'HQ'}, paid on the spot. Planned restocks from HQ go through “Order from HQ”.
+            </Text>
+          ) : (
+            <Field
+              label="Seller"
+              value={text.sellerName}
+              onChangeText={set('sellerName')}
+              placeholder="e.g. Shopee · Toko Airsoft Jaya"
+              error={shownError('sellerName')}
+              changedFrom={was('sellerName')}
+            />
+          )}
+
+          <View style={{ gap: 6 }}>
+            <FieldLabel>Paid from</FieldLabel>
+            <Row gap={0}>
+              {(['COMPANY_ACCOUNT', 'PERSONAL_REIMBURSABLE'] as PaymentMethod[]).map((m) => (
+                <View key={m} style={{ flex: 1 }}>
+                  <Button label={PAYMENT_LABEL[m]} variant={text.paymentMethod === m ? 'primary' : 'secondary'} onPress={() => set('paymentMethod')(m)} />
                 </View>
               ))}
-            </View>
-            {boughtAtHq ? (
-              <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-                An urgent buy at {centre?.name ?? 'HQ'}, paid on the spot. Planned restocks from HQ go through “Order from HQ”.
+            </Row>
+            {shownError('paymentMethod') ? (
+              <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{shownError('paymentMethod')}</Text>
+            ) : original && original.paymentMethod !== text.paymentMethod ? (
+              <Text style={{ ...textStyle(typeScale.helper), color: color.info }}>
+                {`Was: ${PAYMENT_LABEL[original.paymentMethod as PaymentMethod] ?? original.paymentMethod}`}
               </Text>
-            ) : (
-              <Field
-                label="Seller"
-                value={text.sellerName}
-                onChangeText={set('sellerName')}
-                placeholder="e.g. Shopee · Toko Airsoft Jaya"
-                error={shownError('sellerName')}
-                changedFrom={was('sellerName')}
-              />
-            )}
-
-            <View style={{ gap: 6 }}>
-              <FieldLabel>Paid from</FieldLabel>
-              <Row gap={0}>
-                {(['COMPANY_ACCOUNT', 'PERSONAL_REIMBURSABLE'] as PaymentMethod[]).map((m) => (
-                  <View key={m} style={{ flex: 1 }}>
-                    <Button label={PAYMENT_LABEL[m]} variant={text.paymentMethod === m ? 'primary' : 'secondary'} onPress={() => set('paymentMethod')(m)} />
-                  </View>
-                ))}
-              </Row>
-              {shownError('paymentMethod') ? (
-                <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{shownError('paymentMethod')}</Text>
-              ) : original && original.paymentMethod !== text.paymentMethod ? (
-                <Text style={{ ...textStyle(typeScale.helper), color: color.info }}>
-                  {`Was: ${PAYMENT_LABEL[original.paymentMethod as PaymentMethod] ?? original.paymentMethod}`}
-                </Text>
-              ) : text.paymentMethod === 'PERSONAL_REIMBURSABLE' ? (
-                <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>The store’s Owner pays you back (PROC-08).</Text>
-              ) : null}
-            </View>
-            <Row>
-              <Field label="Payment ref" value={text.paymentRef} onChangeText={set('paymentRef')} mono placeholder="TRX-93921" changedFrom={was('paymentRef')} />
-            </Row>
-            {token ? (
-              <PhotoPicker
-                label="Receipt photos"
-                purpose="PURCHASE_RECEIPT"
-                token={token}
-                photos={photos}
-                onChange={setPhotos}
-                sub={
-                  originalReceipts > 0 && photos.length === 0
-                    ? `The original's ${originalReceipts === 1 ? 'photo stays' : `${originalReceipts} photos stay`} with the correction; add one only if the receipt changed.`
-                    : text.paymentMethod === 'PERSONAL_REIMBURSABLE'
-                      ? 'Required when you paid yourself: it’s what the Owner pays you back against. Only the Owner, Accounting and you see it.'
-                      : 'Optional when the store paid. Only the Owner, Accounting and you see it.'
-                }
-                error={shownError('receipt')}
-              />
+            ) : text.paymentMethod === 'PERSONAL_REIMBURSABLE' ? (
+              <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>The store’s Owner pays you back (PROC-08).</Text>
             ) : null}
-            <Row>
-              <Field
-                label="Purchased at"
-                value={text.purchasedAt}
-                onChangeText={set('purchasedAt')}
-                mono
-                placeholder="YYYY-MM-DD"
-                error={shownError('purchasedAt')}
-                changedFrom={was('purchasedAt')}
-              />
-            </Row>
+          </View>
+          <Row>
+            <Field label="Payment ref" value={text.paymentRef} onChangeText={set('paymentRef')} mono placeholder="TRX-93921" changedFrom={was('paymentRef')} />
+          </Row>
+          {token ? (
+            <PhotoPicker
+              label="Receipt photos"
+              purpose="PURCHASE_RECEIPT"
+              token={token}
+              photos={photos}
+              onChange={setPhotos}
+              sub={
+                originalReceipts > 0 && photos.length === 0
+                  ? `The original's ${originalReceipts === 1 ? 'photo stays' : `${originalReceipts} photos stay`} with the correction; add one only if the receipt changed.`
+                  : text.paymentMethod === 'PERSONAL_REIMBURSABLE'
+                    ? 'Required when you paid yourself: it’s what the Owner pays you back against. Only the Owner, Accounting and you see it.'
+                    : 'Optional when the store paid. Only the Owner, Accounting and you see it.'
+              }
+              error={shownError('receipt')}
+            />
+          ) : null}
+          <Row>
             <Field
-              label="Link"
-              value={text.attachments}
-              onChangeText={set('attachments')}
+              label="Purchased at"
+              value={text.purchasedAt}
+              onChangeText={set('purchasedAt')}
               mono
-              placeholder="https://…"
-              sub="Optional: the order page, if there is one. The receipt itself goes in Receipt photos."
-              changedFrom={was('attachments')}
+              placeholder="YYYY-MM-DD"
+              error={shownError('purchasedAt')}
+              changedFrom={was('purchasedAt')}
             />
-          </>
-        ) : null}
-
-        {step === 1 ? (
-          <>
-            <Section>Landed cost — six separate inputs</Section>
-            <Row>
-              <Field label="Subtotal" value={text.subtotal} onChangeText={set('subtotal')} mono keyboardType="numeric" error={shownError('subtotal')} changedFrom={was('subtotal')} />
-              <Field
-                label="− Seller discount"
-                value={text.sellerDiscount}
-                onChangeText={set('sellerDiscount')}
-                mono
-                keyboardType="numeric"
-                error={shownError('sellerDiscount')}
-                changedFrom={was('sellerDiscount')}
-              />
-            </Row>
-            <Row>
-              <Field
-                label="− Platform voucher"
-                value={text.platformVoucher}
-                onChangeText={set('platformVoucher')}
-                mono
-                keyboardType="numeric"
-                error={shownError('platformVoucher')}
-                changedFrom={was('platformVoucher')}
-              />
-              <Field label="+ Shipping" value={text.shipping} onChangeText={set('shipping')} mono keyboardType="numeric" error={shownError('shipping')} changedFrom={was('shipping')} />
-            </Row>
-            <Row>
-              <Field label="+ Insurance" value={text.insurance} onChangeText={set('insurance')} mono keyboardType="numeric" error={shownError('insurance')} changedFrom={was('insurance')} />
-              <Field
-                label="+ Service fee"
-                value={text.serviceFee}
-                onChangeText={set('serviceFee')}
-                mono
-                keyboardType="numeric"
-                error={shownError('serviceFee')}
-                changedFrom={was('serviceFee')}
-              />
-            </Row>
-            <Card>
-              <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute }}>Total cost — computed, never entered</Text>
-              <Text style={{ ...textStyle(typeScale.valueLarge), color: color.ink }}>{rp(total)}</Text>
-            </Card>
-            <Callout>
-              Six inputs rather than one price because the allocation policy has to stay changeable — a single total
-              field is wrong even though it looks cleaner.
-            </Callout>
-          </>
-        ) : null}
-
-        {step === 2 ? (
-          <>
-            <Section>Item</Section>
-            {selectedLine ? (
-              <Card>
-                <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{selectedLine.item.partName}</Text>
-                <View style={{ marginTop: 9 }}>
-                  <Row>
-                    <Field
-                      label="Qty (purchase UOM)"
-                      value={text.purchasedQty}
-                      onChangeText={set('purchasedQty')}
-                      mono
-                      keyboardType="numeric"
-                      error={shownError('purchasedQty')}
-                      changedFrom={was('purchasedQty')}
-                    />
-                    <Field
-                      label="Unit price"
-                      value={text.actualUnitPrice}
-                      onChangeText={set('actualUnitPrice')}
-                      mono
-                      keyboardType="numeric"
-                      error={shownError('actualUnitPrice')}
-                      changedFrom={was('actualUnitPrice')}
-                    />
-                  </Row>
-                </View>
-              </Card>
-            ) : (
-              <Card>
-                <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>Pick a PRA line in step 1 first.</Text>
-                <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 2 }}>
-                  The part and its purchase unit come from that line, so there's nothing to fill in here yet.
-                </Text>
-                <View style={{ marginTop: 9 }}>
-                  <Button label="Go to step 1" variant="secondary" onPress={() => setStep(0)} />
-                </View>
-              </Card>
-            )}
-
-            <Callout tone="warning">
-              Only escalated purchases go to PENDING_APPROVAL. A purchase inside the ceiling auto-approves the moment
-              it's created.
-            </Callout>
-          </>
-        ) : null}
-
-        {supersedeTargetId ? (
+          </Row>
           <Field
-            label="Reason for correction"
-            value={supersedeReason}
-            onChangeText={setSupersedeReason}
-            placeholder="e.g. wrong shipping cost entered"
-            error={attempted && reasonMissing ? 'Required — the correction is refused without a reason.' : undefined}
+            label="Link"
+            value={text.attachments}
+            onChangeText={set('attachments')}
+            mono
+            placeholder="https://…"
+            sub="Optional: the order page, if there is one. The receipt itself goes in Receipt photos."
+            changedFrom={was('attachments')}
           />
-        ) : null}
+        </>
+      ) : null}
 
-        {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
-        {draftNotice ? <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{draftNotice}</Text> : null}
-
-        {supersedeTargetId ? (
-          <Button label={submitting ? 'Saving…' : 'Save correction'} onPress={handleSubmit} disabled={submitting} />
-        ) : (
-          <>
-            <Button
-              label={submitting ? 'Saving…' : 'Create'}
-              variant="gated"
-              gate="MANAGER+·PROC"
-              onPress={handleSubmit}
-              disabled={submitting || !mayLog}
+      {step === 1 ? (
+        <>
+          <Section>Landed cost — six separate inputs</Section>
+          <Row>
+            <Field label="Subtotal" value={text.subtotal} onChangeText={set('subtotal')} mono keyboardType="numeric" error={shownError('subtotal')} changedFrom={was('subtotal')} />
+            <Field
+              label="− Seller discount"
+              value={text.sellerDiscount}
+              onChangeText={set('sellerDiscount')}
+              mono
+              keyboardType="numeric"
+              error={shownError('sellerDiscount')}
+              changedFrom={was('sellerDiscount')}
             />
-            <Button label="Save draft" variant="secondary" onPress={handleSaveDraft} disabled={submitting} />
-          </>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          </Row>
+          <Row>
+            <Field
+              label="− Platform voucher"
+              value={text.platformVoucher}
+              onChangeText={set('platformVoucher')}
+              mono
+              keyboardType="numeric"
+              error={shownError('platformVoucher')}
+              changedFrom={was('platformVoucher')}
+            />
+            <Field label="+ Shipping" value={text.shipping} onChangeText={set('shipping')} mono keyboardType="numeric" error={shownError('shipping')} changedFrom={was('shipping')} />
+          </Row>
+          <Row>
+            <Field label="+ Insurance" value={text.insurance} onChangeText={set('insurance')} mono keyboardType="numeric" error={shownError('insurance')} changedFrom={was('insurance')} />
+            <Field
+              label="+ Service fee"
+              value={text.serviceFee}
+              onChangeText={set('serviceFee')}
+              mono
+              keyboardType="numeric"
+              error={shownError('serviceFee')}
+              changedFrom={was('serviceFee')}
+            />
+          </Row>
+          <Card>
+            <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute }}>Total cost — computed, never entered</Text>
+            <Text style={{ ...textStyle(typeScale.valueLarge), color: color.ink }}>{rp(total)}</Text>
+          </Card>
+          <Callout>
+            Six inputs rather than one price because the allocation policy has to stay changeable — a single total
+            field is wrong even though it looks cleaner.
+          </Callout>
+        </>
+      ) : null}
+
+      {step === 2 ? (
+        <>
+          <Section>Item</Section>
+          {selectedLine ? (
+            <Card>
+              <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{selectedLine.item.partName}</Text>
+              <View style={{ marginTop: 9 }}>
+                <Row>
+                  <Field
+                    label="Qty (purchase UOM)"
+                    value={text.purchasedQty}
+                    onChangeText={set('purchasedQty')}
+                    mono
+                    keyboardType="numeric"
+                    error={shownError('purchasedQty')}
+                    changedFrom={was('purchasedQty')}
+                  />
+                  <Field
+                    label="Unit price"
+                    value={text.actualUnitPrice}
+                    onChangeText={set('actualUnitPrice')}
+                    mono
+                    keyboardType="numeric"
+                    error={shownError('actualUnitPrice')}
+                    changedFrom={was('actualUnitPrice')}
+                  />
+                </Row>
+              </View>
+            </Card>
+          ) : (
+            <Card>
+              <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>Pick a PRA line in step 1 first.</Text>
+              <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 2 }}>
+                The part and its purchase unit come from that line, so there's nothing to fill in here yet.
+              </Text>
+              <View style={{ marginTop: 9 }}>
+                <Button label="Go to step 1" variant="secondary" onPress={() => setStep(0)} />
+              </View>
+            </Card>
+          )}
+
+          <Callout tone="warning">
+            Only escalated purchases go to PENDING_APPROVAL. A purchase inside the ceiling auto-approves the moment
+            it's created.
+          </Callout>
+        </>
+      ) : null}
+
+      {supersedeTargetId ? (
+        <Field
+          label="Reason for correction"
+          value={supersedeReason}
+          onChangeText={setSupersedeReason}
+          placeholder="e.g. wrong shipping cost entered"
+          error={attempted && reasonMissing ? 'Required — the correction is refused without a reason.' : undefined}
+        />
+      ) : null}
+
+      {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
+      {draftNotice ? <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{draftNotice}</Text> : null}
+
+      {supersedeTargetId ? (
+        <Button label={submitting ? 'Saving…' : 'Save correction'} onPress={handleSubmit} disabled={submitting} />
+      ) : (
+        <>
+          <Button
+            label={submitting ? 'Saving…' : 'Create'}
+            variant="gated"
+            gate="MANAGER+·PROC"
+            onPress={handleSubmit}
+            disabled={submitting || !mayLog}
+          />
+          <Button label="Save draft" variant="secondary" onPress={handleSaveDraft} disabled={submitting} />
+        </>
+      )}
+    </Screen>
   );
 }

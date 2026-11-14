@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, Text, View } from 'react-native';
 import { Ban } from 'lucide-react-native';
-import { Button, Callout, Card, Chip, Field, KV, PhotoPicker, Row, Section, TextField, type UploadedPhoto } from '../../../components';
+import { Button, Callout, Card, Chip, Field, KV, PhotoPicker, Row, Screen, Section, TextField, type UploadedPhoto } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { createGoodsReceipt, getRealisasi, listPurchaseOrders, listRealisasi } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
@@ -98,168 +97,162 @@ export default function CreateGoodsReceiptScreen() {
 
   if (result) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Receipt recorded</Text>
-          {result.selfReceived ? <Chip label="Self-received" tone="warning" /> : null}
-          {result.items.map((item) => (
-            <Card key={item.id}>
-              <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
-              <View style={{ marginTop: 8, borderTopWidth: border.hair, borderTopColor: color.hair }}>
-                <KV k="Received (stock units)" v={String(item.quantity)} strong />
-              </View>
-            </Card>
-          ))}
-          {result.selfReceived ? (
-            <Callout tone="warning">You received your own purchase, so the store Owner has been told, with your photo.</Callout>
-          ) : (
-            <Callout>Stock is updated. Nobody is notified of a receipt unless the buyer received it themself.</Callout>
-          )}
-          <Button label="Back to Procurement" onPress={() => router.replace('/(app)/procurement')} />
-        </ScrollView>
-      </SafeAreaView>
+      <Screen title="Receipt recorded">
+        {result.selfReceived ? <Chip label="Self-received" tone="warning" /> : null}
+        {result.items.map((item) => (
+          <Card key={item.id}>
+            <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
+            <View style={{ marginTop: 8, borderTopWidth: border.hair, borderTopColor: color.hair }}>
+              <KV k="Received (stock units)" v={String(item.quantity)} strong />
+            </View>
+          </Card>
+        ))}
+        {result.selfReceived ? (
+          <Callout tone="warning">You received your own purchase, so the store Owner has been told, with your photo.</Callout>
+        ) : (
+          <Callout>Stock is updated. Nobody is notified of a receipt unless the buyer received it themself.</Callout>
+        )}
+        <Button label="Done" onPress={() => router.back()} />
+      </Screen>
     );
   }
 
   const items = via === 'po' ? selectedPo?.items ?? [] : selectedRealisasi?.items ?? [];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Receive Goods</Text>
+    <Screen title="Receive goods">
 
-        <Row gap={0}>
-          {(['realisasi', 'po'] as Via[]).map((v) => (
-            <View key={v} style={{ flex: 1 }}>
-              <Button
-                label={v === 'po' ? 'By purchase order' : 'By realisasi'}
-                variant={via === v ? 'primary' : 'secondary'}
-                onPress={() => {
-                  setVia(v);
-                  setSelectedPartId(null);
-                  setRealisasiItemId(null);
-                }}
-              />
-            </View>
+      <Row gap={0}>
+        {(['realisasi', 'po'] as Via[]).map((v) => (
+          <View key={v} style={{ flex: 1 }}>
+            <Button
+              label={v === 'po' ? 'By purchase order' : 'By realisasi'}
+              variant={via === v ? 'primary' : 'secondary'}
+              onPress={() => {
+                setVia(v);
+                setSelectedPartId(null);
+                setRealisasiItemId(null);
+              }}
+            />
+          </View>
+        ))}
+      </Row>
+      <Callout>Exactly one, never both. The two paths are different kinds of purchase, not two ways of doing one.</Callout>
+
+      <Section>{via === 'po' ? 'Purchase order' : 'Realisasi'}</Section>
+      {via === 'po'
+        ? pos.map((po) => (
+            <Pressable
+              key={po.id}
+              onPress={() => {
+                setSelectedPo(po);
+                setSelectedPartId(null);
+              }}
+              style={{
+                borderWidth: border.base,
+                borderColor: selectedPo?.id === po.id ? color.ink : color.hair,
+                borderRadius: radius.sm,
+                padding: 10,
+                backgroundColor: color.panel,
+              }}
+            >
+              <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{po.poNumber}</Text>
+              <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{po.status}</Text>
+            </Pressable>
+          ))
+        : realisasiList.map((r) => (
+            <Pressable
+              key={r.id}
+              onPress={() => {
+                setSelectedRealisasi(r);
+                setSelectedPartId(null);
+              }}
+              style={{
+                borderWidth: border.base,
+                borderColor: selectedRealisasi?.id === r.id ? color.ink : color.hair,
+                borderRadius: radius.sm,
+                padding: 10,
+                backgroundColor: color.panel,
+              }}
+            >
+              <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{r.externalOrderRef ?? r.id}</Text>
+              <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                {[r.sellerName ?? r.supplierName, r.channel, `bought by ${r.createdByName}`].filter(Boolean).join(' · ')}
+              </Text>
+            </Pressable>
           ))}
-        </Row>
-        <Callout>Exactly one, never both. The two paths are different kinds of purchase, not two ways of doing one.</Callout>
 
-        <Section>{via === 'po' ? 'Purchase order' : 'Realisasi'}</Section>
-        {via === 'po'
-          ? pos.map((po) => (
-              <Pressable
-                key={po.id}
-                onPress={() => {
-                  setSelectedPo(po);
-                  setSelectedPartId(null);
-                }}
-                style={{
-                  borderWidth: border.base,
-                  borderColor: selectedPo?.id === po.id ? color.ink : color.hair,
-                  borderRadius: radius.sm,
-                  padding: 10,
-                  backgroundColor: color.panel,
-                }}
-              >
-                <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{po.poNumber}</Text>
-                <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{po.status}</Text>
-              </Pressable>
-            ))
-          : realisasiList.map((r) => (
-              <Pressable
-                key={r.id}
-                onPress={() => {
-                  setSelectedRealisasi(r);
-                  setSelectedPartId(null);
-                }}
-                style={{
-                  borderWidth: border.base,
-                  borderColor: selectedRealisasi?.id === r.id ? color.ink : color.hair,
-                  borderRadius: radius.sm,
-                  padding: 10,
-                  backgroundColor: color.panel,
-                }}
-              >
-                <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{r.externalOrderRef ?? r.id}</Text>
-                <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-                  {[r.sellerName ?? r.supplierName, r.channel, `bought by ${r.createdByName}`].filter(Boolean).join(' · ')}
-                </Text>
-              </Pressable>
-            ))}
+      {items.length > 0 ? (
+        <>
+          <Section>Item</Section>
+          {items.map((item) => (
+            <Pressable
+              key={item.id}
+              onPress={() => {
+                setSelectedPartId(item.partId);
+                if (via === 'realisasi' && 'purchaseRequestAuthorizationItemId' in item) {
+                  setRealisasiItemId(item.id);
+                }
+              }}
+              style={{
+                borderWidth: border.base,
+                borderColor: selectedPartId === item.partId ? color.ink : color.hair,
+                borderRadius: radius.sm,
+                padding: 10,
+                backgroundColor: color.panel,
+              }}
+            >
+              <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
+            </Pressable>
+          ))}
+        </>
+      ) : null}
 
-        {items.length > 0 ? (
-          <>
-            <Section>Item</Section>
-            {items.map((item) => (
-              <Pressable
-                key={item.id}
-                onPress={() => {
-                  setSelectedPartId(item.partId);
-                  if (via === 'realisasi' && 'purchaseRequestAuthorizationItemId' in item) {
-                    setRealisasiItemId(item.id);
-                  }
-                }}
-                style={{
-                  borderWidth: border.base,
-                  borderColor: selectedPartId === item.partId ? color.ink : color.hair,
-                  borderRadius: radius.sm,
-                  padding: 10,
-                  backgroundColor: color.panel,
-                }}
-              >
-                <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
-              </Pressable>
-            ))}
-          </>
-        ) : null}
+      <Row>
+        <Field label="Received date" value={receivedDate} onChangeText={setReceivedDate} mono placeholder="YYYY-MM-DD" />
+      </Row>
+      <Field label="Received by" value={user?.fullName ?? 'you (current user)'} variant="derived" />
+      <TextField label="Notes" value={notes} onChangeText={setNotes} placeholder="Box slightly damaged, contents intact" />
+      <Field label="Quantity received (stock units)" value={quantity} onChangeText={setQuantity} mono keyboardType="numeric" />
 
-        <Row>
-          <Field label="Received date" value={receivedDate} onChangeText={setReceivedDate} mono placeholder="YYYY-MM-DD" />
-        </Row>
-        <Field label="Received by" value={user?.fullName ?? 'you (current user)'} variant="derived" />
-        <TextField label="Notes" value={notes} onChangeText={setNotes} placeholder="Box slightly damaged, contents intact" />
-        <Field label="Quantity received (stock units)" value={quantity} onChangeText={setQuantity} mono keyboardType="numeric" />
-
-        {attachmentMissing ? (
-          <Card tone="danger">
-            <View className="flex-row items-start" style={{ gap: 8 }}>
-              <Ban size={17} color={color.danger} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...textStyle(typeScale.cardTitle), fontSize: 15, color: color.danger }}>
-                  Cannot receive — no attachment on file
-                </Text>
-                <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 2 }}>
-                  Add the receipt to the Realisasi first. Stock does not move without it.
-                </Text>
-              </View>
+      {attachmentMissing ? (
+        <Card tone="danger">
+          <View className="flex-row items-start" style={{ gap: 8 }}>
+            <Ban size={17} color={color.danger} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...textStyle(typeScale.cardTitle), fontSize: 15, color: color.danger }}>
+                Cannot receive — no attachment on file
+              </Text>
+              <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 2 }}>
+                Add the receipt to the Realisasi first. Stock does not move without it.
+              </Text>
             </View>
-          </Card>
-        ) : null}
+          </View>
+        </Card>
+      ) : null}
 
-        {token ? (
-          <PhotoPicker
-            label={selfReceiving ? 'Photo of the goods (required)' : 'Photo of the goods (optional)'}
-            purpose="GOODS_RECEIPT_PHOTO"
-            token={token}
-            photos={photos}
-            onChange={setPhotos}
-            sub={
-              selfReceiving
-                ? 'You bought this yourself, so a photo is required. The receipt is marked self-received and the Owner is told.'
-                : 'Take it when you open the package.'
-            }
-          />
-        ) : null}
+      {token ? (
+        <PhotoPicker
+          label={selfReceiving ? 'Photo of the goods (required)' : 'Photo of the goods (optional)'}
+          purpose="GOODS_RECEIPT_PHOTO"
+          token={token}
+          photos={photos}
+          onChange={setPhotos}
+          sub={
+            selfReceiving
+              ? 'You bought this yourself, so a photo is required. The receipt is marked self-received and the Owner is told.'
+              : 'Take it when you open the package.'
+          }
+        />
+      ) : null}
 
-        {via === 'po' ? (
-          <Callout>Orders from HQ need no receipt attachment and no receiver check: the Owner sent the order and HQ knows what it shipped.</Callout>
-        ) : null}
+      {via === 'po' ? (
+        <Callout>Orders from HQ need no receipt attachment and no receiver check: the Owner sent the order and HQ knows what it shipped.</Callout>
+      ) : null}
 
-        {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
+      {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 
-        <Button label={submitting ? 'Receiving…' : 'Receive'} onPress={handleSubmit} disabled={submitting || !!attachmentMissing} />
-      </ScrollView>
-    </SafeAreaView>
+      <Button label={submitting ? 'Receiving…' : 'Receive'} onPress={handleSubmit} disabled={submitting || !!attachmentMissing} />
+    </Screen>
   );
 }

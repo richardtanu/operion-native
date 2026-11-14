@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, FieldLabel, Field, KV, Row, Section, SelectField } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Card, Field, FieldLabel, KV, Row, Screen, Section, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canChangeStoreSettings } from '../../../auth/permissions';
 import { getStoreSettings, getTenantTree, updateStoreSettings } from '../../../api/tenants';
@@ -137,72 +136,69 @@ export default function StoreSettingsScreen() {
     );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Store settings</Text>
+    <Screen title="Store settings">
 
-        {stores.length > 1 ? (
-          <SelectField label="Store" value={storeId} items={stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))} onChange={setStoreId} />
-        ) : null}
+      {stores.length > 1 ? (
+        <SelectField label="Store" value={storeId} items={stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))} onChange={setStoreId} />
+      ) : null}
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {notice ? <Callout tone="success">{notice}</Callout> : null}
-        {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {notice ? <Callout tone="success">{notice}</Callout> : null}
+      {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
 
-        {settings && draft ? (
-          <>
-            {!settings.customised ? <Callout>{`${settings.tenantName} hasn’t saved its own settings, so these are the defaults.`}</Callout> : null}
-            {!mayChange ? (
-              <Callout>
-                {atOwnStore ? 'Only the store’s Owner changes these.' : 'HQ reads a store’s settings; only that store’s Owner changes them.'}
-              </Callout>
-            ) : null}
+      {settings && draft ? (
+        <>
+          {!settings.customised ? <Callout>{`${settings.tenantName} hasn’t saved its own settings, so these are the defaults.`}</Callout> : null}
+          {!mayChange ? (
+            <Callout>
+              {atOwnStore ? 'Only the store’s Owner changes these.' : 'HQ reads a store’s settings; only that store’s Owner changes them.'}
+            </Callout>
+          ) : null}
 
-            <Section>Stock</Section>
-            {mayChange ? <View style={{ gap: 10 }}>{group('stock')}</View> : <Card>{group('stock')}</Card>}
-            {mayChange && windowTooShort ? (
-              <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>Usage needs at least can’t be longer than the usage window.</Text>
-            ) : null}
+          <Section>Stock</Section>
+          {mayChange ? <View style={{ gap: 10 }}>{group('stock')}</View> : <Card>{group('stock')}</Card>}
+          {mayChange && windowTooShort ? (
+            <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>Usage needs at least can’t be longer than the usage window.</Text>
+          ) : null}
 
-            <Section>Maintenance</Section>
-            {mayChange ? (
-              <View style={{ gap: 10 }}>
-                {group('maintenance')}
-                <View style={{ gap: 6 }}>
-                  <FieldLabel>Open a work order by itself</FieldLabel>
-                  <Row gap={0}>
-                    {[true, false].map((on) => (
-                      <View key={String(on)} style={{ flex: 1 }}>
-                        <Button
-                          label={on ? 'Yes' : 'No'}
-                          variant={draft.autoCreateWorkOrder === on ? 'primary' : 'secondary'}
-                          onPress={() => setDraft((d) => (d ? { ...d, autoCreateWorkOrder: on } : d))}
-                        />
-                      </View>
-                    ))}
-                  </Row>
-                  <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>When the nightly check finds a unit that needs work.</Text>
-                </View>
+          <Section>Maintenance</Section>
+          {mayChange ? (
+            <View style={{ gap: 10 }}>
+              {group('maintenance')}
+              <View style={{ gap: 6 }}>
+                <FieldLabel>Open a work order by itself</FieldLabel>
+                <Row gap={0}>
+                  {[true, false].map((on) => (
+                    <View key={String(on)} style={{ flex: 1 }}>
+                      <Button
+                        label={on ? 'Yes' : 'No'}
+                        variant={draft.autoCreateWorkOrder === on ? 'primary' : 'secondary'}
+                        onPress={() => setDraft((d) => (d ? { ...d, autoCreateWorkOrder: on } : d))}
+                      />
+                    </View>
+                  ))}
+                </Row>
+                <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>When the nightly check finds a unit that needs work.</Text>
               </View>
-            ) : (
-              <Card>
-                {group('maintenance')}
-                <KV k="Open a work order by itself" v={settings.autoCreateWorkOrder ? 'Yes' : 'No'} />
-              </Card>
-            )}
+            </View>
+          ) : (
+            <Card>
+              {group('maintenance')}
+              <KV k="Open a work order by itself" v={settings.autoCreateWorkOrder ? 'Yes' : 'No'} />
+            </Card>
+          )}
 
-            {mayChange ? (
-              <Button
-                label={saving ? 'Saving…' : 'Save settings'}
-                variant="gated"
-                gate="STORE OWNER"
-                disabled={saving || !changed || problems.length > 0 || windowTooShort}
-                onPress={save}
-              />
-            ) : null}
-          </>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+          {mayChange ? (
+            <Button
+              label={saving ? 'Saving…' : 'Save settings'}
+              variant="gated"
+              gate="STORE OWNER"
+              disabled={saving || !changed || problems.length > 0 || windowTooShort}
+              onPress={save}
+            />
+          ) : null}
+        </>
+      ) : null}
+    </Screen>
   );
 }

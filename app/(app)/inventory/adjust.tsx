@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Field, FieldLabel, KV, Row, SelectField } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Card, Field, FieldLabel, KV, Row, Screen, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canRequestStockAdjustment } from '../../../auth/permissions';
 import { requestStockAdjustment } from '../../../api/inventory';
@@ -67,70 +66,64 @@ export default function AdjustCountScreen() {
 
   if (created) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <View className="flex-1 gap-lg px-xl pt-xl">
-          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Sent to the Owner</Text>
-          <Card>
-            <KV k="Item" v={created.partName} />
-            <KV k="Change" v={created.quantity > 0 ? `+${created.quantity}` : String(created.quantity)} strong />
-            <KV k="Reason" v={created.reason} />
-          </Card>
-          <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-            The count changes when one of the store's Owners approves. They've been told.
-          </Text>
-          <Button label="See adjustments" variant="secondary" onPress={() => router.replace('/(app)/inventory/adjustments')} />
-          <Button label="Done" onPress={() => router.back()} />
-        </View>
-      </SafeAreaView>
+      <Screen title="Sent to the Owner">
+        <Card>
+          <KV k="Item" v={created.partName} />
+          <KV k="Change" v={created.quantity > 0 ? `+${created.quantity}` : String(created.quantity)} strong />
+          <KV k="Reason" v={created.reason} />
+        </Card>
+        <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+          The count changes when one of the store's Owners approves. They've been told.
+        </Text>
+        <Button label="See adjustments" variant="secondary" onPress={() => router.replace('/(app)/inventory/adjustments')} />
+        <Button label="Done" onPress={() => router.back()} />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Adjust count</Text>
+    <Screen title="Adjust count">
 
-        <SelectField
-          label="Item"
-          value={partId}
-          loading={partsLoading}
-          placeholder="Select item…"
-          items={parts.map((p) => ({ id: p.id, label: p.name, sublabel: `${p.currentStock} in stock`, group: p.categoryName ?? 'Uncategorized' }))}
-          onChange={setPartId}
-        />
+      <SelectField
+        label="Item"
+        value={partId}
+        loading={partsLoading}
+        placeholder="Select item…"
+        items={parts.map((p) => ({ id: p.id, label: p.name, sublabel: `${p.currentStock} in stock`, group: p.categoryName ?? 'Uncategorized' }))}
+        onChange={setPartId}
+      />
 
-        <View style={{ gap: 6 }}>
-          <FieldLabel>Change</FieldLabel>
-          <Row gap={0}>
-            {(['REMOVE', 'ADD'] as Direction[]).map((d) => (
-              <View key={d} style={{ flex: 1 }}>
-                <Button label={d === 'REMOVE' ? 'Remove' : 'Add'} variant={direction === d ? 'primary' : 'secondary'} onPress={() => setDirection(d)} />
-              </View>
-            ))}
-          </Row>
-        </View>
-
-        <Row>
-          <Field label="Quantity" value={quantity} onChangeText={setQuantity} mono keyboardType="numeric" placeholder="1" />
-          <Field label="After" value={after != null ? String(after) : '—'} variant="derived" mono />
+      <View style={{ gap: 6 }}>
+        <FieldLabel>Change</FieldLabel>
+        <Row gap={0}>
+          {(['REMOVE', 'ADD'] as Direction[]).map((d) => (
+            <View key={d} style={{ flex: 1 }}>
+              <Button label={d === 'REMOVE' ? 'Remove' : 'Add'} variant={direction === d ? 'primary' : 'secondary'} onPress={() => setDirection(d)} />
+            </View>
+          ))}
         </Row>
-        <Field label="Reason" value={reason} onChangeText={setReason} placeholder="e.g. Bag torn, BBs spilled" />
+      </View>
 
-        <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-          The count changes only when an Owner approves. The Owner is told.
-        </Text>
+      <Row>
+        <Field label="Quantity" value={quantity} onChangeText={setQuantity} mono keyboardType="numeric" placeholder="1" />
+        <Field label="After" value={after != null ? String(after) : '—'} variant="derived" mono />
+      </Row>
+      <Field label="Reason" value={reason} onChangeText={setReason} placeholder="e.g. Bag torn, BBs spilled" />
 
-        {!mayAsk ? <Callout tone="warning">Only the Store Manager and the Owner can ask for an adjustment.</Callout> : null}
-        {error ? <Callout tone="danger">{error}</Callout> : null}
+      <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+        The count changes only when an Owner approves. The Owner is told.
+      </Text>
 
-        <Button
-          label={submitting ? 'Sending…' : 'Ask for adjustment'}
-          variant="gated"
-          gate="MANAGER+"
-          disabled={submitting || !mayAsk}
-          onPress={handleSubmit}
-        />
-      </ScrollView>
-    </SafeAreaView>
+      {!mayAsk ? <Callout tone="warning">Only the Store Manager and the Owner can ask for an adjustment.</Callout> : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+
+      <Button
+        label={submitting ? 'Sending…' : 'Ask for adjustment'}
+        variant="gated"
+        gate="MANAGER+"
+        disabled={submitting || !mayAsk}
+        onPress={handleSubmit}
+      />
+    </Screen>
   );
 }

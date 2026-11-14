@@ -6,6 +6,7 @@ type TypeToken = {
   lineHeight?: number;
   letterSpacing?: number;
   uppercase?: boolean;
+  tabular?: boolean;
 };
 
 /** Spreads one of theme/tokens.js's named `type` styles into an RN Text style. */
@@ -16,5 +17,6 @@ export function textStyle(token: TypeToken): TextStyle {
     ...(token.lineHeight ? { lineHeight: token.lineHeight } : null),
     ...(token.letterSpacing ? { letterSpacing: token.letterSpacing } : null),
     ...(token.uppercase ? { textTransform: 'uppercase' as const } : null),
+    ...(token.tabular ? { fontVariant: ['tabular-nums' as const] } : null),
   };
 }

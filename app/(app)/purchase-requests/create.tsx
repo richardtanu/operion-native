@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, Field, Row, Section, SelectField } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Card, Chip, Field, Row, Screen, Section, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { createPurchaseRequest } from '../../../api/procurement';
 import { getTenantTree } from '../../../api/tenants';
@@ -113,108 +112,102 @@ export default function CreatePurchaseRequestScreen() {
 
   if (created) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <View className="flex-1 gap-lg px-xl pt-xl">
-          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Request created</Text>
-          <Card>
-            <Row>
-              <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Status</Text>
-              <Chip label={created.status} tone="pending" />
-            </Row>
-            <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 6 }}>
-              {created.items.length} line item(s) · for {created.tenantName}
-            </Text>
-            <Text style={{ ...textStyle(typeScale.helper), color: color.mute, marginTop: 2 }}>ID: {created.id}</Text>
-          </Card>
-          <Button label="Create another" variant="secondary" onPress={() => setCreated(null)} />
-          <Button label="Back to Procurement" onPress={() => router.replace('/(app)/procurement')} />
-        </View>
-      </SafeAreaView>
+      <Screen title="Request created">
+        <Card>
+          <Row>
+            <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Status</Text>
+            <Chip label={created.status} tone="pending" />
+          </Row>
+          <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 6 }}>
+            {created.items.length} line item(s) · for {created.tenantName}
+          </Text>
+          <Text style={{ ...textStyle(typeScale.helper), color: color.mute, marginTop: 2 }}>ID: {created.id}</Text>
+        </Card>
+        <Button label="Create another" variant="secondary" onPress={() => setCreated(null)} />
+        <Button label="Done" onPress={() => router.back()} />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>New Request</Text>
+    <Screen title="New request">
 
-        {picksStore ? (
-          <SelectField
-            label="Store"
-            value={storeId}
-            placeholder="Pick the store…"
-            items={stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))}
-            onChange={pickStore}
-          />
-        ) : (
-          <Field label="Store" value={stores[0]?.name ?? 'Your store'} variant="derived" />
-        )}
-        <Section>Line items</Section>
-        {lines.map((line) => (
-          <Card key={line.key}>
-            <Row>
-              <SelectField
-                label="Part"
-                value={line.partId || null}
-                loading={partsLoading}
-                placeholder={picksStore && !storeId ? 'Pick the store first' : 'Select part…'}
-                items={parts.map((p) => ({
-                  id: p.id,
-                  label: p.name,
-                  // sublabel: [p.brand, p.categoryName].filter(Boolean).join(' · ') || undefined,
-                  group: p.partTypeName ?? 'Uncategorized',
-                }))}
-                onChange={(id) => {
-                  const part = parts.find((p) => p.id === id);
-                  if (part) updateLine(line.key, { partId: part.id, partName: part.name });
-                }}
-              />
-              <View style={{ width: 82 }}>
-                <Field label="Qty" value={line.quantity} onChangeText={(v) => updateLine(line.key, { quantity: v })} 
-                placeholder=" " 
-                mono keyboardType="numeric" />
-              </View>
-            </Row>
-            {lines.length > 1 ? (
-              <View style={{ marginTop: 8 }}>
-                <Button label="Remove line" variant="secondary" onPress={() => removeLine(line.key)} />
-              </View>
-            ) : null}
-          </Card>
-        ))}
-        <Button label="+ Add line" variant="secondary" onPress={addLine} />
-
-        <Field label="Requested by" value={user?.fullName ?? 'you (current user)'} variant="derived" />
-
-        <View>
-          <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute, marginBottom: 3 }}>Starts at</Text>
-          <Chip tone="pending" label="Pending" />
-        </View>
-
-        <Callout>No cost fields on this screen — quantity only. Pricing enters at Realisasi, not here.</Callout>
-        {!mayCreate ? (
-          <Callout tone="warning" title="Not available for your account">
-            Requests are filed by the Store Manager (Manager scope or above), or by HQ Admin and Procurement.
-          </Callout>
-        ) : null}
-
-        {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
-
-        {!partsLoading && parts.length === 0 ? (
-          <Callout tone="warning">
-            No parts found. Create one in the Parts module first — Purchase Requests can't reference a part that
-            doesn't exist yet.
-          </Callout>
-        ) : null}
-
-        <Button
-          label={submitting ? 'Creating…' : 'Create Request'}
-          variant="gated"
-          gate="MANAGER+·ADMIN·PROC"
-          onPress={handleSubmit}
-          disabled={submitting || !mayCreate}
+      {picksStore ? (
+        <SelectField
+          label="Store"
+          value={storeId}
+          placeholder="Pick the store…"
+          items={stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))}
+          onChange={pickStore}
         />
-      </ScrollView>
-    </SafeAreaView>
+      ) : (
+        <Field label="Store" value={stores[0]?.name ?? 'Your store'} variant="derived" />
+      )}
+      <Section>Line items</Section>
+      {lines.map((line) => (
+        <Card key={line.key}>
+          <Row>
+            <SelectField
+              label="Part"
+              value={line.partId || null}
+              loading={partsLoading}
+              placeholder={picksStore && !storeId ? 'Pick the store first' : 'Select part…'}
+              items={parts.map((p) => ({
+                id: p.id,
+                label: p.name,
+                // sublabel: [p.brand, p.categoryName].filter(Boolean).join(' · ') || undefined,
+                group: p.partTypeName ?? 'Uncategorized',
+              }))}
+              onChange={(id) => {
+                const part = parts.find((p) => p.id === id);
+                if (part) updateLine(line.key, { partId: part.id, partName: part.name });
+              }}
+            />
+            <View style={{ width: 82 }}>
+              <Field label="Qty" value={line.quantity} onChangeText={(v) => updateLine(line.key, { quantity: v })} 
+              placeholder=" " 
+              mono keyboardType="numeric" />
+            </View>
+          </Row>
+          {lines.length > 1 ? (
+            <View style={{ marginTop: 8 }}>
+              <Button label="Remove line" variant="secondary" onPress={() => removeLine(line.key)} />
+            </View>
+          ) : null}
+        </Card>
+      ))}
+      <Button label="+ Add line" variant="secondary" onPress={addLine} />
+
+      <Field label="Requested by" value={user?.fullName ?? 'you (current user)'} variant="derived" />
+
+      <View>
+        <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute, marginBottom: 3 }}>Starts at</Text>
+        <Chip tone="pending" label="Pending" />
+      </View>
+
+      <Callout>No cost fields on this screen — quantity only. Pricing enters at Realisasi, not here.</Callout>
+      {!mayCreate ? (
+        <Callout tone="warning" title="Not available for your account">
+          Requests are filed by the Store Manager (Manager scope or above), or by HQ Admin and Procurement.
+        </Callout>
+      ) : null}
+
+      {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
+
+      {!partsLoading && parts.length === 0 ? (
+        <Callout tone="warning">
+          No parts found. Create one in the Parts module first — Purchase Requests can't reference a part that
+          doesn't exist yet.
+        </Callout>
+      ) : null}
+
+      <Button
+        label={submitting ? 'Creating…' : 'Create Request'}
+        variant="gated"
+        gate="MANAGER+·ADMIN·PROC"
+        onPress={handleSubmit}
+        disabled={submitting || !mayCreate}
+      />
+    </Screen>
   );
 }

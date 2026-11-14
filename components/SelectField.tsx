@@ -76,17 +76,17 @@ export function SelectField({ label, placeholder = 'Select…', value, items, lo
       <Dropdown
         ref={dropdownRef}
         style={{
-          borderWidth: border.base,
+          borderWidth: border.hair,
           borderColor: color.line,
-          borderRadius: radius.sm,
+          borderRadius: radius.md,
           backgroundColor: color.panel,
-          paddingVertical: 9,
-          paddingHorizontal: 10,
-          minHeight: 0,
+          paddingVertical: 12,
+          paddingHorizontal: 14,
+          minHeight: 48,
         }}
         containerStyle={{
-          borderRadius: radius.sm,
-          borderWidth: border.base,
+          borderRadius: radius.md,
+          borderWidth: border.hair,
           borderColor: color.line,
           backgroundColor: color.panel,
           overflow: 'hidden',
@@ -98,7 +98,7 @@ export function SelectField({ label, placeholder = 'Select…', value, items, lo
         inputSearchStyle={{
           ...textStyle(typeScale.body),
           color: color.ink,
-          borderRadius: radius.sm,
+          borderRadius: radius.md,
           borderColor: color.line,
         }}
         fontFamily={font.body}

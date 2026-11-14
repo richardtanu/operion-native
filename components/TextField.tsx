@@ -23,23 +23,24 @@ export function TextField({ label, variant = 'editable', error, style, ...inputP
   const isReadonly = variant === 'readonly-derived';
 
   return (
-    <View style={{ gap: 4 }}>
-      <Text style={{ ...textStyle(typeScale.fieldLabel), fontWeight: '600', color: color.mute }}>{label}</Text>
+    <View style={{ gap: 6 }}>
+      <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.steel }}>{label}</Text>
       <TextInput
         editable={!isReadonly}
         placeholderTextColor={color.mute}
         style={[
           {
             ...textStyle(typeScale.body),
-            fontFamily: isReadonly ? font.mono : font.body,
+            fontFamily: isReadonly ? font.bodyMedium : font.body,
             fontStyle: isReadonly ? 'italic' : 'normal',
             color: isReadonly ? color.steel : color.ink,
             backgroundColor: isReadonly ? color.derived : color.panel,
-            borderWidth: isReadonly ? 0 : border.base,
+            borderWidth: isReadonly ? 0 : error ? border.strong : border.hair,
             borderColor: error ? color.danger : color.line,
-            borderRadius: radius.sm,
-            paddingHorizontal: 10,
-            paddingVertical: 9,
+            borderRadius: radius.md,
+            minHeight: 48,
+            paddingHorizontal: 14,
+            paddingVertical: 12,
           },
           style,
         ]}

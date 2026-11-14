@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Field, KV, Row, Section, SelectField } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Field, KV, Row, Screen, Section, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canDraftOrder, canEditItems, canLinkToCatalog, canRetireItems } from '../../../auth/permissions';
 import { createPart, linkToCatalog, listCategories, listPartTypes, listParts, retirePart, updatePart } from '../../../api/parts';
@@ -172,110 +171,107 @@ export default function ItemFormScreen() {
   const category = categories.find((c) => c.id === categoryId);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>{editingId ? 'Edit item' : 'Add item'}</Text>
+    <Screen title={editingId ? 'Edit item' : 'Add item'}>
 
-        <Field label="Name" value={name} onChangeText={setName} placeholder="e.g. Spring M130" />
-        {hqMatch ? (
-          hqMatch.storePartId ? (
-            <Callout tone="neutral">{`You already stock HQ's “${hqMatch.name}”. Find it in Items instead of adding a second one.`}</Callout>
-          ) : (
-            <View className="gap-sm">
-              <Callout tone="neutral">{`HQ sells “${hqMatch.name}”. Order it from HQ instead of adding your own, so stock and orders stay on one item.`}</Callout>
-              <Button
-                label="Order from HQ instead"
-                variant="gated"
-                gate="MANAGER+·PROC"
-                disabled={!canDraftOrder(user)}
-                onPress={() => router.replace({ pathname: '/(app)/purchase-orders/create', params: { lines: encodeLines([{ partId: hqMatch.id, quantity: null }]) } })}
-              />
-            </View>
-          )
-        ) : null}
-        <Field label="Brand" value={brand} onChangeText={setBrand} placeholder="Optional" />
-        <SelectField
-          label="Category"
-          value={categoryId}
-          placeholder="Select category…"
-          items={categories.map((c) => ({ id: c.id, label: c.name, sublabel: c.consumable ? 'Counted by quantity' : 'Counted one by one' }))}
-          onChange={(id) => {
-            setCategoryId(id);
-            setPartTypeId(null);
-          }}
-        />
-        <SelectField
-          label="Type"
-          value={partTypeId}
-          placeholder={categoryId ? 'Select type…' : 'Pick a category first'}
-          disabled={!categoryId}
-          items={types.map((t) => ({ id: t.id, label: t.name }))}
-          onChange={setPartTypeId}
-        />
-        {category ? (
-          <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-            {category.consumable ? 'Counted by quantity, like BBs and gas.' : 'Counted one by one: each unit gets its own record.'}
-          </Text>
-        ) : null}
-        <Row>
-          <Field label="Minimum" value={minimum} onChangeText={setMinimum} mono keyboardType="numeric" placeholder="0" />
-          <Field label="Reorder qty" value={reorderQty} onChangeText={setReorderQty} mono keyboardType="numeric" placeholder="0" />
-        </Row>
-        <Field label="Expected lifespan (days)" value={lifespan} onChangeText={setLifespan} mono keyboardType="numeric" placeholder="Optional" />
-        <Field label="Notes" value={notes} onChangeText={setNotes} placeholder="Optional" />
+      <Field label="Name" value={name} onChangeText={setName} placeholder="e.g. Spring M130" />
+      {hqMatch ? (
+        hqMatch.storePartId ? (
+          <Callout tone="neutral">{`You already stock HQ's “${hqMatch.name}”. Find it in Items instead of adding a second one.`}</Callout>
+        ) : (
+          <View className="gap-sm">
+            <Callout tone="neutral">{`HQ sells “${hqMatch.name}”. Order it from HQ instead of adding your own, so stock and orders stay on one item.`}</Callout>
+            <Button
+              label="Order from HQ instead"
+              variant="gated"
+              gate="MANAGER+·PROC"
+              disabled={!canDraftOrder(user)}
+              onPress={() => router.replace({ pathname: '/(app)/purchase-orders/create', params: { lines: encodeLines([{ partId: hqMatch.id, quantity: null }]) } })}
+            />
+          </View>
+        )
+      ) : null}
+      <Field label="Brand" value={brand} onChangeText={setBrand} placeholder="Optional" />
+      <SelectField
+        label="Category"
+        value={categoryId}
+        placeholder="Select category…"
+        items={categories.map((c) => ({ id: c.id, label: c.name, sublabel: c.consumable ? 'Counted by quantity' : 'Counted one by one' }))}
+        onChange={(id) => {
+          setCategoryId(id);
+          setPartTypeId(null);
+        }}
+      />
+      <SelectField
+        label="Type"
+        value={partTypeId}
+        placeholder={categoryId ? 'Select type…' : 'Pick a category first'}
+        disabled={!categoryId}
+        items={types.map((t) => ({ id: t.id, label: t.name }))}
+        onChange={setPartTypeId}
+      />
+      {category ? (
         <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-          Without usage data, minimum stock decides when this item counts as low.
+          {category.consumable ? 'Counted by quantity, like BBs and gas.' : 'Counted one by one: each unit gets its own record.'}
         </Text>
+      ) : null}
+      <Row>
+        <Field label="Minimum" value={minimum} onChangeText={setMinimum} mono keyboardType="numeric" placeholder="0" />
+        <Field label="Reorder qty" value={reorderQty} onChangeText={setReorderQty} mono keyboardType="numeric" placeholder="0" />
+      </Row>
+      <Field label="Expected lifespan (days)" value={lifespan} onChangeText={setLifespan} mono keyboardType="numeric" placeholder="Optional" />
+      <Field label="Notes" value={notes} onChangeText={setNotes} placeholder="Optional" />
+      <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+        Without usage data, minimum stock decides when this item counts as low.
+      </Text>
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {notice ? <Callout tone="success">{notice}</Callout> : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {notice ? <Callout tone="success">{notice}</Callout> : null}
 
-        <Button
-          label={busy ? 'Saving…' : 'Save item'}
-          variant="gated"
-          gate="MANAGER+·ADMIN"
-          disabled={busy || !canEditItems(user) || (!!editingId && !part)}
-          onPress={save}
-        />
+      <Button
+        label={busy ? 'Saving…' : 'Save item'}
+        variant="gated"
+        gate="MANAGER+·ADMIN"
+        disabled={busy || !canEditItems(user) || (!!editingId && !part)}
+        onPress={save}
+      />
 
-        {part ? (
-          <>
-            <Section>HQ catalog</Section>
-            {part.catalogPartId ? (
-              <>
-                <KV k="Same as" v={`${hqLinked?.name ?? 'An HQ item'} (HQ)`} />
-                <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>Ask HQ to change or remove this link.</Text>
-              </>
-            ) : canLinkToCatalog(user) ? (
-              <View className="gap-sm">
-                <SelectField
-                  label="Same as HQ's item"
-                  value={linkTo}
-                  placeholder={linkable.length ? 'Select HQ item…' : 'Nothing left to link'}
-                  disabled={linkable.length === 0}
-                  items={linkable.map((c) => ({ id: c.id, label: c.name, sublabel: c.mandatoryFromHq ? 'Must buy from HQ' : undefined }))}
-                  onChange={setLinkTo}
-                />
-                <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-                  Once linked, orders from HQ add to this item, and only HQ can change or remove the link.
-                </Text>
-                <Button label="Link" variant="gated" gate="MANAGER+" disabled={busy || !linkTo} onPress={link} />
-              </View>
-            ) : (
-              <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>Not linked to an item HQ sells.</Text>
-            )}
+      {part ? (
+        <>
+          <Section>HQ catalog</Section>
+          {part.catalogPartId ? (
+            <>
+              <KV k="Same as" v={`${hqLinked?.name ?? 'An HQ item'} (HQ)`} />
+              <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>Ask HQ to change or remove this link.</Text>
+            </>
+          ) : canLinkToCatalog(user) ? (
+            <View className="gap-sm">
+              <SelectField
+                label="Same as HQ's item"
+                value={linkTo}
+                placeholder={linkable.length ? 'Select HQ item…' : 'Nothing left to link'}
+                disabled={linkable.length === 0}
+                items={linkable.map((c) => ({ id: c.id, label: c.name, sublabel: c.mandatoryFromHq ? 'Must buy from HQ' : undefined }))}
+                onChange={setLinkTo}
+              />
+              <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+                Once linked, orders from HQ add to this item, and only HQ can change or remove the link.
+              </Text>
+              <Button label="Link" variant="gated" gate="MANAGER+" disabled={busy || !linkTo} onPress={link} />
+            </View>
+          ) : (
+            <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>Not linked to an item HQ sells.</Text>
+          )}
 
-            {canRetireItems(user) && !part.retired ? (
-              <>
-                <Section>Retire</Section>
-                <Field label="Reason" value={retireReason} onChangeText={setRetireReason} placeholder="e.g. no longer stocked" />
-                <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>Only when stock is 0 and nothing is installed.</Text>
-                <Button label="Retire item" variant="gated" gate="OWNER+·ADMIN" disabled={busy || !retireReason.trim()} onPress={retire} />
-              </>
-            ) : null}
-          </>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+          {canRetireItems(user) && !part.retired ? (
+            <>
+              <Section>Retire</Section>
+              <Field label="Reason" value={retireReason} onChangeText={setRetireReason} placeholder="e.g. no longer stocked" />
+              <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>Only when stock is 0 and nothing is installed.</Text>
+              <Button label="Retire item" variant="gated" gate="OWNER+·ADMIN" disabled={busy || !retireReason.trim()} onPress={retire} />
+            </>
+          ) : null}
+        </>
+      ) : null}
+    </Screen>
   );
 }

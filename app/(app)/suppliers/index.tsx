@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text, View } from 'react-native';
 import { Lock } from 'lucide-react-native';
-import { Button, Callout, Card, Chip, Row, Section, TextField } from '../../../components';
+import { Button, Callout, Card, Chip, Row, Screen, Section, TextField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { createSupplier, listSuppliers } from '../../../api/procurement';
 import { getTenantTree } from '../../../api/tenants';
@@ -75,47 +74,44 @@ export default function SuppliersScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Suppliers</Text>
+    <Screen title="Suppliers">
 
-        <Section>Suppliers · managed by HQ</Section>
-        {listError ? <Callout tone="danger">{listError}</Callout> : null}
-        {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-        {suppliers.map((s) => (
-          <Card key={s.id}>
-            <View className="flex-row items-center justify-between" style={{ gap: 8 }}>
-              <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{s.name}</Text>
-              {s.franchiseCentre ? <Chip label="HQ · seller" tone="pending" /> : null}
-            </View>
-            <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>{s.contact}</Text>
-          </Card>
-        ))}
-        <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-          Read-only: suppliers can't be edited or deleted. Buying somewhere else? Name the seller on the purchase itself.
-        </Text>
+      <Section>Suppliers · managed by HQ</Section>
+      {listError ? <Callout tone="danger">{listError}</Callout> : null}
+      {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {suppliers.map((s) => (
+        <Card key={s.id}>
+          <View className="flex-row items-center justify-between" style={{ gap: 8 }}>
+            <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{s.name}</Text>
+            {s.franchiseCentre ? <Chip label="HQ · seller" tone="pending" /> : null}
+          </View>
+          <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>{s.contact}</Text>
+        </Card>
+      ))}
+      <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+        Read-only: suppliers can't be edited or deleted. Buying somewhere else? Name the seller on the purchase itself.
+      </Text>
 
-        {atHq ? (
-          <>
-            <Section>New supplier</Section>
-            <Row>
-              <TextField label="Name" value={name} onChangeText={setName} placeholder="Supplier name" />
-              <TextField label="Contact" value={contact} onChangeText={setContact} placeholder="Phone or email" />
-            </Row>
-            {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
-            <Button label={submitting ? 'Creating…' : 'Create supplier'} onPress={handleSubmit} disabled={submitting} />
-          </>
-        ) : (
-          <Card>
-            <View className="flex-row items-start" style={{ gap: 8 }}>
-              <Lock size={16} color={color.steel} />
-              <Text style={{ ...textStyle(typeScale.helper), color: color.steel, flex: 1 }}>
-                Only HQ adds suppliers. For a purchase from somewhere else, write the seller's name on the purchase.
-              </Text>
-            </View>
-          </Card>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+      {atHq ? (
+        <>
+          <Section>New supplier</Section>
+          <Row>
+            <TextField label="Name" value={name} onChangeText={setName} placeholder="Supplier name" />
+            <TextField label="Contact" value={contact} onChangeText={setContact} placeholder="Phone or email" />
+          </Row>
+          {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
+          <Button label={submitting ? 'Creating…' : 'Create supplier'} onPress={handleSubmit} disabled={submitting} />
+        </>
+      ) : (
+        <Card>
+          <View className="flex-row items-start" style={{ gap: 8 }}>
+            <Lock size={16} color={color.steel} />
+            <Text style={{ ...textStyle(typeScale.helper), color: color.steel, flex: 1 }}>
+              Only HQ adds suppliers. For a purchase from somewhere else, write the seller's name on the purchase.
+            </Text>
+          </View>
+        </Card>
+      )}
+    </Screen>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Crosshair } from 'lucide-react-native';
 import { Button, Callout, TextField } from '../../components';
 import { useAuth } from '../../auth/AuthContext';
 import { ThemeContext, useTheme } from '../../theme/ThemeContext';
@@ -26,7 +27,7 @@ export default function LoginScreen() {
 }
 
 function LoginScreenBody() {
-  const { color, type: typeScale } = useTheme();
+  const { color, font, type: typeScale, radius, border } = useTheme();
   const { login, sessionExpired, signOutReason } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,14 +47,28 @@ function LoginScreenBody() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: color.ground }}>
       <View className="flex-1 justify-center gap-lg px-xl">
-        <View className="gap-xs">
-          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Operion</Text>
+        <View style={{ alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <View
+            style={{
+              width: 84,
+              height: 84,
+              borderRadius: radius.pill,
+              borderWidth: border.base,
+              borderColor: color.line,
+              backgroundColor: color.panel,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Crosshair size={44} color={color.ink} strokeWidth={1.5} />
+          </View>
+          <Text style={{ fontFamily: font.displayBold, fontSize: 32, letterSpacing: 2, color: color.ink }}>OPERION</Text>
           <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Sign in to continue</Text>
         </View>
 
-        <View className="gap-md">
+        <View className="gap-md" style={{ backgroundColor: color.surface, borderRadius: radius.lg, borderWidth: border.hair, borderColor: color.hair, padding: 16 }}>
           <TextField
             label="Email"
             value={email}

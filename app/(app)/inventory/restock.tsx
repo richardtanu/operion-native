@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
-import { Button, Callout, Card, Section } from '../../../components';
+import { Button, Callout, Card, Screen, Section } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canCreatePurchaseRequest, canDraftOrder } from '../../../auth/permissions';
 import { useTheme } from '../../../theme/ThemeContext';
@@ -80,51 +79,48 @@ export default function RestockScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Restock</Text>
-        <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-          {`Worst first. Suggested amounts cover each item's ${target ?? 14}-day target; change them on the next screen.`}
-        </Text>
+    <Screen title="Restock">
+      <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+        {`Worst first. Suggested amounts cover each item's ${target ?? 14}-day target; change them on the next screen.`}
+      </Text>
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-        {!loading && !error && low.length === 0 ? (
-          <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>Nothing is running low.</Text>
-        ) : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {!loading && !error && low.length === 0 ? (
+        <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>Nothing is running low.</Text>
+      ) : null}
 
-        {fromHq.length ? (
-          <>
-            <Section>From HQ · order</Section>
-            {fromHq.map(renderLine)}
-            <Button
-              label="Order these from HQ"
-              variant="gated"
-              gate="MANAGER+·PROC"
-              disabled={!canDraftOrder(user) || picked(fromHq).length === 0}
-              onPress={orderFromHq}
-            />
-          </>
-        ) : null}
+      {fromHq.length ? (
+        <>
+          <Section>From HQ · order</Section>
+          {fromHq.map(renderLine)}
+          <Button
+            label="Order these from HQ"
+            variant="gated"
+            gate="MANAGER+·PROC"
+            disabled={!canDraftOrder(user) || picked(fromHq).length === 0}
+            onPress={orderFromHq}
+          />
+        </>
+      ) : null}
 
-        {elsewhere.length ? (
-          <>
-            <Section>Elsewhere · request</Section>
-            {elsewhere.map(renderLine)}
-            <Button
-              label="Request these"
-              variant="gated"
-              gate="MANAGER+·ADMIN·PROC"
-              disabled={!canCreatePurchaseRequest(user) || picked(elsewhere).length === 0}
-              onPress={request}
-            />
-          </>
-        ) : null}
+      {elsewhere.length ? (
+        <>
+          <Section>Elsewhere · request</Section>
+          {elsewhere.map(renderLine)}
+          <Button
+            label="Request these"
+            variant="gated"
+            gate="MANAGER+·ADMIN·PROC"
+            disabled={!canCreatePurchaseRequest(user) || picked(elsewhere).length === 0}
+            onPress={request}
+          />
+        </>
+      ) : null}
 
-        <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-          The Owner approves later: on the request, or when sending the order to HQ.
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
+      <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+        The Owner approves later: on the request, or when sending the order to HQ.
+      </Text>
+    </Screen>
   );
 }

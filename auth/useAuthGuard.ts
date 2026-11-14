@@ -26,7 +26,7 @@ export function useAuthGuard() {
     } else if (status === 'authenticated' && mustChange && !onChangePassword) {
       router.replace('/(app)/account/password');
     } else if (status === 'authenticated' && inAuthGroup) {
-      router.replace('/(app)/dashboard');
+      router.replace('/(app)/(tabs)/home');
     }
   }, [status, mustChange, segments, router]);
 }

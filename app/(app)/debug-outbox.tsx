@@ -1,7 +1,6 @@
 import { Redirect } from 'expo-router';
 import { FlatList, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, SyncStateIndicator, type SyncState } from '../../components';
+import { Button, Callout, Screen, SyncStateIndicator, type SyncState } from '../../components';
 import { useOutbox } from '../../outbox/OutboxProvider';
 import type { OutboxItem, OutboxStatus } from '../../outbox/types';
 import { useTheme } from '../../theme/ThemeContext';
@@ -13,10 +12,10 @@ import { textStyle } from '../../theme/typeStyle';
 // enqueue a fake item, watch it go queued -> confirmed/failed, and confirm
 // a kill-and-relaunch mid-queue doesn't lose the row.
 //
-// Never reachable in a production build: the dashboard hides its link
+// Never reachable in a production build: the side menu hides its link
 // behind __DEV__, and a deep link to this route redirects away.
 export default function DebugOutboxRoute() {
-  if (!__DEV__) return <Redirect href="/(app)/dashboard" />;
+  if (!__DEV__) return <Redirect href="/(app)/(tabs)/home" />;
   return <DebugOutboxScreen />;
 }
 
@@ -25,10 +24,8 @@ function DebugOutboxScreen() {
   const { items, enqueue, retryItem } = useOutbox();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <View className="flex-1 gap-lg px-xl pt-xl">
-        <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Outbox debug</Text>
-
+    <Screen title="Outbox debug" scroll={false}>
+      <View className="flex-1 gap-lg">
         <Callout title="What this proves">
           Enqueue writes below, then background/kill and relaunch the app before they resolve —
           the row should still be here on relaunch. That durability guarantee is the entire
@@ -71,7 +68,7 @@ function DebugOutboxScreen() {
           ListEmptyComponent={<Text style={{ ...textStyle(typeScale.body), color: color.steel }}>No outbox items yet.</Text>}
         />
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

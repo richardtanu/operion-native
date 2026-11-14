@@ -24,6 +24,7 @@ export declare const font: {
   readonly displayBold: string;
   readonly body: string;
   readonly bodyMedium: string;
+  readonly bodyBold: string;
   readonly mono: string;
   readonly monoMedium: string;
 };
@@ -34,6 +35,7 @@ export interface TypeStyle {
   readonly lineHeight?: number;
   readonly letterSpacing?: number;
   readonly uppercase?: boolean;
+  readonly tabular?: boolean;
 }
 
 export declare const type: {
@@ -62,6 +64,7 @@ export declare const space: {
 export declare const radius: {
   readonly sm: number;
   readonly md: number;
+  readonly lg: number;
   readonly pill: number;
 };
 

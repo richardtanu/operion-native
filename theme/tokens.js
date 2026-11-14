@@ -54,12 +54,12 @@ const tone = {
 };
 
 /**
- * Type. Three families, each with one job.
- *  display — Barlow Condensed. Headings and stencilled labels. Condensed
- *            survives long Indonesian labels in a 390pt column.
- *  body    — Barlow. Prose, helper text, callouts.
- *  mono    — IBM Plex Mono. Anything a person reads back aloud:
- *            IDs, quantities, money, timestamps. Digits align in columns.
+ * Type. Since 15 Nov 2026 the app reads like a phone app, not a web page:
+ * sentence-case titles and labels in Barlow, money and counts in Barlow
+ * with tabular digits so columns still line up.
+ *  display — Barlow Condensed. Only small uppercase tags (callout titles).
+ *  body    — Barlow, three weights. Titles, prose, labels, buttons, values.
+ *  mono    — IBM Plex Mono. IDs and codes a person reads back aloud.
  *
  * Load via expo-font. Falling back to system fonts loses the whole
  * visual language, so check loaded state before first paint.
@@ -69,28 +69,29 @@ const font = {
   displayBold: 'BarlowCondensed_700Bold',
   body: 'Barlow_400Regular',
   bodyMedium: 'Barlow_500Medium',
+  bodyBold: 'Barlow_600SemiBold',
   mono: 'IBMPlexMono_400Regular',
   monoMedium: 'IBMPlexMono_600SemiBold',
 };
 
 const type = {
-  screenTitle: { family: font.displayBold, size: 20, letterSpacing: 0.8 },
-  heading: { family: font.displayBold, size: 30, lineHeight: 32 },
-  cardTitle: { family: font.displayBold, size: 21, lineHeight: 23 },
-  sectionLabel: { family: font.display, size: 11, letterSpacing: 1.8, uppercase: true },
-  fieldLabel: { family: font.display, size: 10, letterSpacing: 1.4, uppercase: true },
-  body: { family: font.body, size: 14, lineHeight: 20 },
-  helper: { family: font.body, size: 12, lineHeight: 17 },
-  value: { family: font.mono, size: 14 },
-  valueLarge: { family: font.monoMedium, size: 26 },
-  button: { family: font.displayBold, size: 17, letterSpacing: 0.85, uppercase: true },
-  chip: { family: font.displayBold, size: 12, letterSpacing: 1.1, uppercase: true },
+  screenTitle: { family: font.bodyBold, size: 18 },
+  heading: { family: font.bodyBold, size: 24, lineHeight: 30 },
+  cardTitle: { family: font.bodyBold, size: 17, lineHeight: 22 },
+  sectionLabel: { family: font.bodyMedium, size: 13, letterSpacing: 0.6, uppercase: true },
+  fieldLabel: { family: font.bodyMedium, size: 13 },
+  body: { family: font.body, size: 15, lineHeight: 21 },
+  helper: { family: font.body, size: 13, lineHeight: 18 },
+  value: { family: font.bodyMedium, size: 15, tabular: true },
+  valueLarge: { family: font.bodyBold, size: 24, tabular: true },
+  button: { family: font.bodyBold, size: 16 },
+  chip: { family: font.bodyMedium, size: 12 },
 };
 
 const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 };
 
-/** Near-square. Rounded corners read consumer; this is equipment. */
-const radius = { sm: 2, md: 4, pill: 999 };
+/** Rounded like a phone app (15 Nov 2026): fields and buttons md, cards lg. */
+const radius = { sm: 8, md: 12, lg: 16, pill: 999 };
 
 const border = { hair: 1, base: 1.5, strong: 2 };
 

@@ -25,6 +25,7 @@ module.exports = {
       borderRadius: {
         sm: `${radius.sm}px`,
         md: `${radius.md}px`,
+        lg: `${radius.lg}px`,
         pill: `${radius.pill}px`,
       },
     },

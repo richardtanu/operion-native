@@ -7,38 +7,29 @@ export type ChipTone = 'neutral' | 'success' | 'warning' | 'danger' | 'pending';
 type ChipProps = {
   label: string;
   tone?: ChipTone;
-  /** Filled background instead of the default outline — reserve for the one status that should read loudest on a screen. */
+  /** Filled background instead of the default tint — reserve for the one status that should read loudest on a screen. */
   solid?: boolean;
 };
 
-// A single status badge. Screens with more than one independent status
-// dimension (e.g. Realisasi's `status` + `varianceStatus`) render multiple
-// Chips side by side — never merge them into one. Composing that layout is
-// the screen's job; this component only renders one.
+// A single status badge: a tinted pill. Screens with more than one
+// independent status dimension (e.g. Realisasi's `status` + `varianceStatus`)
+// render multiple Chips side by side — never merge them into one. Composing
+// that layout is the screen's job; this component only renders one.
 export function Chip({ label, tone = 'neutral', solid }: ChipProps) {
-  const { color, tone: toneColors, type: typeScale, radius, border, glow } = useTheme();
+  const { color, tone: toneColors, type: typeScale, radius } = useTheme();
   const c = toneColors[tone];
-  const glowStyle =
-    solid && glow
-      ? { shadowColor: c, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.7, shadowRadius: glow.radius / 2, elevation: 3 }
-      : null;
 
   return (
     <View
-      style={[
-        {
-          alignSelf: 'flex-start',
-          borderWidth: border.base,
-          borderColor: c,
-          borderRadius: radius.sm,
-          backgroundColor: solid ? c : 'transparent',
-          paddingVertical: 2,
-          paddingHorizontal: 8,
-        },
-        glowStyle,
-      ]}
+      style={{
+        alignSelf: 'flex-start',
+        borderRadius: radius.pill,
+        backgroundColor: solid ? c : `${c}26`,
+        paddingVertical: 3,
+        paddingHorizontal: 10,
+      }}
     >
-      <Text style={{ ...textStyle(typeScale.chip), fontWeight: '700', color: solid ? color.panel : c }}>{label}</Text>
+      <Text style={{ ...textStyle(typeScale.chip), color: solid ? color.panel : c }}>{label}</Text>
     </View>
   );
 }
