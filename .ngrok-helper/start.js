@@ -20,6 +20,7 @@
 // phone always talks to this run's backend tunnel instead of a stale one
 // left in .env. Set SKIP_BACKEND_TUNNEL=1 to keep whatever .env says.
 const { spawn } = require('child_process');
+const http = require('http');
 const path = require('path');
 const qrcode = require('qrcode-terminal');
 
@@ -32,8 +33,10 @@ console.log('Starting Cloudflare tunnels first (to learn their public URLs)...\n
 // (confirmed via cloudflared's own connectivity pre-check, which detected
 // it and suggested this exact fallback after ~47s of failed QUIC retries
 // during testing). Skip straight to the protocol that actually works here.
+// One quoted command string, not (file, args): the repo lives under
+// "C:\richards stuff\", and an unquoted path splits at the space.
 function openTunnel(label, localUrl) {
-  const child = spawn(CLOUDFLARED, ['tunnel', '--protocol', 'http2', '--url', localUrl], {
+  const child = spawn(`"${CLOUDFLARED}" tunnel --protocol http2 --url ${localUrl}`, {
     shell: true,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -67,7 +70,7 @@ Promise.all([metroTunnel.url, backendTunnel ? backendTunnel.url : null]).then(([
 });
 
 function startMetro(publicUrl, backendUrl) {
-  metro = spawn('npx', ['expo', 'start'], {
+  metro = spawn('npx expo start', {
     cwd: PROJECT_DIR,
     shell: true,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -79,23 +82,46 @@ function startMetro(publicUrl, backendUrl) {
   });
 
   let qrShown = false;
+  const showQr = () => {
+    if (qrShown) return;
+    qrShown = true;
+    clearInterval(statusPoll);
+    const expUrl = publicUrl.replace('https://', 'exp://');
+    console.log('\n' + '='.repeat(60));
+    console.log('Scan this in Expo Go, or use "Enter URL manually":');
+    console.log(expUrl);
+    if (backendUrl) console.log('App talks to backend at: ' + backendUrl);
+    console.log('='.repeat(60) + '\n');
+    qrcode.generate(expUrl, { small: true });
+    console.log('\n(Leave this window open - closing it stops the tunnels.)\n');
+  };
 
-  metro.stdout.on('data', (chunk) => {
+  // Metro is ready when it says so in its log, or when it answers /status,
+  // whichever comes first. The log alone wasn't enough: in some windows the
+  // QR never appeared although Metro was up. Colour codes are stripped, both
+  // streams are read, and the last few hundred characters are kept so a line
+  // split across two chunks still matches.
+  let tail = '';
+  const watchLog = (out, chunk) => {
     const text = chunk.toString();
-    process.stdout.write('[metro] ' + text);
-    if (!qrShown && /Waiting on http/.test(text)) {
-      qrShown = true;
-      const expUrl = publicUrl.replace('https://', 'exp://');
-      console.log('\n' + '='.repeat(60));
-      console.log('Scan this in Expo Go, or use "Enter URL manually":');
-      console.log(expUrl);
-      if (backendUrl) console.log('App talks to backend at: ' + backendUrl);
-      console.log('='.repeat(60) + '\n');
-      qrcode.generate(expUrl, { small: true });
-      console.log('\n(Leave this window open - closing it stops the tunnels.)\n');
-    }
-  });
-  metro.stderr.on('data', (chunk) => process.stderr.write('[metro] ' + chunk.toString()));
+    out.write('[metro] ' + text);
+    tail = (tail + text.replace(/\x1b\[[0-9;]*m/g, '')).slice(-400);
+    if (/Waiting on http|Logs for your project/.test(tail)) showQr();
+  };
+  metro.stdout.on('data', (chunk) => watchLog(process.stdout, chunk));
+  metro.stderr.on('data', (chunk) => watchLog(process.stderr, chunk));
+
+  const statusPoll = setInterval(() => {
+    http
+      .get('http://localhost:8081/status', (res) => {
+        let body = '';
+        res.on('data', (d) => (body += d));
+        res.on('end', () => {
+          if (body.includes('packager-status:running')) showQr();
+        });
+      })
+      .on('error', () => {});
+  }, 1000);
 }
 
 process.on('SIGINT', () => {
