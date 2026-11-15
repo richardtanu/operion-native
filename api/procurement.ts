@@ -44,6 +44,11 @@ export function listPurchaseRequests(token: string): Promise<PurchaseRequestResp
   return apiRequest<PurchaseRequestResponse[]>('/purchase-requests', { token });
 }
 
+/** One request, for its detail page. Same visibility as the list. */
+export function getPurchaseRequest(id: string, token: string): Promise<PurchaseRequestResponse> {
+  return apiRequest<PurchaseRequestResponse>(`/purchase-requests/${id}`, { token });
+}
+
 export function getPurchaseRequestHistory(id: string, token: string): Promise<StatusHistoryEntry[]> {
   return apiRequest<StatusHistoryEntry[]>(`/purchase-requests/${id}/history`, { token });
 }

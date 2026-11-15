@@ -10,6 +10,7 @@ import { ApiError } from '../../../api/httpError';
 import type { PurchaseRequestAuthorizationResponse, PurchaseRequestResponse } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
+import { requestCode } from '../../../lib/requestCode';
 
 
 type Line = { key: string; partId: string; authorizedQty: string; maxValue: string };
@@ -136,7 +137,12 @@ export default function CreatePurchaseAuthorizationScreen() {
             >
               {selectedPrIds.includes(pr.id) ? <Check size={13} color={color.tag} /> : null}
             </View>
-            <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{pr.id}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{requestCode(pr)}</Text>
+              <Text numberOfLines={1} style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                {pr.items.map((i) => `${i.partName} × ${i.quantity}`).join(', ')}
+              </Text>
+            </View>
           </Pressable>
         ))
       )}

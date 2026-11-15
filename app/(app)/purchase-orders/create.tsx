@@ -9,6 +9,7 @@ import { ApiError } from '../../../api/httpError';
 import type { CatalogItemResponse, PurchaseOrderResponse, PurchaseRequestResponse } from '../../../api/types';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
+import { requestCode } from '../../../lib/requestCode';
 import { rp } from '../../../lib/money';
 import { decodeLines } from '../../../lib/stockLevel';
 
@@ -209,6 +210,7 @@ export default function CreatePurchaseOrderScreen() {
                 backgroundColor: color.panel,
               }}
             >
+              <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{requestCode(pr)}</Text>
               <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>
                 {pr.items.map((i) => `${i.partName} × ${i.quantity}`).join(', ')}
               </Text>

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
-import { Button, Callout, Card, Chip, Field, Row, Screen, Section, SelectField } from '../../../components';
+import { X } from 'lucide-react-native';
+import { Button, Callout, Card, Chip, Field, Row, Screen, Section, SelectField, Tap } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { createPurchaseRequest } from '../../../api/procurement';
 import { getTenantTree } from '../../../api/tenants';
@@ -12,6 +13,7 @@ import type { PartResponse, PurchaseRequestResponse, TenantResponse } from '../.
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 import { decodeLines } from '../../../lib/stockLevel';
+import { requestCode } from '../../../lib/requestCode';
 
 
 type Line = { key: string; categoryId: string; partId: string; partName: string; quantity: string };
@@ -35,7 +37,7 @@ const categoryOf = (p: PartResponse) => p.categoryId ?? NO_CATEGORY;
 // Each line picks a category first, then a part from it in a searchable
 // list (15 Nov 2026); the part and quantity appear once a category is picked.
 export default function CreatePurchaseRequestScreen() {
-  const { color, type: typeScale } = useTheme();
+  const { color, font, type: typeScale, radius } = useTheme();
   const router = useRouter();
   const params = useLocalSearchParams<{ lines?: string; storeId?: string }>();
   const { user, token } = useAuth();
@@ -137,8 +139,13 @@ export default function CreatePurchaseRequestScreen() {
           <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 6 }}>
             {created.items.length} line item(s) · for {created.tenantName}
           </Text>
-          <Text style={{ ...textStyle(typeScale.helper), color: color.mute, marginTop: 2 }}>ID: {created.id}</Text>
+          <Text style={{ fontFamily: font.monoMedium, fontSize: 14, color: color.ink, marginTop: 6 }}>{requestCode(created)}</Text>
         </Card>
+        <Button
+          label="Open request"
+          variant="secondary"
+          onPress={() => router.replace({ pathname: '/(app)/purchase-requests/[requestId]', params: { requestId: created.id } })}
+        />
         <Button label="Create another" variant="secondary" onPress={() => setCreated(null)} />
         <Button label="Done" onPress={() => router.back()} />
       </Screen>
@@ -160,9 +167,24 @@ export default function CreatePurchaseRequestScreen() {
         <Field label="Store" value={stores[0]?.name ?? 'Your store'} variant="derived" />
       )}
       <Section>Line items</Section>
-      {lines.map((line) => (
+      {lines.map((line, index) => (
         <Card key={line.key}>
           <View style={{ gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 24 }}>
+              <Text style={{ ...textStyle(typeScale.sectionLabel), color: color.steel }}>{`Line ${index + 1}`}</Text>
+              {lines.length > 1 ? (
+                <Tap
+                  onPress={() => removeLine(line.key)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove line ${index + 1}`}
+                  hitSlop={10}
+                  style={{ width: 28, height: 28, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', backgroundColor: color.derived }}
+                  pressedStyle={{ backgroundColor: color.hair }}
+                >
+                  <X size={16} color={color.steel} />
+                </Tap>
+              ) : null}
+            </View>
             <SelectField
               label="Category"
               value={line.categoryId || null}
@@ -200,7 +222,6 @@ export default function CreatePurchaseRequestScreen() {
                 </View>
               </Row>
             ) : null}
-            {lines.length > 1 ? <Button label="Remove line" variant="secondary" onPress={() => removeLine(line.key)} /> : null}
           </View>
         </Card>
       ))}
