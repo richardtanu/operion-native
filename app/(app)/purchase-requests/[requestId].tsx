@@ -94,6 +94,7 @@ export default function PurchaseRequestDetailScreen() {
   const open = pr.status === 'PENDING' || pr.status === 'APPROVED';
   const hasReason = reason.trim().length > 0;
   const partById = new Map(parts.map((p) => [p.id, p]));
+  const totalQty = pr.items.reduce((s, i) => s + i.quantity, 0);
 
   return (
     <Screen title={requestCode(pr)}>
@@ -104,8 +105,8 @@ export default function PurchaseRequestDetailScreen() {
         </View>
         <KV k="Store" v={pr.tenantName} />
         <KV k="Requested by" v={pr.requestedByName} />
-        <KV k="Lines" v={String(pr.items.length)} />
-        <KV k="Total quantity" v={String(pr.items.reduce((s, i) => s + i.quantity, 0))} />
+        <KV k="Total items" v={String(pr.items.length)} strong />
+        <KV k="Total quantity" v={String(totalQty)} />
         <Text selectable style={{ fontFamily: font.mono, fontSize: 11, color: color.mute, marginTop: 6 }}>{`ID ${pr.id}`}</Text>
       </Card>
 
@@ -134,6 +135,22 @@ export default function PurchaseRequestDetailScreen() {
           </Card>
         );
       })}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderTopWidth: 1,
+          borderTopColor: color.line,
+          paddingTop: 10,
+          paddingHorizontal: 4,
+        }}
+      >
+        <Text style={{ ...textStyle(typeScale.body), fontFamily: font.bodyBold, color: color.ink }}>Total</Text>
+        <Text style={{ ...textStyle(typeScale.value), fontFamily: font.bodyBold, color: color.ink }}>
+          {`${pr.items.length} item${pr.items.length === 1 ? '' : 's'} · ${totalQty} units`}
+        </Text>
+      </View>
 
       {history.length > 0 ? (
         <>

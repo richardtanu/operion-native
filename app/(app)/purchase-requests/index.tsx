@@ -19,8 +19,9 @@ import { textStyle } from '../../../theme/typeStyle';
 // direct-purchase path.
 const FILTERS: PurchaseRequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'ORDERED', 'AUTHORIZED', 'CANCELLED'];
 
-// PROC-02 — Requests. A list of cards, each named by its short code
-// (date-requester-time) with its lines; tapping one opens its detail page
+// PROC-02 — Requests. A list of cards, each named by its code
+// (date-requester-time_ms) with only its item count, who, store and when: the
+// items themselves are on the detail page; tapping a card opens it
 // (purchase-requests/[requestId]), where the items, history and the
 // approve / reject / cancel actions live (15 Nov 2026; until then the detail
 // opened inside this list). OWNER+ and Accounting (BE-41) also see the
@@ -72,7 +73,6 @@ export default function PurchaseRequestListScreen() {
 
       {filtered.map((pr) => {
         const at = parseLocalDateTime(pr.createdAt);
-        const names = pr.items.map((i) => `${i.partName} ×${i.quantity}`);
         return (
           <Tap
             key={pr.id}
@@ -96,12 +96,8 @@ export default function PurchaseRequestListScreen() {
               <Chip label={pr.status} tone={REQUEST_STATUS_TONE[pr.status]} />
               <ChevronRight size={18} color={color.steel} />
             </View>
-            <Text numberOfLines={2} style={{ ...textStyle(typeScale.body), fontFamily: font.bodyMedium, color: color.ink }}>
-              {names.slice(0, 3).join(', ')}
-              {names.length > 3 ? ` and ${names.length - 3} more` : ''}
-            </Text>
             <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-              {`${pr.items.length} line${pr.items.length === 1 ? '' : 's'} · by ${pr.requestedByName} · for ${pr.tenantName}`}
+              {`${pr.items.length} item${pr.items.length === 1 ? '' : 's'} · by ${pr.requestedByName} · for ${pr.tenantName}`}
             </Text>
             {at ? <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>{`${formatDayLabel(at)} · ${formatTime(at)}`}</Text> : null}
           </Tap>
