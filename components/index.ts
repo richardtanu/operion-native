@@ -21,4 +21,5 @@ export { StatCard } from './StatCard';
 export { StepTabs, type StepState } from './StepTabs';
 export { SyncStateIndicator, type SyncState } from './SyncStateIndicator';
 export { TabBar } from './TabBar';
+export { Tap } from './Tap';
 export { TextField } from './TextField';

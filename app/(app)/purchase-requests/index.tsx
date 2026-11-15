@@ -1,18 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
-import { Button, Callout, Card, HistoryList, KV, Row, Screen, Section, SpendingSummary, TextField } from '../../../components';
+import { ChevronRight } from 'lucide-react-native';
+import { Button, Callout, Chip, Screen, SpendingSummary, Tap } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
-import {
-  approvePurchaseRequest,
-  cancelPurchaseRequest,
-  getPurchaseRequestHistory,
-  listPurchaseRequests,
-  rejectPurchaseRequest,
-} from '../../../api/procurement';
-import { getTenantTree } from '../../../api/tenants';
-import { canReadSpending, canSetBudget, ownerPlus as isOwnerPlus } from '../../../auth/permissions';
+import { listPurchaseRequests } from '../../../api/procurement';
+import { canReadSpending, canSetBudget } from '../../../auth/permissions';
 import { ApiError } from '../../../api/httpError';
-import type { PurchaseRequestResponse, PurchaseRequestStatus, StatusHistoryEntry } from '../../../api/types';
+import type { PurchaseRequestResponse, PurchaseRequestStatus } from '../../../api/types';
+import { formatDayLabel, formatTime, parseLocalDateTime } from '../../../lib/dates';
+import { REQUEST_STATUS_TONE, requestCode } from '../../../lib/requestCode';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
@@ -22,181 +19,94 @@ import { textStyle } from '../../../theme/typeStyle';
 // direct-purchase path.
 const FILTERS: PurchaseRequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'ORDERED', 'AUTHORIZED', 'CANCELLED'];
 
-// PROC-02 — PR Approval Console. List + detail + actions collapsed onto one
-// screen. Approve/reject: the store's own OWNER+ (HQ can't decide for a
-// store). Cancel (BE-15): a PENDING request by its requester or the store's
-// OWNER+, an APPROVED one by the store's OWNER+ only, always with a reason.
-// OWNER+ and Accounting (BE-41) also see the store's spending this month (BE-16).
+// PROC-02 — Requests. A list of cards, each named by its short code
+// (date-requester-time) with its lines; tapping one opens its detail page
+// (purchase-requests/[requestId]), where the items, history and the
+// approve / reject / cancel actions live (15 Nov 2026; until then the detail
+// opened inside this list). OWNER+ and Accounting (BE-41) also see the
+// store's spending this month (BE-16).
 export default function PurchaseRequestListScreen() {
-  const { color, type: typeScale } = useTheme();
+  const { color, font, type: typeScale, radius, border } = useTheme();
+  const router = useRouter();
   const { user, token } = useAuth();
   const [filter, setFilter] = useState<PurchaseRequestStatus>('PENDING');
   const [items, setItems] = useState<PurchaseRequestResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [history, setHistory] = useState<StatusHistoryEntry[]>([]);
-  const [reason, setReason] = useState('');
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [ownTenantId, setOwnTenantId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!token) return;
-    getTenantTree(token)
-      .then((tree) => setOwnTenantId(tree[0]?.id ?? null))
-      .catch(() => setOwnTenantId(null));
-  }, [token]);
+  // Reload whenever the list comes back into view: a decision taken on the
+  // detail page moves the request to another filter.
+  useFocusEffect(
+    useCallback(() => {
+      if (!token) return;
+      setLoading(true);
+      setListError(null);
+      listPurchaseRequests(token)
+        .then(setItems)
+        .catch((err) => setListError(err instanceof ApiError ? err.message : 'Could not load purchase requests.'))
+        .finally(() => setLoading(false));
+    }, [token]),
+  );
 
-  const load = useCallback(async () => {
-    if (!token) return;
-    setLoading(true);
-    setListError(null);
-    try {
-      setItems(await listPurchaseRequests(token));
-    } catch (err) {
-      setListError(err instanceof ApiError ? err.message : 'Could not load purchase requests.');
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  const selected = items.find((i) => i.id === selectedId) ?? null;
-
-  useEffect(() => {
-    if (!selected || !token) {
-      setHistory([]);
-      return;
-    }
-    getPurchaseRequestHistory(selected.id, token)
-      .then(setHistory)
-      .catch(() => setHistory([]));
-  }, [selected, token]);
-
-  const runAction = async (fn: () => Promise<PurchaseRequestResponse>) => {
-    setActionError(null);
-    setBusy(true);
-    try {
-      await fn();
-      setReason('');
-      await load();
-    } catch (err) {
-      setActionError(err instanceof ApiError ? err.message : 'Action failed.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const filtered = items.filter((i) => i.status === filter);
-  const ownerPlus = isOwnerPlus(user);
-  const ownStore = !!selected && selected.tenantId === ownTenantId;
-  const mayDecide = ownerPlus && ownStore;
-  const isRequester = !!selected && selected.requestedById === user?.id;
-  const mayCancel =
-    !!selected &&
-    ((selected.status === 'PENDING' && (isRequester || mayDecide)) || (selected.status === 'APPROVED' && mayDecide));
-  const hasReason = reason.trim().length > 0;
+  const filtered = items
+    .filter((i) => i.status === filter)
+    .sort((a, b) => (parseLocalDateTime(b.createdAt)?.getTime() ?? 0) - (parseLocalDateTime(a.createdAt)?.getTime() ?? 0));
+  const countOf = (s: PurchaseRequestStatus) => items.filter((i) => i.status === s).length;
 
   return (
     <Screen title="Requests">
-
       {token && canReadSpending(user) ? <SpendingSummary token={token} canSetBudget={canSetBudget(user)} /> : null}
 
       <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-        {FILTERS.map((f) => (
-          <Button key={f} label={f} variant={filter === f ? 'primary' : 'secondary'} onPress={() => setFilter(f)} compact />
-        ))}
+        {FILTERS.map((f) => {
+          const n = countOf(f);
+          return <Button key={f} label={n ? `${f} · ${n}` : f} variant={filter === f ? 'primary' : 'secondary'} onPress={() => setFilter(f)} compact />;
+        })}
       </View>
 
       {listError ? <Callout tone="danger">{listError}</Callout> : null}
-      {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-      {!loading && filtered.length === 0 ? (
+      {loading && items.length === 0 ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {!loading && !listError && filtered.length === 0 ? (
         <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No requests with status {filter}.</Text>
       ) : null}
 
-      <View className="gap-sm">
-        {filtered.map((pr) => (
-          <Card key={pr.id}>
-            <View>
-              <Text
-                onPress={() => setSelectedId(pr.id === selectedId ? null : pr.id)}
-                style={{ ...textStyle(typeScale.value), color: color.ink }}
-              >
-                {pr.id}
+      {filtered.map((pr) => {
+        const at = parseLocalDateTime(pr.createdAt);
+        const names = pr.items.map((i) => `${i.partName} ×${i.quantity}`);
+        return (
+          <Tap
+            key={pr.id}
+            onPress={() => router.push({ pathname: '/(app)/purchase-requests/[requestId]', params: { requestId: pr.id } })}
+            accessibilityRole="button"
+            accessibilityLabel={`Request ${requestCode(pr)}, ${pr.status}`}
+            style={{
+              backgroundColor: color.panel,
+              borderRadius: radius.lg,
+              borderWidth: border.hair,
+              borderColor: color.hair,
+              padding: 14,
+              gap: 6,
+            }}
+            pressedStyle={{ backgroundColor: color.derived }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text numberOfLines={1} style={{ fontFamily: font.monoMedium, fontSize: 14, color: color.ink, flex: 1 }}>
+                {requestCode(pr)}
               </Text>
-              <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink }} onPress={() => setSelectedId(pr.id === selectedId ? null : pr.id)}>
-                {pr.items.length} line{pr.items.length === 1 ? '' : 's'}
-              </Text>
-              <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-                requested by {pr.requestedByName} · for {pr.tenantName}
-              </Text>
+              <Chip label={pr.status} tone={REQUEST_STATUS_TONE[pr.status]} />
+              <ChevronRight size={18} color={color.steel} />
             </View>
-          </Card>
-        ))}
-      </View>
-
-      {selected ? (
-        <>
-          <Section>Selected — {selected.id}</Section>
-          <Card>
-            <KV k="Status" v={selected.status} />
-            <KV k="Store" v={selected.tenantName} />
-            <KV k="Requested by" v={selected.requestedByName} />
-            <KV k="Created" v={new Date(selected.createdAt).toLocaleString()} />
-          </Card>
-
-          {history.length > 0 ? (
-            <Card>
-              <HistoryList entries={history} />
-            </Card>
-          ) : null}
-
-          {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
-
-          {selected.status === 'PENDING' || selected.status === 'APPROVED' ? (
-            <TextField label="Reason (required to reject or cancel)" value={reason} onChangeText={setReason} placeholder="e.g. bought locally already" />
-          ) : null}
-
-          {selected.status === 'PENDING' ? (
-          <Row>
-            <View style={{ flex: 1 }}>
-              <Button
-                label="Approve"
-                variant="gated"
-                gate="OWNER+"
-                disabled={!mayDecide || busy}
-                onPress={() => runAction(() => approvePurchaseRequest(selected.id, token!))}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Button
-                label="Reject"
-                variant="gated"
-                gate="OWNER+"
-                disabled={!mayDecide || busy || !hasReason}
-                onPress={() => runAction(() => rejectPurchaseRequest(selected.id, { reason: reason.trim() }, token!))}
-              />
-            </View>
-          </Row>
-          ) : null}
-          {selected.status === 'PENDING' || selected.status === 'APPROVED' ? (
-            <Button
-              label="Cancel request"
-              variant="gated"
-              gate={selected.status === 'PENDING' ? 'REQUESTER·OWNER+' : 'OWNER+'}
-              disabled={!mayCancel || busy || !hasReason}
-              onPress={() => runAction(() => cancelPurchaseRequest(selected.id, { reason: reason.trim() }, token!))}
-            />
-          ) : null}
-          {ownerPlus && !ownStore && !isRequester ? (
-            <Callout>This request belongs to {selected.tenantName}. Approving, rejecting and cancelling it is that store's Owner's call.</Callout>
-          ) : null}
-        </>
-      ) : null}
+            <Text numberOfLines={2} style={{ ...textStyle(typeScale.body), fontFamily: font.bodyMedium, color: color.ink }}>
+              {names.slice(0, 3).join(', ')}
+              {names.length > 3 ? ` and ${names.length - 3} more` : ''}
+            </Text>
+            <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+              {`${pr.items.length} line${pr.items.length === 1 ? '' : 's'} · by ${pr.requestedByName} · for ${pr.tenantName}`}
+            </Text>
+            {at ? <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>{`${formatDayLabel(at)} · ${formatTime(at)}`}</Text> : null}
+          </Tap>
+        );
+      })}
     </Screen>
   );
 }
