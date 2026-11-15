@@ -25,6 +25,8 @@ type SelectFieldProps = {
   items: SelectFieldItem[];
   loading?: boolean;
   disabled?: boolean;
+  /** Force the search box on or off. By default it shows for more than six ungrouped items. */
+  search?: boolean;
   onChange: (id: string) => void;
 };
 
@@ -36,7 +38,7 @@ type SelectFieldProps = {
  * the library has no native SectionList mode, so headers are synthesized
  * as non-selectable rows in the same flat data array.
  */
-export function SelectField({ label, placeholder = 'Select…', value, items, loading, disabled, onChange }: SelectFieldProps) {
+export function SelectField({ label, placeholder = 'Select…', value, items, loading, disabled, search, onChange }: SelectFieldProps) {
   const { color, font, type: typeScale, radius, border } = useTheme();
   const isGrouped = items.some((item) => item.group);
 
@@ -105,7 +107,7 @@ export function SelectField({ label, placeholder = 'Select…', value, items, lo
         activeColor={color.derived}
         iconColor={color.mute}
         data={loading ? [] : rows}
-        search={!isGrouped && items.length > 6}
+        search={search ?? (!isGrouped && items.length > 6)}
         searchPlaceholder="Search…"
         labelField="label"
         valueField="id"

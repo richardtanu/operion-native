@@ -14,13 +14,17 @@ import { textStyle } from '../../../theme/typeStyle';
 import { decodeLines } from '../../../lib/stockLevel';
 
 
-type Line = { key: string; partId: string; partName: string; quantity: string };
+type Line = { key: string; categoryId: string; partId: string; partName: string; quantity: string };
 
 let lineKeySeq = 0;
 function newLine(): Line {
   lineKeySeq += 1;
-  return { key: `line-${lineKeySeq}`, partId: '', partName: '', quantity: '' };
+  return { key: `line-${lineKeySeq}`, categoryId: '', partId: '', partName: '', quantity: '' };
 }
+
+/** Items with no category are picked under this one, so none are unreachable. */
+const NO_CATEGORY = '__none__';
+const categoryOf = (p: PartResponse) => p.categoryId ?? NO_CATEGORY;
 
 // PROC-01 — Purchase Request Create. Blocking-error, manual-retry: calls
 // api/procurement.ts directly, never through the outbox. BE-14: only
@@ -28,6 +32,8 @@ function newLine(): Line {
 // default), a Store Manager's store is fixed; HQ only sees the picked
 // store's items (BE-26). Restock (INV-02), Stock (INV-01) and Stock across
 // stores (INV-03) open it with `lines=partId:qty,…` and, from HQ, `storeId`.
+// Each line picks a category first, then a part from it in a searchable
+// list (15 Nov 2026); the part and quantity appear once a category is picked.
 export default function CreatePurchaseRequestScreen() {
   const { color, type: typeScale } = useTheme();
   const router = useRouter();
@@ -48,10 +54,18 @@ export default function CreatePurchaseRequestScreen() {
   // HQ picks the store first and then sees only that store's items; a Store Manager sees their own.
   const parts = picksStore ? (storeId ? allParts.filter((p) => p.tenantId === storeId) : []) : allParts;
 
+  // Category first, then the part (15 Nov 2026): only categories that hold
+  // one of the store's items, each with its item count.
+  const categories = [...new Map(parts.map((p) => [categoryOf(p), p.categoryName ?? 'Uncategorised'])).entries()]
+    .map(([id, name]) => ({ id, label: name, sublabel: `${parts.filter((p) => categoryOf(p) === id).length} items` }))
+    .sort((a, b) => (a.id === NO_CATEGORY ? 1 : b.id === NO_CATEGORY ? -1 : a.label.localeCompare(b.label)));
+
   const pickStore = (id: string) => {
     setStoreId(id);
     setLines((prev) => {
-      const kept = prev.filter((l) => !l.partId || allParts.find((p) => p.id === l.partId)?.tenantId === id);
+      const kept = prev
+        .filter((l) => !l.partId || allParts.find((p) => p.id === l.partId)?.tenantId === id)
+        .map((l) => (l.partId ? l : { ...l, categoryId: '' }));
       return kept.length ? kept : [newLine()];
     });
   };
@@ -66,7 +80,9 @@ export default function CreatePurchaseRequestScreen() {
           .map((l) => ({ part: active.find((p) => p.id === l.partId), quantity: l.quantity }))
           .filter((l) => l.part);
         if (prefill.length) {
-          setLines(prefill.map((l) => ({ ...newLine(), partId: l.part!.id, partName: l.part!.name, quantity: l.quantity })));
+          setLines(
+            prefill.map((l) => ({ ...newLine(), categoryId: categoryOf(l.part!), partId: l.part!.id, partName: l.part!.name, quantity: l.quantity })),
+          );
         }
       })
       .catch(() => setParts([]))
@@ -146,34 +162,46 @@ export default function CreatePurchaseRequestScreen() {
       <Section>Line items</Section>
       {lines.map((line) => (
         <Card key={line.key}>
-          <Row>
+          <View style={{ gap: 12 }}>
             <SelectField
-              label="Part"
-              value={line.partId || null}
+              label="Category"
+              value={line.categoryId || null}
               loading={partsLoading}
-              placeholder={picksStore && !storeId ? 'Pick the store first' : 'Select part…'}
-              items={parts.map((p) => ({
-                id: p.id,
-                label: p.name,
-                // sublabel: [p.brand, p.categoryName].filter(Boolean).join(' · ') || undefined,
-                group: p.partTypeName ?? 'Uncategorized',
-              }))}
+              placeholder={picksStore && !storeId ? 'Pick the store first' : 'Select category…'}
+              items={categories}
               onChange={(id) => {
-                const part = parts.find((p) => p.id === id);
-                if (part) updateLine(line.key, { partId: part.id, partName: part.name });
+                if (id === line.categoryId) return;
+                // A part from another category no longer fits: pick again.
+                updateLine(line.key, { categoryId: id, partId: '', partName: '' });
               }}
             />
-            <View style={{ width: 82 }}>
-              <Field label="Qty" value={line.quantity} onChangeText={(v) => updateLine(line.key, { quantity: v })} 
-              placeholder=" " 
-              mono keyboardType="numeric" />
-            </View>
-          </Row>
-          {lines.length > 1 ? (
-            <View style={{ marginTop: 8 }}>
-              <Button label="Remove line" variant="secondary" onPress={() => removeLine(line.key)} />
-            </View>
-          ) : null}
+            {line.categoryId ? (
+              <Row>
+                <SelectField
+                  label="Part"
+                  value={line.partId || null}
+                  placeholder="Search or select part…"
+                  search
+                  items={parts
+                    .filter((p) => categoryOf(p) === line.categoryId)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((p) => ({
+                      id: p.id,
+                      label: p.name,
+                      sublabel: [p.partTypeName, p.brand, `${p.currentStock} in stock`].filter(Boolean).join(' · '),
+                    }))}
+                  onChange={(id) => {
+                    const part = parts.find((p) => p.id === id);
+                    if (part) updateLine(line.key, { partId: part.id, partName: part.name });
+                  }}
+                />
+                <View style={{ width: 82 }}>
+                  <Field label="Qty" value={line.quantity} onChangeText={(v) => updateLine(line.key, { quantity: v })} placeholder=" " mono keyboardType="numeric" />
+                </View>
+              </Row>
+            ) : null}
+            {lines.length > 1 ? <Button label="Remove line" variant="secondary" onPress={() => removeLine(line.key)} /> : null}
+          </View>
         </Card>
       ))}
       <Button label="+ Add line" variant="secondary" onPress={addLine} />
@@ -202,7 +230,7 @@ export default function CreatePurchaseRequestScreen() {
       ) : null}
 
       <Button
-        label={submitting ? 'Creating…' : 'Create Request'}
+        label={submitting ? 'Creating…' : 'Create request'}
         variant="gated"
         gate="MANAGER+·ADMIN·PROC"
         onPress={handleSubmit}
