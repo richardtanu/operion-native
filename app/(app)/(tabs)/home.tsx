@@ -83,7 +83,7 @@ export default function HomeScreen() {
         <Text numberOfLines={1} style={{ ...textStyle(typeScale.cardTitle), color: color.ink }}>
           {store?.name ?? user?.tenantName ?? ' '}
         </Text>
-        <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{store ? (store.atHq ? 'HQ · every store' : store.code) : ' '}</Text>
+        <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{store ? (store.atHq ? 'HQ · every store' : store.code) : (user?.tenantCode ?? ' ')}</Text>
       </View>
     </View>
   );

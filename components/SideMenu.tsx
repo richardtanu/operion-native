@@ -10,6 +10,7 @@ import { ROLE_LABEL, scopeLabel } from '../lib/people';
 import { useUnreadCount } from '../lib/useUnreadCount';
 import { useTheme } from '../theme/ThemeContext';
 import { textStyle } from '../theme/typeStyle';
+import { Tap } from './Tap';
 
 type SideMenuValue = { open: () => void };
 
@@ -74,18 +75,12 @@ function SideMenuSheet({ visible, onClose }: { visible: boolean; onClose: () => 
     ]);
 
   const item = (Icon: LucideIcon, label: string, onPress: () => void, opts: { badge?: number | null; danger?: boolean } = {}) => (
-    <Pressable
+    <Tap
       key={label}
       onPress={onPress}
       accessibilityRole="button"
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 16,
-        minHeight: 52,
-        paddingHorizontal: 20,
-        backgroundColor: pressed ? color.panel : 'transparent',
-      })}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 52, paddingHorizontal: 20 }}
+      pressedStyle={{ backgroundColor: color.panel }}
     >
       <Icon size={22} color={opts.danger ? color.danger : color.ink} />
       <Text style={{ ...textStyle(typeScale.body), fontFamily: font.bodyMedium, color: opts.danger ? color.danger : color.ink, flex: 1 }}>{label}</Text>
@@ -94,7 +89,7 @@ function SideMenuSheet({ visible, onClose }: { visible: boolean; onClose: () => 
           <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: '#FFFFFF' }}>{opts.badge > 99 ? '99+' : opts.badge}</Text>
         </View>
       ) : null}
-    </Pressable>
+    </Tap>
   );
 
   return (

@@ -1,6 +1,7 @@
-import { Pressable, Text, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { Text, View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { textStyle } from '../theme/typeStyle';
+import { Tap } from './Tap';
 
 type ButtonVariant = 'primary' | 'secondary' | 'gated';
 
@@ -42,11 +43,11 @@ export function Button({ label, variant = 'primary', gate, compact, disabled, st
       : null;
 
   return (
-    <Pressable
+    <Tap
       accessibilityRole="button"
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
-      style={({ pressed }) => [
+      style={[
         {
           width: compact ? 'auto' : '100%',
           minHeight: compact ? 36 : 48,
@@ -60,11 +61,11 @@ export function Button({ label, variant = 'primary', gate, compact, disabled, st
           backgroundColor,
           borderWidth,
           borderColor,
-          opacity: pressed ? 0.75 : 1,
         },
         glowStyle,
         style,
       ]}
+      pressedStyle={{ opacity: 0.75 }}
       {...pressableProps}
     >
       <Text style={{ ...textStyle(typeScale.button), fontSize: compact ? 14 : typeScale.button.size, color: textColor }}>{label}</Text>
@@ -73,6 +74,6 @@ export function Button({ label, variant = 'primary', gate, compact, disabled, st
           <Text style={{ fontFamily: font.monoMedium, fontSize: 10, color: disabled ? color.mute : color.tag }}>{gate}</Text>
         </View>
       ) : null}
-    </Pressable>
+    </Tap>
   );
 }

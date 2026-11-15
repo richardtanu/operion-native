@@ -1,6 +1,7 @@
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { Lock, type LucideIcon } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
+import { Tap } from './Tap';
 
 export type MenuTileItem = {
   key: string;
@@ -42,11 +43,12 @@ function MenuTile({ item, accent }: { item: MenuTileItem; accent?: string }) {
   };
 
   return (
-    <Pressable
+    <Tap
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={locked ? `${label}, locked` : badge ? `${label}, ${badge} waiting` : label}
-      style={({ pressed }) => ({ width: '33.333%', alignItems: 'center', gap: 8, opacity: pressed ? 0.7 : 1 })}
+      style={{ width: '33.333%', alignItems: 'center', gap: 8 }}
+      pressedStyle={{ opacity: 0.7 }}
     >
       <View
         style={{
@@ -101,6 +103,6 @@ function MenuTile({ item, accent }: { item: MenuTileItem; accent?: string }) {
       <Text numberOfLines={2} style={{ fontFamily: font.bodyMedium, fontSize: 13, lineHeight: 17, textAlign: 'center', color: locked ? color.mute : color.ink, paddingHorizontal: 4 }}>
         {label}
       </Text>
-    </Pressable>
+    </Tap>
   );
 }
