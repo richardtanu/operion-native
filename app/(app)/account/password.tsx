@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Field } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Field, Screen } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { changePassword } from '../../../api/auth';
 import { ApiError } from '../../../api/httpError';
@@ -43,7 +42,7 @@ export default function ChangePasswordScreen() {
       setCurrent('');
       setNext('');
       setRepeat('');
-      if (forced) router.replace('/(app)/dashboard');
+      if (forced) router.replace('/(app)/(tabs)/home');
       else setDone(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not change the password.');
@@ -54,49 +53,43 @@ export default function ChangePasswordScreen() {
 
   if (done) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <View className="flex-1 gap-lg px-xl pt-xl">
-          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Password changed</Text>
-          <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>
-            This phone stays signed in. Anywhere else you were signed in has been signed out.
-          </Text>
-          <Button label="Back" onPress={() => router.back()} />
-        </View>
-      </SafeAreaView>
+      <Screen title="Password changed">
+        <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>
+          This phone stays signed in. Anywhere else you were signed in has been signed out.
+        </Text>
+        <Button label="Back" onPress={() => router.back()} />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Change password</Text>
+    <Screen title="Change password">
 
-        {forced ? (
-          <Callout tone="warning" title="Choose your own password">
-            Someone else set your current password. Choose your own before you go on.
-          </Callout>
-        ) : null}
+      {forced ? (
+        <Callout tone="warning" title="Choose your own password">
+          Someone else set your current password. Choose your own before you go on.
+        </Callout>
+      ) : null}
 
-        <Field label="Current password" value={current} onChangeText={setCurrent} secureTextEntry autoCapitalize="none" />
-        <Field
-          label="New password"
-          value={next}
-          onChangeText={setNext}
-          secureTextEntry
-          autoCapitalize="none"
-          sub="8 to 72 characters."
-        />
-        <Field label="New password again" value={repeat} onChangeText={setRepeat} secureTextEntry autoCapitalize="none" />
+      <Field label="Current password" value={current} onChangeText={setCurrent} secureTextEntry autoCapitalize="none" />
+      <Field
+        label="New password"
+        value={next}
+        onChangeText={setNext}
+        secureTextEntry
+        autoCapitalize="none"
+        sub="8 to 72 characters."
+      />
+      <Field label="New password again" value={repeat} onChangeText={setRepeat} secureTextEntry autoCapitalize="none" />
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
 
-        <Button label={submitting ? 'Saving…' : 'Change password'} disabled={submitting} onPress={handleSubmit} />
-        {forced ? (
-          <Button label="Sign out" variant="secondary" onPress={logout} />
-        ) : (
-          <Button label="Cancel" variant="secondary" onPress={() => router.back()} />
-        )}
-      </ScrollView>
-    </SafeAreaView>
+      <Button label={submitting ? 'Saving…' : 'Change password'} disabled={submitting} onPress={handleSubmit} />
+      {forced ? (
+        <Button label="Sign out" variant="secondary" onPress={logout} />
+      ) : (
+        <Button label="Cancel" variant="secondary" onPress={() => router.back()} />
+      )}
+    </Screen>
   );
 }

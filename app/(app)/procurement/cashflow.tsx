@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, type ChipTone, KV, Row, Section, SelectField } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Card, Chip, type ChipTone, KV, Row, Screen, Section, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canReadCashflow } from '../../../auth/permissions';
 import { getCashflow } from '../../../api/procurement';
@@ -92,80 +91,77 @@ export default function CashflowScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Cashflow</Text>
+    <Screen title="Cashflow">
 
-        {!allowed ? (
-          <Callout tone="warning">The cashflow is for Accounting and the store’s Owner.</Callout>
-        ) : (
-          <>
-            {multiStore ? (
-              <SelectField
-                label="Store"
-                value={storeId}
-                items={[{ id: ALL, label: 'Every store' }, ...stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))]}
-                onChange={setStoreId}
-              />
-            ) : null}
+      {!allowed ? (
+        <Callout tone="warning">The cashflow is for Accounting and the store’s Owner.</Callout>
+      ) : (
+        <>
+          {multiStore ? (
+            <SelectField
+              label="Store"
+              value={storeId}
+              items={[{ id: ALL, label: 'Every store' }, ...stores.map((t) => ({ id: t.id, label: t.name, sublabel: t.code }))]}
+              onChange={setStoreId}
+            />
+          ) : null}
 
-            <Row>
-              <View style={{ flex: 1 }}>
-                <Button label="‹ Earlier" variant="secondary" onPress={() => step(-1)} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button label="Later ›" variant="secondary" disabled={thisMonth} onPress={() => step(1)} />
-              </View>
-            </Row>
+          <Row>
+            <View style={{ flex: 1 }}>
+              <Button label="‹ Earlier" variant="secondary" onPress={() => step(-1)} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button label="Later ›" variant="secondary" disabled={thisMonth} onPress={() => step(1)} />
+            </View>
+          </Row>
 
-            <Card>
-              <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute }}>{`${MONTHS[month.getMonth()]} ${month.getFullYear()}`}</Text>
-              <KV k="Money out" v={data ? rp(data.totalOut) : '—'} strong />
-              <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 4 }}>
-                Money in isn’t recorded in the app yet.
-              </Text>
-            </Card>
+          <Card>
+            <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute }}>{`${MONTHS[month.getMonth()]} ${month.getFullYear()}`}</Text>
+            <KV k="Money out" v={data ? rp(data.totalOut) : '—'} strong />
+            <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 4 }}>
+              Money in isn’t recorded in the app yet.
+            </Text>
+          </Card>
 
-            {error ? <Callout tone="danger">{error}</Callout> : null}
-            {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-            {!loading && data && data.events.length === 0 ? (
-              <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No money moved this month.</Text>
-            ) : null}
+          {error ? <Callout tone="danger">{error}</Callout> : null}
+          {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+          {!loading && data && data.events.length === 0 ? (
+            <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No money moved this month.</Text>
+          ) : null}
 
-            {days.map(([date, events]) => {
-              const day = parseLocalDateTime(date);
-              return (
-                <View key={date} className="gap-sm">
-                  <Section>{day ? formatDayLabel(day) : date}</Section>
-                  {events.map((e) => {
-                    const status = STATUS[e.recordStatus];
-                    return (
-                      <Card key={`${e.kind}-${e.recordId}`} tone={e.recordStatus === 'FAILED' ? 'danger' : undefined}>
-                        <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink }}>{KIND_LABEL[e.kind] ?? e.kind}</Text>
-                            <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-                              {[multiStore && storeId === ALL ? e.tenantName : null, e.counterparty, e.reference, e.method === 'CASH' ? 'Cash' : e.method === 'TRANSFER' ? 'Transfer' : null]
-                                .filter(Boolean)
-                                .join(' · ')}
-                            </Text>
-                          </View>
-                          <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{`− ${rp(e.amount)}`}</Text>
+          {days.map(([date, events]) => {
+            const day = parseLocalDateTime(date);
+            return (
+              <View key={date} className="gap-sm">
+                <Section>{day ? formatDayLabel(day) : date}</Section>
+                {events.map((e) => {
+                  const status = STATUS[e.recordStatus];
+                  return (
+                    <Card key={`${e.kind}-${e.recordId}`} tone={e.recordStatus === 'FAILED' ? 'danger' : undefined}>
+                      <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink }}>{KIND_LABEL[e.kind] ?? e.kind}</Text>
+                          <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                            {[multiStore && storeId === ALL ? e.tenantName : null, e.counterparty, e.reference, e.method === 'CASH' ? 'Cash' : e.method === 'TRANSFER' ? 'Transfer' : null]
+                              .filter(Boolean)
+                              .join(' · ')}
+                          </Text>
                         </View>
-                        {status ? (
-                          <View style={{ marginTop: 8 }}>
-                            <Chip label={status.label} tone={status.tone} />
-                          </View>
-                        ) : null}
-                      </Card>
-                    );
-                  })}
-                </View>
-              );
-            })}
-          </>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+                        <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{`− ${rp(e.amount)}`}</Text>
+                      </View>
+                      {status ? (
+                        <View style={{ marginTop: 8 }}>
+                          <Chip label={status.label} tone={status.tone} />
+                        </View>
+                      ) : null}
+                    </Card>
+                  );
+                })}
+              </View>
+            );
+          })}
+        </>
+      )}
+    </Screen>
   );
 }

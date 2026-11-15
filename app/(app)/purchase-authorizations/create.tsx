@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
-import { Button, Callout, CeilingBar, Card, Chip, Field, KV, Row, Section } from '../../../components';
+import { Button, Callout, Card, CeilingBar, Chip, Field, KV, Row, Screen, Section } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canSetSpendingLimits } from '../../../auth/permissions';
 import { createPurchaseAuthorization, listPurchaseRequests } from '../../../api/procurement';
@@ -84,111 +83,105 @@ export default function CreatePurchaseAuthorizationScreen() {
 
   if (created) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Authorization created</Text>
-          <Chip label={created.status} tone={created.status === 'CANCELLED' ? 'neutral' : 'success'} solid />
-          <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-            Also reachable: active · partially_fulfilled · fulfilled · cancelled — recomputed, never stored
-          </Text>
+      <Screen title="Limits set">
+        <Chip label={created.status} tone={created.status === 'CANCELLED' ? 'neutral' : 'success'} solid />
+        <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+          Also reachable: active · partially_fulfilled · fulfilled · cancelled — recomputed, never stored
+        </Text>
 
-          {created.items.map((item) => (
-            <Card key={item.id}>
-              <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
-              <View style={{ marginTop: 8 }}>
-                <CeilingBar authorized={item.authorizedQty} consumed={item.purchasedQty} />
-              </View>
-              <View style={{ marginTop: 8 }}>
-                <KV k="Purchased" v={item.purchasedValue != null ? `${item.purchasedQty} · Rp ${item.purchasedValue.toLocaleString('id-ID')}` : `${item.purchasedQty} · —`} derived />
-                <KV k="Remaining" v={item.remainingValue != null ? `${item.remainingQty} · Rp ${item.remainingValue.toLocaleString('id-ID')}` : `${item.remainingQty} · —`} derived strong />
-              </View>
-            </Card>
-          ))}
+        {created.items.map((item) => (
+          <Card key={item.id}>
+            <Text style={{ ...textStyle(typeScale.body), color: color.ink }}>{item.partName}</Text>
+            <View style={{ marginTop: 8 }}>
+              <CeilingBar authorized={item.authorizedQty} consumed={item.purchasedQty} />
+            </View>
+            <View style={{ marginTop: 8 }}>
+              <KV k="Purchased" v={item.purchasedValue != null ? `${item.purchasedQty} · Rp ${item.purchasedValue.toLocaleString('id-ID')}` : `${item.purchasedQty} · —`} derived />
+              <KV k="Remaining" v={item.remainingValue != null ? `${item.remainingQty} · Rp ${item.remainingValue.toLocaleString('id-ID')}` : `${item.remainingQty} · —`} derived strong />
+            </View>
+          </Card>
+        ))}
 
-          <Button label="Back to Procurement" onPress={() => router.replace('/(app)/procurement')} />
-        </ScrollView>
-      </SafeAreaView>
+        <Button label="Done" onPress={() => router.back()} />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>New Authorization</Text>
+    <Screen title="Spending limits">
 
-        <Section>Purchase requests being authorized</Section>
-        {approvedPrs.length === 0 ? (
-          <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No APPROVED purchase requests found.</Text>
-        ) : (
-          approvedPrs.map((pr) => (
-            <Pressable
-              key={pr.id}
-              onPress={() => togglePr(pr.id)}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: selectedPrIds.includes(pr.id) }}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}
+      <Section>Purchase requests being authorized</Section>
+      {approvedPrs.length === 0 ? (
+        <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No APPROVED purchase requests found.</Text>
+      ) : (
+        approvedPrs.map((pr) => (
+          <Pressable
+            key={pr.id}
+            onPress={() => togglePr(pr.id)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: selectedPrIds.includes(pr.id) }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}
+          >
+            <View
+              style={{
+                width: 19,
+                height: 19,
+                borderWidth: border.base,
+                borderColor: color.ink,
+                backgroundColor: selectedPrIds.includes(pr.id) ? color.ink : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: radius.sm,
+              }}
             >
-              <View
-                style={{
-                  width: 19,
-                  height: 19,
-                  borderWidth: border.base,
-                  borderColor: color.ink,
-                  backgroundColor: selectedPrIds.includes(pr.id) ? color.ink : 'transparent',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: radius.sm,
-                }}
-              >
-                {selectedPrIds.includes(pr.id) ? <Check size={13} color={color.tag} /> : null}
-              </View>
-              <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{pr.id}</Text>
-            </Pressable>
-          ))
-        )}
-
-        <Section>Ceiling lines</Section>
-        {lines.map((line) => (
-          <Card key={line.key}>
-            <Field label="Part" value={line.partId} onChangeText={(v) => updateLine(line.key, { partId: v })} placeholder="Part ID" />
-            <View style={{ marginTop: 9 }}>
-              <Row>
-                <Field label="Authorized qty" value={line.authorizedQty} onChangeText={(v) => updateLine(line.key, { authorizedQty: v })} mono keyboardType="numeric" />
-                <Field label="Max value" value={line.maxValue} onChangeText={(v) => updateLine(line.key, { maxValue: v })} mono keyboardType="numeric" />
-              </Row>
+              {selectedPrIds.includes(pr.id) ? <Check size={13} color={color.tag} /> : null}
             </View>
-          </Card>
-        ))}
-        <Button label="+ Add line" variant="secondary" onPress={addLine} />
+            <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{pr.id}</Text>
+          </Pressable>
+        ))
+      )}
 
-        <Callout tone="warning">
-          No total row, deliberately. Ceilings exist per line only — there is no cap above line level, so several
-          lines each individually within ceiling can still overrun a budget nobody stated.
-        </Callout>
-        <Callout>There is no approve step. Creating this record is the authorization.</Callout>
-        <Callout>
-          Creating this notifies the PROCUREMENT users in this branch, so purchasing knows they can buy. The request's
-          requester is told it was authorized.
-        </Callout>
-        <Callout tone="warning">
-          Purchased and remaining value are Owner+-only — below that scope they come back null from the API and render
-          masked, not as an error. The max value you set here stays visible.
-        </Callout>
+      <Section>Ceiling lines</Section>
+      {lines.map((line) => (
+        <Card key={line.key}>
+          <Field label="Part" value={line.partId} onChangeText={(v) => updateLine(line.key, { partId: v })} placeholder="Part ID" />
+          <View style={{ marginTop: 9 }}>
+            <Row>
+              <Field label="Authorized qty" value={line.authorizedQty} onChangeText={(v) => updateLine(line.key, { authorizedQty: v })} mono keyboardType="numeric" />
+              <Field label="Max value" value={line.maxValue} onChangeText={(v) => updateLine(line.key, { maxValue: v })} mono keyboardType="numeric" />
+            </Row>
+          </View>
+        </Card>
+      ))}
+      <Button label="+ Add line" variant="secondary" onPress={addLine} />
 
-        {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
+      <Callout tone="warning">
+        No total row, deliberately. Ceilings exist per line only — there is no cap above line level, so several
+        lines each individually within ceiling can still overrun a budget nobody stated.
+      </Callout>
+      <Callout>There is no approve step. Creating this record is the authorization.</Callout>
+      <Callout>
+        Creating this notifies the PROCUREMENT users in this branch, so purchasing knows they can buy. The request's
+        requester is told it was authorized.
+      </Callout>
+      <Callout tone="warning">
+        Purchased and remaining value are Owner+-only — below that scope they come back null from the API and render
+        masked, not as an error. The max value you set here stays visible.
+      </Callout>
 
-        {!mayCreate ? (
-          <Callout tone="warning">Your scope can't set spending limits — the store Owner does. Ask them to create this.</Callout>
-        ) : null}
+      {error ? <Text style={{ ...textStyle(typeScale.helper), color: color.danger }}>{error}</Text> : null}
 
-        <Button
-          label={submitting ? 'Creating…' : 'Create (= authorize)'}
-          variant="gated"
-          gate="OWNER+"
-          onPress={handleSubmit}
-          disabled={submitting || !mayCreate}
-        />
-      </ScrollView>
-    </SafeAreaView>
+      {!mayCreate ? (
+        <Callout tone="warning">Your scope can't set spending limits — the store Owner does. Ask them to create this.</Callout>
+      ) : null}
+
+      <Button
+        label={submitting ? 'Creating…' : 'Create (= authorize)'}
+        variant="gated"
+        gate="OWNER+"
+        onPress={handleSubmit}
+        disabled={submitting || !mayCreate}
+      />
+    </Screen>
   );
 }

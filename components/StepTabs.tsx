@@ -18,8 +18,13 @@ type StepTabsProps = {
 // every step to find what's left.
 export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
   const { color, type: typeScale, radius, border } = useTheme();
+  // A segmented control: one rounded track, the active step filled.
   return (
-    <View className="flex-row" style={{ gap: 4 }} accessibilityRole="tablist">
+    <View
+      className="flex-row"
+      style={{ gap: 4, padding: 4, borderRadius: radius.md, backgroundColor: color.panel, borderWidth: border.hair, borderColor: color.hair }}
+      accessibilityRole="tablist"
+    >
       {steps.map((s, i) => {
         const selected = i === active;
         const stateLabel = s.state === 'complete' ? ', complete' : s.state === 'missing' ? ', needs attention' : '';
@@ -32,21 +37,19 @@ export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
             accessibilityLabel={`Step ${i + 1}, ${s.label}${stateLabel}`}
             style={{
               flex: 1,
-              minHeight: 44,
+              minHeight: 40,
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 5,
               borderRadius: radius.sm,
-              borderWidth: border.base,
-              borderColor: selected ? color.ink : color.line,
               backgroundColor: selected ? color.ink : 'transparent',
               paddingHorizontal: 4,
             }}
           >
             <Text
               numberOfLines={1}
-              style={{ ...textStyle(typeScale.chip), fontSize: 13, fontWeight: '700', color: selected ? color.panel : color.steel }}
+              style={{ ...textStyle(typeScale.chip), fontSize: 13, color: selected ? color.panel : color.steel }}
             >
               {`${i + 1}. ${s.label}`}
             </Text>
@@ -56,7 +59,7 @@ export function StepTabs({ steps, active, onSelect }: StepTabsProps) {
                 style={{
                   width: 8,
                   height: 8,
-                  borderRadius: radius.sm,
+                  borderRadius: radius.pill,
                   backgroundColor: color.danger,
                   borderWidth: selected ? 1.5 : 0,
                   borderColor: color.panel,

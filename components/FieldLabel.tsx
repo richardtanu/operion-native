@@ -5,9 +5,5 @@ import { textStyle } from '../theme/typeStyle';
 
 export function FieldLabel({ children }: PropsWithChildren) {
   const { color, type: typeScale } = useTheme();
-  return (
-    <Text style={{ ...textStyle(typeScale.fieldLabel), fontWeight: '600', color: color.mute, marginBottom: 3 }}>
-      {children}
-    </Text>
-  );
+  return <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.steel, marginBottom: 6 }}>{children}</Text>;
 }

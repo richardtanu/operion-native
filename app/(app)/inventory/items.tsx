@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, Row, Section } from '../../../components';
+import { Pressable, Text, View } from 'react-native';
+import { Button, Callout, Card, Chip, Row, Screen, Section } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canEditItems, canRetireItems } from '../../../auth/permissions';
 import { listParts, restorePart } from '../../../api/parts';
@@ -70,55 +69,52 @@ export default function ItemsScreen() {
   const open = (id: string) => router.push({ pathname: '/(app)/inventory/item/[partId]', params: { partId: id } });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Items</Text>
+    <Screen title="Items">
 
-        <Link href="/(app)/inventory/item-form" asChild>
-          <Button label="Add item" variant="gated" gate="MANAGER+·ADMIN" disabled={!canEditItems(user)} />
-        </Link>
+      <Link href="/(app)/inventory/item-form" asChild>
+        <Button label="Add item" variant="gated" gate="MANAGER+·ADMIN" disabled={!canEditItems(user)} />
+      </Link>
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-        {!loading && !error && active.length === 0 ? (
-          <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No items yet.</Text>
-        ) : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {!loading && !error && active.length === 0 ? (
+        <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No items yet.</Text>
+      ) : null}
 
-        {[...byCategory.entries()].map(([category, list]) => (
-          <View key={category} className="gap-sm">
-            <Section>{category}</Section>
-            {list.map((p) => (
-              <Pressable key={p.id} onPress={() => open(p.id)}>
-                <Card>
-                  <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
-                    <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{p.name}</Text>
-                    <Row gap={6}>{p.catalogPartId ? <Chip label="HQ" /> : null}</Row>
-                  </View>
-                  <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>
-                    {`${multiStore ? `${p.tenantName} · ` : ''}${p.currentStock} · min ${p.minimumStock ?? '—'}${p.brand ? ` · ${p.brand}` : ''}`}
-                  </Text>
-                </Card>
-              </Pressable>
-            ))}
-          </View>
-        ))}
-
-        {retired.length ? (
-          <View className="gap-sm">
-            <Section>Retired</Section>
-            {retired.map((p) => (
-              <Card key={p.id}>
-                <Text style={{ ...textStyle(typeScale.cardTitle), color: color.mute }}>{p.name}</Text>
-                {canRetireItems(user) ? (
-                  <View style={{ marginTop: 8 }}>
-                    <Button label="Restore" variant="gated" gate="OWNER+·ADMIN" disabled={busy} onPress={() => restore(p.id)} />
-                  </View>
-                ) : null}
+      {[...byCategory.entries()].map(([category, list]) => (
+        <View key={category} className="gap-sm">
+          <Section>{category}</Section>
+          {list.map((p) => (
+            <Pressable key={p.id} onPress={() => open(p.id)}>
+              <Card>
+                <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
+                  <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{p.name}</Text>
+                  <Row gap={6}>{p.catalogPartId ? <Chip label="HQ" /> : null}</Row>
+                </View>
+                <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>
+                  {`${multiStore ? `${p.tenantName} · ` : ''}${p.currentStock} · min ${p.minimumStock ?? '—'}${p.brand ? ` · ${p.brand}` : ''}`}
+                </Text>
               </Card>
-            ))}
-          </View>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+            </Pressable>
+          ))}
+        </View>
+      ))}
+
+      {retired.length ? (
+        <View className="gap-sm">
+          <Section>Retired</Section>
+          {retired.map((p) => (
+            <Card key={p.id}>
+              <Text style={{ ...textStyle(typeScale.cardTitle), color: color.mute }}>{p.name}</Text>
+              {canRetireItems(user) ? (
+                <View style={{ marginTop: 8 }}>
+                  <Button label="Restore" variant="gated" gate="OWNER+·ADMIN" disabled={busy} onPress={() => restore(p.id)} />
+                </View>
+              ) : null}
+            </Card>
+          ))}
+        </View>
+      ) : null}
+    </Screen>
   );
 }

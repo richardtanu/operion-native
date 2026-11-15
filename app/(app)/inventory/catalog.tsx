@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, Field, FieldLabel, KV, Row, Section, SelectField } from '../../../components';
+import { Pressable, Text, View } from 'react-native';
+import { Button, Callout, Card, Chip, Field, FieldLabel, KV, Row, Screen, Section, SelectField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canManageHqCatalog } from '../../../auth/permissions';
 import { linkToCatalog, listParts, updateHqFlags } from '../../../api/parts';
@@ -101,140 +100,134 @@ export default function HqCatalogScreen() {
 
   if (!loading && !root) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <View className="flex-1 gap-md px-xl pt-xl">
-          <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>HQ catalog</Text>
-          <Callout>HQ manages its catalog when signed in at HQ. Stores see what HQ sells in Order from HQ.</Callout>
-        </View>
-      </SafeAreaView>
+      <Screen title="HQ catalog">
+        <Callout>HQ manages its catalog when signed in at HQ. Stores see what HQ sells in Order from HQ.</Callout>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>HQ catalog</Text>
+    <Screen title="HQ catalog">
 
-        {mayManage ? (
-          <Link href="/(app)/inventory/item-form" asChild>
-            <Button label="Add HQ item" variant="gated" gate="HQ ADMIN" />
-          </Link>
-        ) : (
-          <Callout>Only HQ admins change the catalog.</Callout>
-        )}
+      {mayManage ? (
+        <Link href="/(app)/inventory/item-form" asChild>
+          <Button label="Add HQ item" variant="gated" gate="HQ ADMIN" />
+        </Link>
+      ) : (
+        <Callout>Only HQ admins change the catalog.</Callout>
+      )}
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {notice ? <Callout tone="success">{notice}</Callout> : null}
-        {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-        {!loading && hqItems.length === 0 ? (
-          <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>HQ has no items yet.</Text>
-        ) : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {notice ? <Callout tone="success">{notice}</Callout> : null}
+      {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {!loading && hqItems.length === 0 ? (
+        <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>HQ has no items yet.</Text>
+      ) : null}
 
-        {hqItems.map((item) => {
-          const linked = linkedIn(item.id);
-          const isOpen = openId === item.id;
-          return (
-            <Card key={item.id}>
-              <Pressable onPress={() => mayManage && open(item)} disabled={!mayManage}>
-                <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
-                  <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{item.name}</Text>
-                  <Row gap={6}>
-                    {item.soldByHq ? <Chip label="Sold" tone="success" /> : <Chip label="Not sold" />}
-                    {item.mandatoryFromHq ? <Chip label="Must buy" tone="warning" /> : null}
+      {hqItems.map((item) => {
+        const linked = linkedIn(item.id);
+        const isOpen = openId === item.id;
+        return (
+          <Card key={item.id}>
+            <Pressable onPress={() => mayManage && open(item)} disabled={!mayManage}>
+              <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
+                <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{item.name}</Text>
+                <Row gap={6}>
+                  {item.soldByHq ? <Chip label="Sold" tone="success" /> : <Chip label="Not sold" />}
+                  {item.mandatoryFromHq ? <Chip label="Must buy" tone="warning" /> : null}
+                </Row>
+              </View>
+              <KV k="Price" v={item.hqPrice != null ? rp(item.hqPrice) : '—'} />
+              <KV k="Stores linked" v={`${new Set(linked.map((p) => p.tenantId)).size} of ${stores.length}`} />
+              {item.soldByHq && item.hqPrice == null ? (
+                <Text style={{ ...textStyle(typeScale.helper), color: color.warn }}>No price: stores can't order it until HQ sets one.</Text>
+              ) : null}
+            </Pressable>
+
+            {isOpen ? (
+              <View style={{ gap: 9, marginTop: 10 }}>
+                <View style={{ gap: 6 }}>
+                  <FieldLabel>Sold by HQ</FieldLabel>
+                  <Row gap={0}>
+                    {[true, false].map((v) => (
+                      <View key={String(v)} style={{ flex: 1 }}>
+                        <Button label={v ? 'Yes' : 'No'} variant={(sold || mustBuy) === v ? 'primary' : 'secondary'} onPress={() => setSold(v)} disabled={!v && mustBuy} />
+                      </View>
+                    ))}
                   </Row>
                 </View>
-                <KV k="Price" v={item.hqPrice != null ? rp(item.hqPrice) : '—'} />
-                <KV k="Stores linked" v={`${new Set(linked.map((p) => p.tenantId)).size} of ${stores.length}`} />
-                {item.soldByHq && item.hqPrice == null ? (
-                  <Text style={{ ...textStyle(typeScale.helper), color: color.warn }}>No price: stores can't order it until HQ sets one.</Text>
-                ) : null}
-              </Pressable>
-
-              {isOpen ? (
-                <View style={{ gap: 9, marginTop: 10 }}>
-                  <View style={{ gap: 6 }}>
-                    <FieldLabel>Sold by HQ</FieldLabel>
-                    <Row gap={0}>
-                      {[true, false].map((v) => (
-                        <View key={String(v)} style={{ flex: 1 }}>
-                          <Button label={v ? 'Yes' : 'No'} variant={(sold || mustBuy) === v ? 'primary' : 'secondary'} onPress={() => setSold(v)} disabled={!v && mustBuy} />
-                        </View>
-                      ))}
-                    </Row>
-                  </View>
-                  <View style={{ gap: 6 }}>
-                    <FieldLabel>Stores must buy from HQ</FieldLabel>
-                    <Row gap={0}>
-                      {[true, false].map((v) => (
-                        <View key={String(v)} style={{ flex: 1 }}>
-                          <Button label={v ? 'Yes' : 'No'} variant={mustBuy === v ? 'primary' : 'secondary'} onPress={() => setMustBuy(v)} />
-                        </View>
-                      ))}
-                    </Row>
-                  </View>
-                  <Field
-                    label="HQ's price (Rp)"
-                    value={price}
-                    onChangeText={setPrice}
-                    mono
-                    keyboardType="numeric"
-                    sub="What stores pay per unit. Only Owners and above see it. Orders take it when created and when sent."
-                  />
-                  <Button label={busy ? 'Saving…' : 'Save'} variant="gated" gate="HQ ADMIN" disabled={busy} onPress={() => save(item)} />
-
-                  <Section>Store items</Section>
-                  {stores.map((store) => {
-                    const mine = linked.find((p) => p.tenantId === store.id);
-                    const candidates = parts.filter((p) => p.tenantId === store.id && !p.catalogPartId && !p.retired);
-                    return (
-                      <View key={store.id} style={{ gap: 6 }}>
-                        <View className="flex-row justify-between" style={{ gap: 8 }}>
-                          <Text style={{ ...textStyle(typeScale.body), color: color.ink, flex: 1 }}>{store.name}</Text>
-                          {mine ? <Chip label="Linked" tone="success" /> : <Chip label="Not linked" />}
-                        </View>
-                        {mine ? (
-                          <>
-                            <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{mine.name}</Text>
-                            <Button
-                              label="Unlink"
-                              variant="gated"
-                              gate="HQ ADMIN"
-                              disabled={busy}
-                              onPress={() => run(() => linkToCatalog(mine.id, null, token!), `Unlinked ${store.name}'s item.`, 'Could not unlink.')}
-                              style={{ paddingVertical: 8 }}
-                            />
-                          </>
-                        ) : (
-                          <>
-                            <SelectField
-                              label="Their item"
-                              value={linkPick[store.id] ?? null}
-                              placeholder={candidates.length ? 'Pick their item…' : 'No unlinked items'}
-                              disabled={candidates.length === 0}
-                              items={candidates.map((p) => ({ id: p.id, label: p.name, sublabel: p.categoryName ?? undefined }))}
-                              onChange={(id) => setLinkPick((prev) => ({ ...prev, [store.id]: id }))}
-                            />
-                            <Button
-                              label="Link"
-                              variant="gated"
-                              gate="HQ ADMIN"
-                              disabled={busy || !linkPick[store.id]}
-                              onPress={() =>
-                                run(() => linkToCatalog(linkPick[store.id], item.id, token!), `Linked ${store.name}'s item.`, 'Could not link.')
-                              }
-                              style={{ paddingVertical: 8 }}
-                            />
-                          </>
-                        )}
+                <View style={{ gap: 6 }}>
+                  <FieldLabel>Stores must buy from HQ</FieldLabel>
+                  <Row gap={0}>
+                    {[true, false].map((v) => (
+                      <View key={String(v)} style={{ flex: 1 }}>
+                        <Button label={v ? 'Yes' : 'No'} variant={mustBuy === v ? 'primary' : 'secondary'} onPress={() => setMustBuy(v)} />
                       </View>
-                    );
-                  })}
+                    ))}
+                  </Row>
                 </View>
-              ) : null}
-            </Card>
-          );
-        })}
-      </ScrollView>
-    </SafeAreaView>
+                <Field
+                  label="HQ's price (Rp)"
+                  value={price}
+                  onChangeText={setPrice}
+                  mono
+                  keyboardType="numeric"
+                  sub="What stores pay per unit. Only Owners and above see it. Orders take it when created and when sent."
+                />
+                <Button label={busy ? 'Saving…' : 'Save'} variant="gated" gate="HQ ADMIN" disabled={busy} onPress={() => save(item)} />
+
+                <Section>Store items</Section>
+                {stores.map((store) => {
+                  const mine = linked.find((p) => p.tenantId === store.id);
+                  const candidates = parts.filter((p) => p.tenantId === store.id && !p.catalogPartId && !p.retired);
+                  return (
+                    <View key={store.id} style={{ gap: 6 }}>
+                      <View className="flex-row justify-between" style={{ gap: 8 }}>
+                        <Text style={{ ...textStyle(typeScale.body), color: color.ink, flex: 1 }}>{store.name}</Text>
+                        {mine ? <Chip label="Linked" tone="success" /> : <Chip label="Not linked" />}
+                      </View>
+                      {mine ? (
+                        <>
+                          <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{mine.name}</Text>
+                          <Button
+                            label="Unlink"
+                            variant="gated"
+                            gate="HQ ADMIN"
+                            disabled={busy}
+                            onPress={() => run(() => linkToCatalog(mine.id, null, token!), `Unlinked ${store.name}'s item.`, 'Could not unlink.')}
+                            style={{ paddingVertical: 8 }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <SelectField
+                            label="Their item"
+                            value={linkPick[store.id] ?? null}
+                            placeholder={candidates.length ? 'Pick their item…' : 'No unlinked items'}
+                            disabled={candidates.length === 0}
+                            items={candidates.map((p) => ({ id: p.id, label: p.name, sublabel: p.categoryName ?? undefined }))}
+                            onChange={(id) => setLinkPick((prev) => ({ ...prev, [store.id]: id }))}
+                          />
+                          <Button
+                            label="Link"
+                            variant="gated"
+                            gate="HQ ADMIN"
+                            disabled={busy || !linkPick[store.id]}
+                            onPress={() =>
+                              run(() => linkToCatalog(linkPick[store.id], item.id, token!), `Linked ${store.name}'s item.`, 'Could not link.')
+                            }
+                            style={{ paddingVertical: 8 }}
+                          />
+                        </>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+            ) : null}
+          </Card>
+        );
+      })}
+    </Screen>
   );
 }

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, Text, View } from 'react-native';
 import { ArrowRight, Lock } from 'lucide-react-native';
-import { Button, Callout, Card, Chip, KV, Section, actorLabel, type ChipTone } from '../../../components';
+import { actorLabel, Button, Callout, Card, Chip, type ChipTone, KV, Screen, Section } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { getProcurementActivity } from '../../../api/procurement';
 import { ApiError } from '../../../api/httpError';
@@ -107,137 +106,128 @@ export default function ActivityLogScreen() {
     return byDay;
   }, [entries]);
 
-  const pill = { width: 'auto' as const, paddingHorizontal: 10, paddingVertical: 6 };
 
   if (!allowed) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <View className="gap-md px-xl pt-xl">
-          <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Activity Log</Text>
-          <Callout tone="warning" title="Not available for your account">
-            The activity log is for ADMIN, PROCUREMENT or ACCOUNTING users, or Owner scope and above. Ask an admin if you need it.
-          </Callout>
-        </View>
-      </SafeAreaView>
+      <Screen title="Activity log">
+        <Callout tone="warning" title="Not available for your account">
+          The activity log is for ADMIN, PROCUREMENT or ACCOUNTING users, or Owner scope and above. Ask an admin if you need it.
+        </Callout>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <View className="gap-xs">
-          <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Activity Log</Text>
-          <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-            Every status change on requests, authorizations, purchases and orders across your branches. Newest first.
-          </Text>
-        </View>
+    <Screen title="Activity log">
+      <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+        Every status change on requests, authorizations, purchases and orders across your branches. Newest first.
+      </Text>
 
-        <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-          {TYPE_FILTERS.map((f) => (
-            <Button key={f.value} label={f.label} variant={type === f.value ? 'primary' : 'secondary'} onPress={() => {
-                setType(f.value);
-                setLimit(PAGE); // a new filter starts again from the first page
-              }} style={pill} />
-          ))}
-        </View>
-        <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-          {PERIODS.map((p) => (
-            <Button key={p.label} label={p.label} variant={periodDays === p.days ? 'primary' : 'secondary'} onPress={() => {
-                setPeriodDays(p.days);
-                setLimit(PAGE);
-              }} style={pill} />
-          ))}
-        </View>
-
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {loading && entries.length === 0 ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-        {!loading && !error && entries.length === 0 ? (
-          <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No changes in this period.</Text>
-        ) : null}
-
-        {groups.map((group) => (
-          <View key={group.day} className="gap-sm">
-            <Section>{group.label}</Section>
-            {group.items.map(({ key, entry, at }) => {
-              const expanded = expandedKey === key;
-              return (
-                <Pressable key={key} onPress={() => setExpandedKey(expanded ? null : key)} accessibilityRole="button" accessibilityState={{ expanded }}>
-                  <Card>
-                    {/* Line 1 — when, what kind, which record */}
-                    <View className="flex-row items-center" style={{ gap: 8 }}>
-                      <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>{at ? formatTime(at) : '—'}</Text>
-                      <Chip label={TYPE_TAG[entry.entityType] ?? entry.entityType} />
-                      <Text style={{ ...textStyle(typeScale.value), color: color.ink, flex: 1 }} numberOfLines={1}>
-                        {entry.reference ?? shortId(entry.entityId)}
-                      </Text>
-                    </View>
-
-                    {/* Line 2 — the change itself */}
-                    <View className="flex-row flex-wrap items-center" style={{ gap: 6, marginTop: 8 }}>
-                      {entry.previousStatus ? (
-                        <>
-                          <Chip label={entry.previousStatus} tone={statusTone(entry.previousStatus)} />
-                          <ArrowRight size={14} color={color.steel} />
-                        </>
-                      ) : (
-                        <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>Created as</Text>
-                      )}
-                      <Chip label={entry.newStatus} tone={statusTone(entry.newStatus)} solid />
-                    </View>
-
-                    {/* Line 3 — who, where */}
-                    <View className="flex-row items-center" style={{ gap: 6, marginTop: 8 }}>
-                      {entry.actorKind === 'USER' && entry.actorName ? (
-                        <Text style={{ ...textStyle(typeScale.body), color: color.ink, flexShrink: 1 }}>{entry.actorName}</Text>
-                      ) : (
-                        // BE-22: an automatic change names whose action caused it; a row with no
-                        // actor at all (test data only) says so. The derived treatment, never a blank.
-                        <View className="flex-row items-center" style={{ gap: 4, flexShrink: 1 }}>
-                          <Lock size={12} color={color.steel} />
-                          <Text
-                            style={{
-                              ...textStyle(typeScale.body),
-                              fontStyle: 'italic',
-                              color: entry.actorKind === 'AUTOMATIC' ? color.steel : color.mute,
-                              flexShrink: 1,
-                            }}
-                          >
-                            {actorLabel(entry, entry.actorName)}
-                          </Text>
-                        </View>
-                      )}
-                      <Text style={{ ...textStyle(typeScale.helper), color: color.mute, flexShrink: 1 }} numberOfLines={1}>
-                        · {entry.tenantName}
-                      </Text>
-                    </View>
-
-                    {entry.reason ? (
-                      <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 6 }}>“{entry.reason}”</Text>
-                    ) : null}
-
-                    {expanded ? (
-                      <View style={{ marginTop: 8 }}>
-                        <KV k="Record ID" v={entry.entityId} />
-                        <KV k="When" v={at ? `${formatDayLabel(at)} ${formatTime(at)}` : entry.at} />
-                        <KV k="Branch" v={entry.tenantName} />
-                        {entry.actorKind !== 'USER' ? <KV k="Changed by" v={actorLabel(entry, entry.actorName)} derived /> : null}
-                      </View>
-                    ) : null}
-                  </Card>
-                </Pressable>
-              );
-            })}
-          </View>
+      <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+        {TYPE_FILTERS.map((f) => (
+          <Button key={f.value} label={f.label} variant={type === f.value ? 'primary' : 'secondary'} onPress={() => {
+              setType(f.value);
+              setLimit(PAGE); // a new filter starts again from the first page
+            }} compact />
         ))}
+      </View>
+      <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+        {PERIODS.map((p) => (
+          <Button key={p.label} label={p.label} variant={periodDays === p.days ? 'primary' : 'secondary'} onPress={() => {
+              setPeriodDays(p.days);
+              setLimit(PAGE);
+            }} compact />
+        ))}
+      </View>
 
-        {/* The server returns at most `limit` rows; a full page means there may be more. */}
-        {entries.length >= limit && limit < MAX_LIMIT ? (
-          <Button label={loading ? 'Loading…' : 'Load more'} variant="secondary" disabled={loading} onPress={() => setLimit((l) => Math.min(l + PAGE, MAX_LIMIT))} />
-        ) : null}
-        {entries.length >= MAX_LIMIT ? (
-          <Callout>Showing the newest {MAX_LIMIT} changes, the most one load can return. Pick a shorter period or a record type to see older ones.</Callout>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {loading && entries.length === 0 ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {!loading && !error && entries.length === 0 ? (
+        <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No changes in this period.</Text>
+      ) : null}
+
+      {groups.map((group) => (
+        <View key={group.day} className="gap-sm">
+          <Section>{group.label}</Section>
+          {group.items.map(({ key, entry, at }) => {
+            const expanded = expandedKey === key;
+            return (
+              <Pressable key={key} onPress={() => setExpandedKey(expanded ? null : key)} accessibilityRole="button" accessibilityState={{ expanded }}>
+                <Card>
+                  {/* Line 1 — when, what kind, which record */}
+                  <View className="flex-row items-center" style={{ gap: 8 }}>
+                    <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>{at ? formatTime(at) : '—'}</Text>
+                    <Chip label={TYPE_TAG[entry.entityType] ?? entry.entityType} />
+                    <Text style={{ ...textStyle(typeScale.value), color: color.ink, flex: 1 }} numberOfLines={1}>
+                      {entry.reference ?? shortId(entry.entityId)}
+                    </Text>
+                  </View>
+
+                  {/* Line 2 — the change itself */}
+                  <View className="flex-row flex-wrap items-center" style={{ gap: 6, marginTop: 8 }}>
+                    {entry.previousStatus ? (
+                      <>
+                        <Chip label={entry.previousStatus} tone={statusTone(entry.previousStatus)} />
+                        <ArrowRight size={14} color={color.steel} />
+                      </>
+                    ) : (
+                      <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>Created as</Text>
+                    )}
+                    <Chip label={entry.newStatus} tone={statusTone(entry.newStatus)} solid />
+                  </View>
+
+                  {/* Line 3 — who, where */}
+                  <View className="flex-row items-center" style={{ gap: 6, marginTop: 8 }}>
+                    {entry.actorKind === 'USER' && entry.actorName ? (
+                      <Text style={{ ...textStyle(typeScale.body), color: color.ink, flexShrink: 1 }}>{entry.actorName}</Text>
+                    ) : (
+                      // BE-22: an automatic change names whose action caused it; a row with no
+                      // actor at all (test data only) says so. The derived treatment, never a blank.
+                      <View className="flex-row items-center" style={{ gap: 4, flexShrink: 1 }}>
+                        <Lock size={12} color={color.steel} />
+                        <Text
+                          style={{
+                            ...textStyle(typeScale.body),
+                            fontStyle: 'italic',
+                            color: entry.actorKind === 'AUTOMATIC' ? color.steel : color.mute,
+                            flexShrink: 1,
+                          }}
+                        >
+                          {actorLabel(entry, entry.actorName)}
+                        </Text>
+                      </View>
+                    )}
+                    <Text style={{ ...textStyle(typeScale.helper), color: color.mute, flexShrink: 1 }} numberOfLines={1}>
+                      · {entry.tenantName}
+                    </Text>
+                  </View>
+
+                  {entry.reason ? (
+                    <Text style={{ ...textStyle(typeScale.helper), color: color.steel, marginTop: 6 }}>“{entry.reason}”</Text>
+                  ) : null}
+
+                  {expanded ? (
+                    <View style={{ marginTop: 8 }}>
+                      <KV k="Record ID" v={entry.entityId} />
+                      <KV k="When" v={at ? `${formatDayLabel(at)} ${formatTime(at)}` : entry.at} />
+                      <KV k="Branch" v={entry.tenantName} />
+                      {entry.actorKind !== 'USER' ? <KV k="Changed by" v={actorLabel(entry, entry.actorName)} derived /> : null}
+                    </View>
+                  ) : null}
+                </Card>
+              </Pressable>
+            );
+          })}
+        </View>
+      ))}
+
+      {/* The server returns at most `limit` rows; a full page means there may be more. */}
+      {entries.length >= limit && limit < MAX_LIMIT ? (
+        <Button label={loading ? 'Loading…' : 'Load more'} variant="secondary" disabled={loading} onPress={() => setLimit((l) => Math.min(l + PAGE, MAX_LIMIT))} />
+      ) : null}
+      {entries.length >= MAX_LIMIT ? (
+        <Callout>Showing the newest {MAX_LIMIT} changes, the most one load can return. Pick a shorter period or a record type to see older ones.</Callout>
+      ) : null}
+    </Screen>
   );
 }

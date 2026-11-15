@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, Field, FieldLabel, Row } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Card, Chip, Field, FieldLabel, Row, Screen } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canManageHqCatalog } from '../../../auth/permissions';
 import {
@@ -134,142 +133,139 @@ export default function CategoriesScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Categories</Text>
-        <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-          One list, kept by HQ, used by every store. {mayEdit ? '' : 'Ask HQ to add or change one.'}
-        </Text>
+    <Screen title="Categories">
+      <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+        One list, kept by HQ, used by every store. {mayEdit ? '' : 'Ask HQ to add or change one.'}
+      </Text>
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
-        {loading && categories.length === 0 ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
+      {loading && categories.length === 0 ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
 
-        {mayEdit && !adding && !editingId ? (
-          <Button
-            label="Add category"
-            variant="gated"
-            gate="HQ ADMIN"
-            onPress={() => {
-              setForm(EMPTY_FORM);
-              setAdding(true);
-            }}
-          />
-        ) : null}
+      {mayEdit && !adding && !editingId ? (
+        <Button
+          label="Add category"
+          variant="gated"
+          gate="HQ ADMIN"
+          onPress={() => {
+            setForm(EMPTY_FORM);
+            setAdding(true);
+          }}
+        />
+      ) : null}
 
-        {adding ? (
-          <Card>
-            <View style={{ gap: 10 }}>
-              {categoryFields}
-              <Row>
-                <View style={{ flex: 1 }}>
-                  <Button label="Cancel" variant="secondary" onPress={closeEditor} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    label="Add"
-                    variant="gated"
-                    gate="HQ ADMIN"
-                    disabled={busy || !form.name.trim()}
-                    onPress={() =>
-                      run(
-                        () => createCategory({ name: form.name.trim(), description: form.description.trim() || undefined, consumable: form.consumable }, token!),
-                        closeEditor,
-                      )
-                    }
-                  />
-                </View>
-              </Row>
-            </View>
-          </Card>
-        ) : null}
+      {adding ? (
+        <Card>
+          <View style={{ gap: 10 }}>
+            {categoryFields}
+            <Row>
+              <View style={{ flex: 1 }}>
+                <Button label="Cancel" variant="secondary" onPress={closeEditor} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Button
+                  label="Add"
+                  variant="gated"
+                  gate="HQ ADMIN"
+                  disabled={busy || !form.name.trim()}
+                  onPress={() =>
+                    run(
+                      () => createCategory({ name: form.name.trim(), description: form.description.trim() || undefined, consumable: form.consumable }, token!),
+                      closeEditor,
+                    )
+                  }
+                />
+              </View>
+            </Row>
+          </View>
+        </Card>
+      ) : null}
 
-        {!loading && !error && categories.length === 0 ? (
-          <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No categories yet.</Text>
-        ) : null}
+      {!loading && !error && categories.length === 0 ? (
+        <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>No categories yet.</Text>
+      ) : null}
 
-        {categories.map((c) => {
-          const own = types.filter((t) => t.categoryId === c.id);
-          if (editingId === c.id) {
-            return (
-              <Card key={c.id}>
-                <View style={{ gap: 10 }}>
-                  {categoryFields}
-                  <Button
-                    label="Save category"
-                    variant="gated"
-                    gate="HQ ADMIN"
-                    disabled={busy || !form.name.trim()}
-                    onPress={() =>
-                      run(() => updateCategory(c.id, { name: form.name.trim(), description: form.description.trim(), consumable: form.consumable }, token!))
-                    }
-                  />
-
-                  <FieldLabel>Types</FieldLabel>
-                  {own.map((t) => (
-                    <View key={t.id} className="flex-row items-end" style={{ gap: 8 }}>
-                      <View style={{ flex: 1 }}>
-                        <Field value={typeNames[t.id] ?? t.name} onChangeText={(v) => setTypeNames((n) => ({ ...n, [t.id]: v }))} />
-                      </View>
-                      <Button
-                        label="Rename"
-                        variant="secondary"
-                        disabled={busy || !(typeNames[t.id] ?? '').trim() || typeNames[t.id] === t.name}
-                        onPress={() => run(() => updatePartType(t.id, { name: typeNames[t.id].trim() }, token!))}
-                        style={{ paddingVertical: 8 }}
-                      />
-                      <Button label="Delete" variant="secondary" disabled={busy} onPress={() => run(() => deletePartType(t.id, token!))} style={{ paddingVertical: 8 }} />
-                    </View>
-                  ))}
-                  <View className="flex-row items-end" style={{ gap: 8 }}>
-                    <View style={{ flex: 1 }}>
-                      <Field value={newType} onChangeText={setNewType} placeholder="New type, e.g. Green gas" />
-                    </View>
-                    <Button
-                      label="Add type"
-                      variant="secondary"
-                      disabled={busy || !newType.trim()}
-                      onPress={() => run(() => createPartType({ categoryId: c.id, name: newType.trim() }, token!), () => setNewType(''))}
-                      style={{ paddingVertical: 8 }}
-                    />
-                  </View>
-
-                  <Row>
-                    <View style={{ flex: 1 }}>
-                      <Button label="Done" variant="secondary" onPress={closeEditor} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Button label="Delete category" variant="gated" gate="HQ ADMIN" disabled={busy} onPress={() => run(() => deleteCategory(c.id, token!), closeEditor)} />
-                    </View>
-                  </Row>
-                  <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-                    A category or type that any store’s item still uses can’t be deleted.
-                  </Text>
-                </View>
-              </Card>
-            );
-          }
+      {categories.map((c) => {
+        const own = types.filter((t) => t.categoryId === c.id);
+        if (editingId === c.id) {
           return (
             <Card key={c.id}>
-              <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
-                <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{c.name}</Text>
-                <Chip label={c.consumable ? 'By quantity' : 'One by one'} />
-              </View>
-              <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-                {[countedAs(c.consumable), c.description].filter(Boolean).join(' · ')}
-              </Text>
-              <Text style={{ ...textStyle(typeScale.body), color: own.length ? color.ink : color.mute, marginTop: 6 }}>
-                {own.length ? own.map((t) => t.name).join(', ') : 'No types yet.'}
-              </Text>
-              {mayEdit && !adding && !editingId ? (
-                <View style={{ marginTop: 8 }}>
-                  <Button label="Edit" variant="secondary" onPress={() => startEdit(c)} style={{ paddingVertical: 8 }} />
+              <View style={{ gap: 10 }}>
+                {categoryFields}
+                <Button
+                  label="Save category"
+                  variant="gated"
+                  gate="HQ ADMIN"
+                  disabled={busy || !form.name.trim()}
+                  onPress={() =>
+                    run(() => updateCategory(c.id, { name: form.name.trim(), description: form.description.trim(), consumable: form.consumable }, token!))
+                  }
+                />
+
+                <FieldLabel>Types</FieldLabel>
+                {own.map((t) => (
+                  <View key={t.id} className="flex-row items-end" style={{ gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Field value={typeNames[t.id] ?? t.name} onChangeText={(v) => setTypeNames((n) => ({ ...n, [t.id]: v }))} />
+                    </View>
+                    <Button
+                      label="Rename"
+                      variant="secondary"
+                      disabled={busy || !(typeNames[t.id] ?? '').trim() || typeNames[t.id] === t.name}
+                      onPress={() => run(() => updatePartType(t.id, { name: typeNames[t.id].trim() }, token!))}
+                      style={{ paddingVertical: 8 }}
+                    />
+                    <Button label="Delete" variant="secondary" disabled={busy} onPress={() => run(() => deletePartType(t.id, token!))} style={{ paddingVertical: 8 }} />
+                  </View>
+                ))}
+                <View className="flex-row items-end" style={{ gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <Field value={newType} onChangeText={setNewType} placeholder="New type, e.g. Green gas" />
+                  </View>
+                  <Button
+                    label="Add type"
+                    variant="secondary"
+                    disabled={busy || !newType.trim()}
+                    onPress={() => run(() => createPartType({ categoryId: c.id, name: newType.trim() }, token!), () => setNewType(''))}
+                    style={{ paddingVertical: 8 }}
+                  />
                 </View>
-              ) : null}
+
+                <Row>
+                  <View style={{ flex: 1 }}>
+                    <Button label="Done" variant="secondary" onPress={closeEditor} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button label="Delete category" variant="gated" gate="HQ ADMIN" disabled={busy} onPress={() => run(() => deleteCategory(c.id, token!), closeEditor)} />
+                  </View>
+                </Row>
+                <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+                  A category or type that any store’s item still uses can’t be deleted.
+                </Text>
+              </View>
             </Card>
           );
-        })}
-      </ScrollView>
-    </SafeAreaView>
+        }
+        return (
+          <Card key={c.id}>
+            <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
+              <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{c.name}</Text>
+              <Chip label={c.consumable ? 'By quantity' : 'One by one'} />
+            </View>
+            <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+              {[countedAs(c.consumable), c.description].filter(Boolean).join(' · ')}
+            </Text>
+            <Text style={{ ...textStyle(typeScale.body), color: own.length ? color.ink : color.mute, marginTop: 6 }}>
+              {own.length ? own.map((t) => t.name).join(', ') : 'No types yet.'}
+            </Text>
+            {mayEdit && !adding && !editingId ? (
+              <View style={{ marginTop: 8 }}>
+                <Button label="Edit" variant="secondary" onPress={() => startEdit(c)} style={{ paddingVertical: 8 }} />
+              </View>
+            ) : null}
+          </Card>
+        );
+      })}
+    </Screen>
   );
 }

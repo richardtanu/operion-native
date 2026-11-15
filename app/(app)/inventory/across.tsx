@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Chip, Row } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Card, Chip, Row, Screen } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canFileForAnotherStore } from '../../../auth/permissions';
 import { getTenantTree } from '../../../api/tenants';
@@ -66,68 +65,65 @@ export default function StockAcrossStoresScreen() {
     });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Stock across stores</Text>
+    <Screen title="Stock across stores">
 
-        <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-          {(
-            [
-              ['ALL', 'All'],
-              ['MUST_BUY', 'Must buy from HQ'],
-              ['OUT', 'Out'],
-            ] as [Filter, string][]
-          ).map(([id, label]) => (
-            <Button
-              key={id}
-              label={label}
-              variant={filter === id ? 'primary' : 'secondary'}
-              onPress={() => setFilter(id)}
-              style={{ width: 'auto', paddingHorizontal: 10, paddingVertical: 6 }}
-            />
-          ))}
-        </View>
-
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-        {!loading && !error && shown.length === 0 ? (
-          <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>Nothing to show.</Text>
-        ) : null}
-
-        {shown.map((g) => (
-          <Card key={g.key} tone={g.lines[0].lowBecause === 'OUT' ? 'danger' : g.lines[0].lowBecause ? 'warning' : undefined}>
-            <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
-              <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{g.name}</Text>
-              <Row gap={6}>{g.mustBuy ? <Chip label="Must buy from HQ" /> : null}</Row>
-            </View>
-            <View style={{ gap: 6, marginTop: 6 }}>
-              {g.lines.map((l) => {
-                const s = status(l);
-                return (
-                  <View key={l.partId} style={{ gap: 4 }}>
-                    <View className="flex-row justify-between" style={{ gap: 8 }}>
-                      <Text style={{ ...textStyle(typeScale.body), color: color.ink, flex: 1 }}>{l.tenantName}</Text>
-                      <Text style={{ ...textStyle(typeScale.value), color: s.tone }}>{s.text}</Text>
-                    </View>
-                    {l.lowBecause ? (
-                      <Button
-                        label={`Request for ${l.tenantName}`}
-                        variant="gated"
-                        gate="ADMIN·PROC·OWNER+"
-                        disabled={!canFileForAnotherStore(user)}
-                        onPress={() => request(l)}
-                        style={{ paddingVertical: 8 }}
-                      />
-                    ) : null}
-                  </View>
-                );
-              })}
-            </View>
-          </Card>
+      <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+        {(
+          [
+            ['ALL', 'All'],
+            ['MUST_BUY', 'Must buy from HQ'],
+            ['OUT', 'Out'],
+          ] as [Filter, string][]
+        ).map(([id, label]) => (
+          <Button
+            key={id}
+            label={label}
+            variant={filter === id ? 'primary' : 'secondary'}
+            onPress={() => setFilter(id)}
+            compact
+          />
         ))}
+      </View>
 
-        <Callout>HQ advises; the store decides. Tell the store's Owner, or file a request they can approve.</Callout>
-      </ScrollView>
-    </SafeAreaView>
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {!loading && !error && shown.length === 0 ? (
+        <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>Nothing to show.</Text>
+      ) : null}
+
+      {shown.map((g) => (
+        <Card key={g.key} tone={g.lines[0].lowBecause === 'OUT' ? 'danger' : g.lines[0].lowBecause ? 'warning' : undefined}>
+          <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
+            <Text style={{ ...textStyle(typeScale.cardTitle), color: color.ink, flex: 1 }}>{g.name}</Text>
+            <Row gap={6}>{g.mustBuy ? <Chip label="Must buy from HQ" /> : null}</Row>
+          </View>
+          <View style={{ gap: 6, marginTop: 6 }}>
+            {g.lines.map((l) => {
+              const s = status(l);
+              return (
+                <View key={l.partId} style={{ gap: 4 }}>
+                  <View className="flex-row justify-between" style={{ gap: 8 }}>
+                    <Text style={{ ...textStyle(typeScale.body), color: color.ink, flex: 1 }}>{l.tenantName}</Text>
+                    <Text style={{ ...textStyle(typeScale.value), color: s.tone }}>{s.text}</Text>
+                  </View>
+                  {l.lowBecause ? (
+                    <Button
+                      label={`Request for ${l.tenantName}`}
+                      variant="gated"
+                      gate="ADMIN·PROC·OWNER+"
+                      disabled={!canFileForAnotherStore(user)}
+                      onPress={() => request(l)}
+                      style={{ paddingVertical: 8 }}
+                    />
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+        </Card>
+      ))}
+
+      <Callout>HQ advises; the store decides. Tell the store's Owner, or file a request they can approve.</Callout>
+    </Screen>
   );
 }

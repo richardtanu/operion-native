@@ -1,9 +1,8 @@
 import { useCallback, useState } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
-import { Linking, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Linking, Pressable, Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
-import { Button, Callout, Card, Chip, Field, KV, Row } from '../../../components';
+import { Button, Callout, Card, Chip, Field, KV, Row, Screen } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canRecordExpense, ownerPlus as isOwnerPlus } from '../../../auth/permissions';
 import { listExpenses, markExpensesPaid, undoExpensePayment, voidExpense } from '../../../api/expenses';
@@ -145,188 +144,185 @@ export default function ExpensesScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Expenses</Text>
+    <Screen title="Expenses">
 
-        <View className="flex-row">
-          {(['HQ', 'BRANCH_SPECIFIC'] as ExpenseCategory[]).map((c) => (
-            <View key={c} style={{ flex: 1 }}>
-              <Button label={CATEGORY_LABEL[c]} variant={category === c ? 'primary' : 'secondary'} onPress={() => setCategory(c)} />
-            </View>
-          ))}
-        </View>
+      <View className="flex-row">
+        {(['HQ', 'BRANCH_SPECIFIC'] as ExpenseCategory[]).map((c) => (
+          <View key={c} style={{ flex: 1 }}>
+            <Button label={CATEGORY_LABEL[c]} variant={category === c ? 'primary' : 'secondary'} onPress={() => setCategory(c)} />
+          </View>
+        ))}
+      </View>
 
-        {ownerPlus && monthTotal != null ? (
-          <KV k={`${MONTHS[now.getMonth()]} · ${CATEGORY_LABEL[category]}`} v={rp(monthTotal)} strong derived />
-        ) : null}
+      {ownerPlus && monthTotal != null ? (
+        <KV k={`${MONTHS[now.getMonth()]} · ${CATEGORY_LABEL[category]}`} v={rp(monthTotal)} strong derived />
+      ) : null}
 
-        <Link href="/(app)/expenses/create" asChild>
-          <Button label="Add expense" variant="gated" gate="MANAGER+" disabled={!canRecordExpense(user)} />
-        </Link>
+      <Link href="/(app)/expenses/create" asChild>
+        <Button label="Add expense" variant="gated" gate="MANAGER+" disabled={!canRecordExpense(user)} />
+      </Link>
 
-        <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-          {FILTERS.map((f) => (
-            <Button
-              key={f.id}
-              label={f.label}
-              variant={filter === f.id ? 'primary' : 'secondary'}
-              onPress={() => setFilter(f.id)}
-              style={{ width: 'auto', paddingHorizontal: 10, paddingVertical: 6 }}
-            />
-          ))}
-        </View>
+      <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+        {FILTERS.map((f) => (
+          <Button
+            key={f.id}
+            label={f.label}
+            variant={filter === f.id ? 'primary' : 'secondary'}
+            onPress={() => setFilter(f.id)}
+            compact
+          />
+        ))}
+      </View>
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {notice ? <Callout tone="success">{notice}</Callout> : null}
-        {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-        {!loading && !error && items.length === 0 ? (
-          <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>{emptyText[filter]}</Text>
-        ) : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {notice ? <Callout tone="success">{notice}</Callout> : null}
+      {loading ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {!loading && !error && items.length === 0 ? (
+        <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>{emptyText[filter]}</Text>
+      ) : null}
 
-        {items.map((e) => {
-          const mine = e.createdById === user?.id;
-          const selectable = filter === 'OWED' && ownerPlus && !mine;
-          const isSelected = selected.includes(e.id);
-          const date = parseLocalDateTime(e.expenseDate);
-          const payer = e.paidBy === 'STORE' ? 'Paid by store' : mine ? 'Paid by you' : `Paid by ${e.createdByName}`;
-          const receipts = e.receiptUploadIds.length;
-          const mayVoid = e.status === 'ACTIVE' && e.reimbursementStatus !== 'REIMBURSED' && (mine || ownerPlus);
-          const mayUndo = filter === 'PAID_BACK' && ownerPlus && !mine;
-          const asking = reasonFor?.id === e.id;
-          return (
-            <Pressable key={e.id} disabled={!selectable} onPress={() => toggle(e.id)} accessibilityRole={selectable ? 'checkbox' : undefined} accessibilityState={selectable ? { checked: isSelected } : undefined}>
-              <Card tone={isSelected ? 'success' : undefined}>
-                <View className="flex-row items-start" style={{ gap: 10 }}>
-                  {selectable ? (
-                    <View
-                      style={{
-                        width: 22,
-                        height: 22,
-                        marginTop: 2,
-                        borderRadius: radius.sm,
-                        borderWidth: border.base,
-                        borderColor: isSelected ? color.ink : color.line,
-                        backgroundColor: isSelected ? color.ink : 'transparent',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {isSelected ? <Check size={14} strokeWidth={3} color={color.panel} /> : null}
-                    </View>
-                  ) : null}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ ...textStyle(typeScale.cardTitle), color: e.status === 'VOIDED' ? color.mute : color.ink }}>{e.description}</Text>
-                    <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-                      {[multiStore ? e.tenantName : null, payer, date ? formatDayLabel(date) : null, receipts ? `${receipts} receipt${receipts === 1 ? '' : 's'}` : null]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </Text>
+      {items.map((e) => {
+        const mine = e.createdById === user?.id;
+        const selectable = filter === 'OWED' && ownerPlus && !mine;
+        const isSelected = selected.includes(e.id);
+        const date = parseLocalDateTime(e.expenseDate);
+        const payer = e.paidBy === 'STORE' ? 'Paid by store' : mine ? 'Paid by you' : `Paid by ${e.createdByName}`;
+        const receipts = e.receiptUploadIds.length;
+        const mayVoid = e.status === 'ACTIVE' && e.reimbursementStatus !== 'REIMBURSED' && (mine || ownerPlus);
+        const mayUndo = filter === 'PAID_BACK' && ownerPlus && !mine;
+        const asking = reasonFor?.id === e.id;
+        return (
+          <Pressable key={e.id} disabled={!selectable} onPress={() => toggle(e.id)} accessibilityRole={selectable ? 'checkbox' : undefined} accessibilityState={selectable ? { checked: isSelected } : undefined}>
+            <Card tone={isSelected ? 'success' : undefined}>
+              <View className="flex-row items-start" style={{ gap: 10 }}>
+                {selectable ? (
+                  <View
+                    style={{
+                      width: 22,
+                      height: 22,
+                      marginTop: 2,
+                      borderRadius: radius.sm,
+                      borderWidth: border.base,
+                      borderColor: isSelected ? color.ink : color.line,
+                      backgroundColor: isSelected ? color.ink : 'transparent',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {isSelected ? <Check size={14} strokeWidth={3} color={color.panel} /> : null}
                   </View>
-                  <Text style={{ ...textStyle(typeScale.valueLarge), fontSize: 19, color: e.amount == null || e.status === 'VOIDED' ? color.mute : color.ink }}>
-                    {e.amount == null ? 'Hidden' : rp(e.amount)}
+                ) : null}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ ...textStyle(typeScale.cardTitle), color: e.status === 'VOIDED' ? color.mute : color.ink }}>{e.description}</Text>
+                  <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
+                    {[multiStore ? e.tenantName : null, payer, date ? formatDayLabel(date) : null, receipts ? `${receipts} receipt${receipts === 1 ? '' : 's'}` : null]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </Text>
                 </View>
+                <Text style={{ ...textStyle(typeScale.valueLarge), fontSize: 19, color: e.amount == null || e.status === 'VOIDED' ? color.mute : color.ink }}>
+                  {e.amount == null ? 'Hidden' : rp(e.amount)}
+                </Text>
+              </View>
 
-                <View style={{ marginTop: 8, gap: 6 }}>
-                  <Row gap={6}>
-                    {e.status === 'VOIDED' ? (
-                      <Chip label="Voided" tone="danger" />
-                    ) : e.reimbursementStatus === 'PENDING' ? (
-                      <Chip label="Owed" tone="warning" />
-                    ) : e.reimbursementStatus === 'REIMBURSED' ? (
-                      <Chip label="Paid back" tone="success" />
-                    ) : (
-                      <Chip label="Store" />
-                    )}
-                  </Row>
-
+              <View style={{ marginTop: 8, gap: 6 }}>
+                <Row gap={6}>
                   {e.status === 'VOIDED' ? (
-                    <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{`Voided by ${e.voidedByName ?? '—'}: ${e.voidReason ?? ''}`}</Text>
-                  ) : null}
+                    <Chip label="Voided" tone="danger" />
+                  ) : e.reimbursementStatus === 'PENDING' ? (
+                    <Chip label="Owed" tone="warning" />
+                  ) : e.reimbursementStatus === 'REIMBURSED' ? (
+                    <Chip label="Paid back" tone="success" />
+                  ) : (
+                    <Chip label="Store" />
+                  )}
+                </Row>
 
-                  {e.reimbursementStatus === 'REIMBURSED' ? (
-                    <View>
-                      <KV k="Paid back" v={e.reimbursedAt ? formatDayLabel(parseLocalDateTime(e.reimbursedAt) ?? new Date()) : '—'} />
-                      <KV k="How" v={[e.reimbursementMethod === 'CASH' ? 'Cash' : 'Transfer', e.reimbursementReference].filter(Boolean).join(' · ')} />
-                    </View>
-                  ) : null}
+                {e.status === 'VOIDED' ? (
+                  <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{`Voided by ${e.voidedByName ?? '—'}: ${e.voidReason ?? ''}`}</Text>
+                ) : null}
 
-                  {receipts ? (
-                    <Text onPress={() => openReceipt(e.receiptUploadIds[0])} accessibilityRole="button" style={{ ...textStyle(typeScale.helper), color: color.info }}>
-                      {receipts === 1 ? 'View receipt' : `View receipt (1 of ${receipts})`}
-                    </Text>
-                  ) : null}
-
-                  {asking ? (
-                    <View style={{ gap: 8 }}>
-                      <Field
-                        label="Reason (required)"
-                        value={reason}
-                        onChangeText={setReason}
-                        placeholder={reasonFor!.action === 'VOID' ? 'e.g. amount was wrong' : 'e.g. marked the wrong one'}
-                      />
-                      <Row>
-                        <View style={{ flex: 1 }}>
-                          <Button label="Keep" variant="secondary" onPress={() => setReasonFor(null)} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Button
-                            label={reasonFor!.action === 'VOID' ? 'Void' : 'Undo'}
-                            variant="gated"
-                            gate={reasonFor!.action === 'VOID' ? 'CREATOR·OWNER+' : 'STORE OWNER'}
-                            disabled={busy || !reason.trim()}
-                            onPress={() => handleReason(e)}
-                          />
-                        </View>
-                      </Row>
-                    </View>
-                  ) : mayUndo ? (
-                    <Button label="Undo paid back" variant="secondary" onPress={() => setReasonFor({ id: e.id, action: 'UNDO' })} style={{ paddingVertical: 8 }} />
-                  ) : mayVoid ? (
-                    <Button label="Void" variant="secondary" onPress={() => setReasonFor({ id: e.id, action: 'VOID' })} style={{ paddingVertical: 8 }} />
-                  ) : null}
-                </View>
-              </Card>
-            </Pressable>
-          );
-        })}
-
-        {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
-
-        {filter === 'OWED' && ownerPlus && items.length > 0 ? (
-          <Card>
-            <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute }}>
-              {selected.length === 0 ? 'Select what you paid back' : `${selected.length} selected · ${rp(selectedTotal)}`}
-            </Text>
-            <View style={{ gap: 9, marginTop: 8 }}>
-              <Row>
-                <Field label="Paid on" value={paidAt} onChangeText={setPaidAt} mono placeholder="YYYY-MM-DD" />
-                <Field label="Reference" value={reference} onChangeText={setReference} placeholder="e.g. BCA 0123" />
-              </Row>
-              <Row gap={0}>
-                {(['TRANSFER', 'CASH'] as ReimbursementMethod[]).map((m) => (
-                  <View key={m} style={{ flex: 1 }}>
-                    <Button label={m === 'CASH' ? 'Cash' : 'Transfer'} variant={method === m ? 'primary' : 'secondary'} onPress={() => setMethod(m)} />
+                {e.reimbursementStatus === 'REIMBURSED' ? (
+                  <View>
+                    <KV k="Paid back" v={e.reimbursedAt ? formatDayLabel(parseLocalDateTime(e.reimbursedAt) ?? new Date()) : '—'} />
+                    <KV k="How" v={[e.reimbursementMethod === 'CASH' ? 'Cash' : 'Transfer', e.reimbursementReference].filter(Boolean).join(' · ')} />
                   </View>
-                ))}
-              </Row>
-              <Button
-                label={busy ? 'Saving…' : 'Mark paid back'}
-                variant="gated"
-                gate="STORE OWNER"
-                disabled={busy || selected.length === 0}
-                onPress={handleMarkPaid}
-              />
-            </View>
-          </Card>
-        ) : null}
+                ) : null}
 
-        <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
-          Both tabs are the branch's own spending and count in its monthly budget. The store Owner pays back what the Store
-          Manager paid; nobody marks money owed to themself, and HQ can see this list but not mark it.
-        </Text>
-      </ScrollView>
-    </SafeAreaView>
+                {receipts ? (
+                  <Text onPress={() => openReceipt(e.receiptUploadIds[0])} accessibilityRole="button" style={{ ...textStyle(typeScale.helper), color: color.info }}>
+                    {receipts === 1 ? 'View receipt' : `View receipt (1 of ${receipts})`}
+                  </Text>
+                ) : null}
+
+                {asking ? (
+                  <View style={{ gap: 8 }}>
+                    <Field
+                      label="Reason (required)"
+                      value={reason}
+                      onChangeText={setReason}
+                      placeholder={reasonFor!.action === 'VOID' ? 'e.g. amount was wrong' : 'e.g. marked the wrong one'}
+                    />
+                    <Row>
+                      <View style={{ flex: 1 }}>
+                        <Button label="Keep" variant="secondary" onPress={() => setReasonFor(null)} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Button
+                          label={reasonFor!.action === 'VOID' ? 'Void' : 'Undo'}
+                          variant="gated"
+                          gate={reasonFor!.action === 'VOID' ? 'CREATOR·OWNER+' : 'STORE OWNER'}
+                          disabled={busy || !reason.trim()}
+                          onPress={() => handleReason(e)}
+                        />
+                      </View>
+                    </Row>
+                  </View>
+                ) : mayUndo ? (
+                  <Button label="Undo paid back" variant="secondary" onPress={() => setReasonFor({ id: e.id, action: 'UNDO' })} style={{ paddingVertical: 8 }} />
+                ) : mayVoid ? (
+                  <Button label="Void" variant="secondary" onPress={() => setReasonFor({ id: e.id, action: 'VOID' })} style={{ paddingVertical: 8 }} />
+                ) : null}
+              </View>
+            </Card>
+          </Pressable>
+        );
+      })}
+
+      {actionError ? <Callout tone="danger">{actionError}</Callout> : null}
+
+      {filter === 'OWED' && ownerPlus && items.length > 0 ? (
+        <Card>
+          <Text style={{ ...textStyle(typeScale.fieldLabel), color: color.mute }}>
+            {selected.length === 0 ? 'Select what you paid back' : `${selected.length} selected · ${rp(selectedTotal)}`}
+          </Text>
+          <View style={{ gap: 9, marginTop: 8 }}>
+            <Row>
+              <Field label="Paid on" value={paidAt} onChangeText={setPaidAt} mono placeholder="YYYY-MM-DD" />
+              <Field label="Reference" value={reference} onChangeText={setReference} placeholder="e.g. BCA 0123" />
+            </Row>
+            <Row gap={0}>
+              {(['TRANSFER', 'CASH'] as ReimbursementMethod[]).map((m) => (
+                <View key={m} style={{ flex: 1 }}>
+                  <Button label={m === 'CASH' ? 'Cash' : 'Transfer'} variant={method === m ? 'primary' : 'secondary'} onPress={() => setMethod(m)} />
+                </View>
+              ))}
+            </Row>
+            <Button
+              label={busy ? 'Saving…' : 'Mark paid back'}
+              variant="gated"
+              gate="STORE OWNER"
+              disabled={busy || selected.length === 0}
+              onPress={handleMarkPaid}
+            />
+          </View>
+        </Card>
+      ) : null}
+
+      <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>
+        Both tabs are the branch's own spending and count in its monthly budget. The store Owner pays back what the Store
+        Manager paid; nobody marks money owed to themself, and HQ can see this list but not mark it.
+      </Text>
+    </Screen>
   );
 }

@@ -29,6 +29,7 @@ export interface ThemeFonts {
   displayBold: string;
   body: string;
   bodyMedium: string;
+  bodyBold: string;
   mono: string;
   monoMedium: string;
 }
@@ -39,6 +40,8 @@ export interface ThemeTypeStyle {
   lineHeight?: number;
   letterSpacing?: number;
   uppercase?: boolean;
+  /** Same-width digits, so money and counts line up in columns. */
+  tabular?: boolean;
 }
 
 export interface ThemeTypeScale {
@@ -67,6 +70,7 @@ export interface ThemeSpace {
 export interface ThemeRadius {
   sm: number;
   md: number;
+  lg: number;
   pill: number;
 }
 

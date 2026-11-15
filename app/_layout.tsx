@@ -3,9 +3,10 @@ import '../global.css';
 import { useEffect } from 'react';
 import { Slot } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
-import { Barlow_400Regular, Barlow_500Medium } from '@expo-google-fonts/barlow';
+import { Barlow_400Regular, Barlow_500Medium, Barlow_600SemiBold } from '@expo-google-fonts/barlow';
 import { BarlowCondensed_600SemiBold, BarlowCondensed_700Bold } from '@expo-google-fonts/barlow-condensed';
 import { IBMPlexMono_400Regular, IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono';
 import { AuthProvider, useAuth } from '../auth/AuthContext';
@@ -29,13 +30,21 @@ function AppShell({ fontsLoaded }: { fontsLoaded: boolean }) {
   // gates render instead of racing it.
   if (!fontsLoaded) return null;
 
-  return <Slot />;
+  // Every screen has a dark top bar (Tactical Green), so the clock and
+  // battery icons are always light.
+  return (
+    <>
+      <StatusBar style="light" />
+      <Slot />
+    </>
+  );
 }
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Barlow_400Regular,
     Barlow_500Medium,
+    Barlow_600SemiBold,
     BarlowCondensed_600SemiBold,
     BarlowCondensed_700Bold,
     IBMPlexMono_400Regular,

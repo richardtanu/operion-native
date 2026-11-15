@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card } from '../../../components';
+import { Pressable, Text, View } from 'react-native';
+import { Button, Callout, Card, Screen } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { listNotifications, markAllNotificationsRead, markNotificationRead } from '../../../api/notifications';
 import { ApiError } from '../../../api/httpError';
@@ -86,44 +85,39 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <View className="flex-row items-baseline justify-between" style={{ gap: 10 }}>
-          <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Notifications</Text>
-          <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>{unread} unread</Text>
-        </View>
+    <Screen title="Notifications">
+      <Text style={{ ...textStyle(typeScale.value), color: color.steel }}>{unread} unread</Text>
 
-        <Button label={busy ? 'Marking…' : 'Mark all read'} variant="secondary" disabled={busy || unread === 0} onPress={markAll} />
+      <Button label={busy ? 'Marking…' : 'Mark all read'} variant="secondary" disabled={busy || unread === 0} onPress={markAll} />
 
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-        {loading && items.length === 0 ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
-        {!loading && !error && items.length === 0 ? (
-          <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>Nothing yet. You're told when your requests move and when you can buy.</Text>
-        ) : null}
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+      {loading && items.length === 0 ? <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>Loading…</Text> : null}
+      {!loading && !error && items.length === 0 ? (
+        <Text style={{ ...textStyle(typeScale.body), color: color.mute }}>Nothing yet. You're told when your requests move and when you can buy.</Text>
+      ) : null}
 
-        <View className="gap-sm">
-          {items.map((n) => {
-            const at = parseLocalDateTime(n.createdAt);
-            return (
-              <Pressable key={n.id} onPress={() => markOne(n)} accessibilityRole="button" accessibilityHint={n.read ? undefined : 'Marks this notification read'}>
-                <Card>
-                  <View className="flex-row items-center" style={{ gap: 8 }}>
-                    {!n.read ? <View style={{ width: 8, height: 8, borderRadius: radius.sm, backgroundColor: color.info }} /> : null}
-                    <Text style={{ ...textStyle(typeScale.chip), color: n.read ? color.mute : color.info, flex: 1 }}>
-                      {TYPE_LABEL[n.type] ?? n.type}
-                    </Text>
-                    <Text style={{ ...textStyle(typeScale.value), fontSize: 12, color: color.mute }}>
-                      {at ? `${formatDayLabel(at)} ${formatTime(at)}` : ''}
-                    </Text>
-                  </View>
-                  <Text style={{ ...textStyle(typeScale.cardTitle), color: n.read ? color.steel : color.ink, marginTop: 6 }}>{n.title}</Text>
-                  <Text style={{ ...textStyle(typeScale.body), color: n.read ? color.mute : color.steel, marginTop: 2 }}>{n.message}</Text>
-                </Card>
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <View className="gap-sm">
+        {items.map((n) => {
+          const at = parseLocalDateTime(n.createdAt);
+          return (
+            <Pressable key={n.id} onPress={() => markOne(n)} accessibilityRole="button" accessibilityHint={n.read ? undefined : 'Marks this notification read'}>
+              <Card>
+                <View className="flex-row items-center" style={{ gap: 8 }}>
+                  {!n.read ? <View style={{ width: 8, height: 8, borderRadius: radius.sm, backgroundColor: color.info }} /> : null}
+                  <Text style={{ ...textStyle(typeScale.chip), color: n.read ? color.mute : color.info, flex: 1 }}>
+                    {TYPE_LABEL[n.type] ?? n.type}
+                  </Text>
+                  <Text style={{ ...textStyle(typeScale.value), fontSize: 12, color: color.mute }}>
+                    {at ? `${formatDayLabel(at)} ${formatTime(at)}` : ''}
+                  </Text>
+                </View>
+                <Text style={{ ...textStyle(typeScale.cardTitle), color: n.read ? color.steel : color.ink, marginTop: 6 }}>{n.title}</Text>
+                <Text style={{ ...textStyle(typeScale.body), color: n.read ? color.mute : color.steel, marginTop: 2 }}>{n.message}</Text>
+              </Card>
+            </Pressable>
+          );
+        })}
+      </View>
+    </Screen>
   );
 }

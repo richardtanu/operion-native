@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Callout, Card, Field, FieldLabel, KV, PhotoPicker, Row, type UploadedPhoto } from '../../../components';
+import { Text, View } from 'react-native';
+import { Button, Callout, Card, Field, FieldLabel, KV, PhotoPicker, Row, Screen, type UploadedPhoto } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
 import { canRecordExpense, canRecordStorePaidExpense } from '../../../auth/permissions';
 import { createExpense } from '../../../api/expenses';
@@ -76,84 +75,78 @@ export default function CreateExpenseScreen() {
 
   if (created) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-        <View className="flex-1 gap-lg px-xl pt-xl">
-          <Text style={{ ...textStyle(typeScale.heading), color: color.ink }}>Expense recorded</Text>
-          <Card>
-            <KV k="What" v={created.description} />
-            <KV k="Amount" v={created.amount == null ? 'Hidden' : rp(created.amount)} strong />
-            <KV k="Paid by" v={created.paidBy === 'STORE' ? 'The store' : 'You — the Owner pays you back'} />
-          </Card>
-          <Button label="Add another" variant="secondary" onPress={reset} />
-          <Button label="Back to Expenses" onPress={() => router.back()} />
-        </View>
-      </SafeAreaView>
+      <Screen title="Expense recorded">
+        <Card>
+          <KV k="What" v={created.description} />
+          <KV k="Amount" v={created.amount == null ? 'Hidden' : rp(created.amount)} strong />
+          <KV k="Paid by" v={created.paidBy === 'STORE' ? 'The store' : 'You — the Owner pays you back'} />
+        </Card>
+        <Button label="Add another" variant="secondary" onPress={reset} />
+        <Button label="Back to Expenses" onPress={() => router.back()} />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: color.surface }}>
-      <ScrollView contentContainerClassName="gap-md px-xl pt-xl pb-xl">
-        <Text style={{ ...textStyle(typeScale.screenTitle), color: color.ink }}>Add expense</Text>
+    <Screen title="Add expense">
 
-        {!mayRecord ? <Callout tone="warning">Only the Store Manager and the Owner record expenses.</Callout> : null}
+      {!mayRecord ? <Callout tone="warning">Only the Store Manager and the Owner record expenses.</Callout> : null}
 
-        <Field label="What" value={description} onChangeText={setDescription} placeholder="e.g. Printer paper A4, 2 reams" />
-        <Row>
-          <Field label="Amount (Rp)" value={amount} onChangeText={setAmount} mono keyboardType="numeric" placeholder="96000" />
-          <Field label="Date" value={date} onChangeText={setDate} mono placeholder="YYYY-MM-DD" />
+      <Field label="What" value={description} onChangeText={setDescription} placeholder="e.g. Printer paper A4, 2 reams" />
+      <Row>
+        <Field label="Amount (Rp)" value={amount} onChangeText={setAmount} mono keyboardType="numeric" placeholder="96000" />
+        <Field label="Date" value={date} onChangeText={setDate} mono placeholder="YYYY-MM-DD" />
+      </Row>
+
+      <View style={{ gap: 6 }}>
+        <FieldLabel>Category</FieldLabel>
+        <Row gap={0}>
+          {(['HQ', 'BRANCH_SPECIFIC'] as ExpenseCategory[]).map((c) => (
+            <View key={c} style={{ flex: 1 }}>
+              <Button label={c === 'HQ' ? 'HQ' : 'Branch specific'} variant={category === c ? 'primary' : 'secondary'} onPress={() => setCategory(c)} />
+            </View>
+          ))}
         </Row>
+      </View>
 
-        <View style={{ gap: 6 }}>
-          <FieldLabel>Category</FieldLabel>
-          <Row gap={0}>
-            {(['HQ', 'BRANCH_SPECIFIC'] as ExpenseCategory[]).map((c) => (
-              <View key={c} style={{ flex: 1 }}>
-                <Button label={c === 'HQ' ? 'HQ' : 'Branch specific'} variant={category === c ? 'primary' : 'secondary'} onPress={() => setCategory(c)} />
-              </View>
-            ))}
-          </Row>
-        </View>
+      <View style={{ gap: 6 }}>
+        <FieldLabel>Paid by</FieldLabel>
+        <Row gap={0}>
+          {(['PERSONAL', 'STORE'] as ExpensePaidBy[]).map((p) => (
+            <View key={p} style={{ flex: 1 }}>
+              <Button
+                label={p === 'PERSONAL' ? 'Me' : 'Store'}
+                variant={paidBy === p ? 'primary' : 'secondary'}
+                disabled={p === 'STORE' && !mayRecordStorePaid}
+                onPress={() => setPaidBy(p)}
+              />
+            </View>
+          ))}
+        </Row>
+        <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>Only the store Owner records what the store paid.</Text>
+      </View>
 
-        <View style={{ gap: 6 }}>
-          <FieldLabel>Paid by</FieldLabel>
-          <Row gap={0}>
-            {(['PERSONAL', 'STORE'] as ExpensePaidBy[]).map((p) => (
-              <View key={p} style={{ flex: 1 }}>
-                <Button
-                  label={p === 'PERSONAL' ? 'Me' : 'Store'}
-                  variant={paidBy === p ? 'primary' : 'secondary'}
-                  disabled={p === 'STORE' && !mayRecordStorePaid}
-                  onPress={() => setPaidBy(p)}
-                />
-              </View>
-            ))}
-          </Row>
-          <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>Only the store Owner records what the store paid.</Text>
-        </View>
-
-        {token ? (
-          <PhotoPicker
-            label="Receipt photo"
-            purpose="EXPENSE_RECEIPT"
-            token={token}
-            photos={photos}
-            onChange={setPhotos}
-            sub={paidBy === 'PERSONAL' ? 'Required when you paid yourself: it’s what the Owner pays you back against.' : 'Optional when the store paid.'}
-            error={photoError}
-          />
-        ) : null}
-
-        {error ? <Callout tone="danger">{error}</Callout> : null}
-
-        <Button
-          label={submitting ? 'Saving…' : 'Add expense'}
-          variant="gated"
-          gate="MANAGER+"
-          disabled={submitting || !mayRecord}
-          onPress={handleSubmit}
+      {token ? (
+        <PhotoPicker
+          label="Receipt photo"
+          purpose="EXPENSE_RECEIPT"
+          token={token}
+          photos={photos}
+          onChange={setPhotos}
+          sub={paidBy === 'PERSONAL' ? 'Required when you paid yourself: it’s what the Owner pays you back against.' : 'Optional when the store paid.'}
+          error={photoError}
         />
-      </ScrollView>
-    </SafeAreaView>
+      ) : null}
+
+      {error ? <Callout tone="danger">{error}</Callout> : null}
+
+      <Button
+        label={submitting ? 'Saving…' : 'Add expense'}
+        variant="gated"
+        gate="MANAGER+"
+        disabled={submitting || !mayRecord}
+        onPress={handleSubmit}
+      />
+    </Screen>
   );
 }
