@@ -73,6 +73,7 @@ export default function PurchaseRequestListScreen() {
 
       {filtered.map((pr) => {
         const at = parseLocalDateTime(pr.createdAt);
+        const qty = pr.items.reduce((s, i) => s + i.quantity, 0);
         return (
           <Tap
             key={pr.id}
@@ -97,7 +98,7 @@ export default function PurchaseRequestListScreen() {
               <ChevronRight size={18} color={color.steel} />
             </View>
             <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>
-              {`${pr.items.length} item${pr.items.length === 1 ? '' : 's'} · by ${pr.requestedByName} · for ${pr.tenantName}`}
+              {`${pr.items.length} part${pr.items.length === 1 ? '' : 's'} · ${qty} item${qty === 1 ? '' : 's'} · by ${pr.requestedByName} · for ${pr.tenantName}`}
             </Text>
             {at ? <Text style={{ ...textStyle(typeScale.helper), color: color.mute }}>{`${formatDayLabel(at)} · ${formatTime(at)}`}</Text> : null}
           </Tap>
