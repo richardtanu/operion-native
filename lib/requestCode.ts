@@ -15,11 +15,12 @@ export const REQUEST_STATUS_TONE: Record<PurchaseRequestStatus, ChipTone> = {
 const pad = (n: number) => String(n).padStart(2, '0');
 
 /**
- * A purchase request's short name for people: date, who asked, time, as
- * `20261115-RINA-1432` (15 Nov 2026, Rina, 14:32). The backend has no request
- * number, only a UUID, so this is built from the request's own fields
- * (15 Nov 2026); the full ID stays on the detail page. Two requests by the
- * same person in the same minute share a code.
+ * A purchase request's name for people: date, who asked, then the time to
+ * the millisecond, as `20261115-RINA-143207_947` (15 Nov 2026, Rina,
+ * 14:32:07.947). The backend has no request number, only a UUID, so this is
+ * built from the request's own fields (15 Nov 2026); the full ID stays on
+ * the detail page. The milliseconds come straight from `createdAt`'s
+ * fraction, which the backend writes when it isn't zero.
  */
 export function requestCode(pr: { createdAt: string; requestedByName: string | null }): string {
   const at = parseLocalDateTime(pr.createdAt);
@@ -31,5 +32,8 @@ export function requestCode(pr: { createdAt: string; requestedByName: string | n
       .toUpperCase()
       .slice(0, 10) || 'UNKNOWN';
   if (!at) return who;
-  return `${at.getFullYear()}${pad(at.getMonth() + 1)}${pad(at.getDate())}-${who}-${pad(at.getHours())}${pad(at.getMinutes())}`;
+  const ms = (/\.(\d+)/.exec(pr.createdAt)?.[1] ?? '').padEnd(3, '0').slice(0, 3);
+  const date = `${at.getFullYear()}${pad(at.getMonth() + 1)}${pad(at.getDate())}`;
+  const time = `${pad(at.getHours())}${pad(at.getMinutes())}${pad(at.getSeconds())}`;
+  return `${date}-${who}-${time}_${ms}`;
 }
