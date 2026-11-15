@@ -75,20 +75,24 @@ export default function PurchaseRequestDetailScreen() {
     );
   }
 
-  // A decision ends the job on this page, so it goes back to the list, which
-  // reloads and no longer shows the request under its old status.
+  // A decision ends the job on this page, so it goes to the Requests list,
+  // which reloads and no longer shows the request under its old status.
+  // dismissTo goes back to the list when it's underneath and opens it when
+  // it isn't. The move happens only once the server has said yes, and
+  // outside the try, so a navigation hiccup can't pass for a failed approval.
   const runAction = async (fn: () => Promise<PurchaseRequestResponse>) => {
     setActionError(null);
     setBusy(true);
+    let decided = false;
     try {
       await fn();
-      if (router.canGoBack()) router.back();
-      else router.replace('/(app)/purchase-requests');
+      decided = true;
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : 'Action failed.');
     } finally {
       setBusy(false);
     }
+    if (decided) router.dismissTo('/(app)/purchase-requests');
   };
 
   const at = parseLocalDateTime(pr.createdAt);
