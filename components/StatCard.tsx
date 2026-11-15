@@ -1,6 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { textStyle } from '../theme/typeStyle';
+import { Tap } from './Tap';
 
 type StatCardProps = {
   label: string;
@@ -16,14 +17,14 @@ type StatCardProps = {
 export function StatCard({ label, value, sub, valueColor, onPress }: StatCardProps) {
   const { color, type: typeScale, radius, border } = useTheme();
   return (
-    <Pressable
+    <Tap
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : undefined}
-      style={({ pressed }) => ({
+      style={{
         flexBasis: '46%',
         flexGrow: 1,
-        backgroundColor: pressed ? color.derived : color.panel,
+        backgroundColor: color.panel,
         borderRadius: radius.lg,
         borderWidth: border.hair,
         borderColor: color.hair,
@@ -31,15 +32,18 @@ export function StatCard({ label, value, sub, valueColor, onPress }: StatCardPro
         paddingHorizontal: 12,
         alignItems: 'center',
         gap: 4,
-      })}
+      }}
+      pressedStyle={{ backgroundColor: color.derived }}
     >
       <Text style={{ ...textStyle(typeScale.body), color: color.steel }}>{label}</Text>
-      <Text style={{ ...textStyle(typeScale.valueLarge), color: valueColor ?? color.ink }}>{value}</Text>
+      <Text numberOfLines={1} adjustsFontSizeToFit style={{ ...textStyle(typeScale.valueLarge), color: valueColor ?? color.ink }}>
+        {value}
+      </Text>
       {sub ? (
         <View>
           <Text style={{ ...textStyle(typeScale.helper), color: color.steel, textAlign: 'center' }}>{sub}</Text>
         </View>
       ) : null}
-    </Pressable>
+    </Tap>
   );
 }

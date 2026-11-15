@@ -1,8 +1,9 @@
 import { Children, Fragment, type PropsWithChildren } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { ChevronRight, Lock, type LucideIcon } from 'lucide-react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { textStyle } from '../theme/typeStyle';
+import { Tap } from './Tap';
 
 // Rows grouped in one rounded card with hairlines between them, like a
 // phone's settings screen.
@@ -44,20 +45,13 @@ export function ListRow({ Icon, title, subtitle, value, onPress, lockedFor, tint
   };
 
   return (
-    <Pressable
+    <Tap
       onPress={press}
       disabled={!onPress && !locked}
       accessibilityRole={onPress || locked ? 'button' : undefined}
       accessibilityLabel={locked ? `${title}, locked` : undefined}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 14,
-        minHeight: 60,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        backgroundColor: pressed ? color.derived : 'transparent',
-      })}
+      style={{ flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 60, paddingVertical: 10, paddingHorizontal: 14 }}
+      pressedStyle={{ backgroundColor: color.derived }}
     >
       <View style={{ width: 36, height: 36, borderRadius: radius.md, backgroundColor: `${iconColor}1F`, alignItems: 'center', justifyContent: 'center' }}>
         <Icon size={20} color={iconColor} />
@@ -68,6 +62,6 @@ export function ListRow({ Icon, title, subtitle, value, onPress, lockedFor, tint
       </View>
       {value ? <Text style={{ ...textStyle(typeScale.value), color: color.ink }}>{value}</Text> : null}
       {locked ? <Lock size={16} color={color.mute} /> : onPress ? <ChevronRight size={18} color={color.steel} /> : null}
-    </Pressable>
+    </Tap>
   );
 }

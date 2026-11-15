@@ -39,12 +39,10 @@ export default function AccountScreen() {
         <Text numberOfLines={2} style={{ ...textStyle(typeScale.heading), fontSize: 22, color: color.ink }}>
           {store?.name ?? user?.tenantName ?? ' '}
         </Text>
-        {store ? (
-          <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-            <Chip label={store.atHq ? 'HQ' : 'Store'} tone="pending" />
-            <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{`Code ${store.code}`}</Text>
-          </View>
-        ) : null}
+        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+          {store ? <Chip label={store.atHq ? 'HQ' : 'Store'} tone="pending" /> : null}
+          <Text style={{ ...textStyle(typeScale.helper), color: color.steel }}>{`Code ${store?.code ?? user?.tenantCode ?? '—'}`}</Text>
+        </View>
       </View>
     </View>
   );
