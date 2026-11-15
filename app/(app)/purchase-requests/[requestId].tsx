@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { Button, Callout, Card, Chip, HistoryList, KV, Row, Screen, Section, TextField } from '../../../components';
 import { useAuth } from '../../../auth/AuthContext';
@@ -20,6 +20,9 @@ import { useStoreInfo } from '../../../lib/useStoreInfo';
 import { useTheme } from '../../../theme/ThemeContext';
 import { textStyle } from '../../../theme/typeStyle';
 
+/** A quantity as people say it: "1 item", "5 items". */
+const itemsLabel = (n: number) => `${n} item${n === 1 ? '' : 's'}`;
+
 // PROC-02 detail — one purchase request on its own page, opened from the
 // Requests list (15 Nov 2026). Its items (with each item's category, type and
 // stock now, read from the store's item list), its history, and the actions.
@@ -29,6 +32,7 @@ import { textStyle } from '../../../theme/typeStyle';
 export default function PurchaseRequestDetailScreen() {
   const { color, font, type: typeScale } = useTheme();
   const { requestId } = useLocalSearchParams<{ requestId: string }>();
+  const router = useRouter();
   const { user, token } = useAuth();
   const store = useStoreInfo();
   const [pr, setPr] = useState<PurchaseRequestResponse | null>(null);
@@ -71,13 +75,15 @@ export default function PurchaseRequestDetailScreen() {
     );
   }
 
+  // A decision ends the job on this page, so it goes back to the list, which
+  // reloads and no longer shows the request under its old status.
   const runAction = async (fn: () => Promise<PurchaseRequestResponse>) => {
     setActionError(null);
     setBusy(true);
     try {
-      setPr(await fn());
-      setReason('');
-      load();
+      await fn();
+      if (router.canGoBack()) router.back();
+      else router.replace('/(app)/purchase-requests');
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : 'Action failed.');
     } finally {
@@ -105,12 +111,12 @@ export default function PurchaseRequestDetailScreen() {
         </View>
         <KV k="Store" v={pr.tenantName} />
         <KV k="Requested by" v={pr.requestedByName} />
-        <KV k="Total items" v={String(pr.items.length)} strong />
-        <KV k="Total quantity" v={String(totalQty)} />
+        <KV k="Parts" v={String(pr.items.length)} />
+        <KV k="Total items" v={itemsLabel(totalQty)} strong />
         <Text selectable style={{ fontFamily: font.mono, fontSize: 11, color: color.mute, marginTop: 6 }}>{`ID ${pr.id}`}</Text>
       </Card>
 
-      <Section>{`Items (${pr.items.length})`}</Section>
+      <Section>{`Parts (${pr.items.length})`}</Section>
       {pr.items.map((item, i) => {
         const part = partById.get(item.partId);
         const low = part && part.minimumStock != null && part.currentStock <= part.minimumStock;
@@ -129,7 +135,7 @@ export default function PurchaseRequestDetailScreen() {
                 ) : null}
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ ...textStyle(typeScale.valueLarge), color: color.ink }}>{`×${item.quantity}`}</Text>
+                <Text style={{ ...textStyle(typeScale.value), fontFamily: font.bodyBold, fontSize: 17, color: color.ink }}>{itemsLabel(item.quantity)}</Text>
               </View>
             </View>
           </Card>
@@ -148,7 +154,7 @@ export default function PurchaseRequestDetailScreen() {
       >
         <Text style={{ ...textStyle(typeScale.body), fontFamily: font.bodyBold, color: color.ink }}>Total</Text>
         <Text style={{ ...textStyle(typeScale.value), fontFamily: font.bodyBold, color: color.ink }}>
-          {`${pr.items.length} item${pr.items.length === 1 ? '' : 's'} · ${totalQty} units`}
+          {`${pr.items.length} part${pr.items.length === 1 ? '' : 's'} · ${itemsLabel(totalQty)}`}
         </Text>
       </View>
 
